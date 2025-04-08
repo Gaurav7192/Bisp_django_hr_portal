@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .main-content {
+        padding-left: 0px;
+    }
+
+    th {
+        cursor: pointer;
+    }
+
+    th.sort-asc::after {
+        content: " ▲";
+    }
+
+    th.sort-desc::after {
+        content: " ▼";
+    }
+
+    .table-controls {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .pagination {
+        margin-top: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .pagination button {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        background: #f8f9fa;
+        cursor: pointer;
+    }
+
+    .pagination button.active {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+</style>
+
+<div>
+    {% include 'side bar.html' %}
+
+    <div class="main-content container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4>Total Projects: {{ total_projects }}</h4>
+            <a href="{% url 'add_project' request.session.user_id %}" class="btn btn-primary">Add Project</a>
+        </div>
+
+        <!-- Search & Rows Per Page -->
+        <div class="table-controls">
+            <input type="text" id="searchInput" onkeyup="searchAndPaginate()" placeholder="Search anything..." class="form-control" />
+
+            <select id="rowsLimit" class="form-select" onchange="changePage(1)">
+                <option value="5">Show 5 rows</option>
+                <option value="10" selected>Show 10 rows</option>
+                <option value="20">Show 20 rows</option>
+                <option value="30">Show 30 rows</option>
+            </select>
+        </div>
+
+        <table class="table table-bordered" id="projectsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th onclick="sortTable(1)">Project Name</th>
+                    <th onclick="sortTable(2)">Deadline</th>
+                    <th onclick="sortTable(3)">Rate Status</th>
+                    <th onclick="sortTable(4)">Project Status</th>
+                    <th onclick="sortTable(5)">Project Leader</th>
+                    <th onclick="sortTable(6)">Project Members</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in projects %}
+                <tr>
+                    <td></td> <!-- S.No will be filled dynamically -->
+                    <td>{{ project.pname }}</td>
+                    <td>{{ project.end_date|default:"Not Set" }}</td>
+                    <td>{{ project.get_rate_status_display }}</td>
+                    <td>{{ project.get_status_display }}</td>
+                    <td>{{ project.manager }}</td>
+                    <td>
+                        {% for member in project.team_members.all %}
+                            {{ member.emp_id.name }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            No team members assigned
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination Controls -->
+        <div class="pagination" id="paginationControls"></div>
+    </div>
+</div>
+
+<script>
+let sortDirection = {};
+let allRows = Array.from(document.querySelectorAll("#projectsTable tbody tr"));
+let currentPage = 1;
+
+// Sorting
+function sortTable(colIndex) {
+    const table = document.getElementById("projectsTable");
+    const ths = table.tHead.rows[0].cells;
+
+    Array.from(ths).forEach(th => th.classList.remove("sort-asc", "sort-desc"));
+
+    sortDirection[colIndex] = !sortDirection[colIndex];
+    const direction = sortDirection[colIndex] ? 1 : -1;
+    ths[colIndex].classList.add(sortDirection[colIndex] ? "sort-asc" : "sort-desc");
+
+    allRows.sort((a, b) => {
+        const aText = a.cells[colIndex].innerText.toLowerCase();
+        const bText = b.cells[colIndex].innerText.toLowerCase();
+        return aText.localeCompare(bText) * direction;
+    });
+
+    changePage(1);
+}
+
+// Search + Pagination
+function searchAndPaginate() {
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+    allRows.forEach(row => {
+        const textMatch = Array.from(row.cells).some(cell => cell.innerText.toLowerCase().includes(searchValue));
+        row.style.display = textMatch ? "" : "none";
+    });
+
+    changePage(1);
+}
+
+// Change Page
+function changePage(page) {
+    const rowsLimit = parseInt(document.getElementById("rowsLimit").value);
+    const tbody = document.querySelector("#projectsTable tbody");
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+    const filteredRows = allRows.filter(row => row.style.display !== "none");
+
+    const totalPages = Math.ceil(filteredRows.length / rowsLimit);
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    currentPage = page;
+
+    tbody.innerHTML = "";
+
+    const startIndex = (page - 1) * rowsLimit;
+    const endIndex = Math.min(startIndex + rowsLimit, filteredRows.length);
+
+    for (let i = startIndex; i < endIndex; i++) {
+        const row = filteredRows[i].cloneNode(true);
+        row.cells[0].innerText = i + 1;  // S.No
+        tbody.appendChild(row);
+    }
+
+    updatePaginationControls(totalPages);
+}
+
+// Pagination buttons
+function updatePaginationControls(totalPages) {
+    const pagination = document.getElementById("paginationControls");
+    pagination.innerHTML = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.innerText = i;
+        btn.className = i === currentPage ? "active" : "";
+        btn.onclick = () => changePage(i);
+        pagination.appendChild(btn);
+    }
+}
+
+// Initial load
+window.onload = () => {
+    allRows = Array.from(document.querySelectorAll("#projectsTable tbody tr"));
+    searchAndPaginate();
+};
+</script>
+{% endblock %}

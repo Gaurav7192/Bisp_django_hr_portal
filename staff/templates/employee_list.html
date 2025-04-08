@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div>  {% include 'side bar.html' %}
+
+  <div class="container mt-5">
+    <h1 class="mb-4">Employee List</h1>
+
+    <!-- Success Messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-success" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Add Member Button -->
+    <a href="{% url 'staff_registration' request.session.user_id %}" class="btn btn-success mb-3">Add Member</a>
+
+    <!-- Filters -->
+    <form method="get" class="mb-4">
+      <div class="row">
+        <div class="col-md-4">
+          <select name="position" class="form-control">
+            <option value="">All Positions</option>
+            <option value="HR" {% if request.GET.position == 'HR' %}selected{% endif %}>HR</option>
+            <option value="Manager" {% if request.GET.position == 'Manager' %}selected{% endif %}>Manager</option>
+            <option value="Staff" {% if request.GET.position == 'Staff' %}selected{% endif %}>Staff</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <select name="department" class="form-control">
+            <option value="">All Departments</option>
+            {% for dept in department_choices %}
+              <option value="{{ dept }}" {% if request.GET.department == dept %}selected{% endif %}>{{ dept }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary">Filter</button>
+          <a href="{% url 'employee_list' %}" class="btn btn-secondary">Reset</a>
+        </div>
+      </div>
+    </form>
+
+    <!-- Employee Table -->
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Position</th>
+          <th>Department</th>
+          <th>Join Date</th>
+          <th>Report To</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emp in employees %}
+        <tr>
+          <td>{{ emp.id }}</td>
+          <td>{{ emp.name }}</td>
+          <td>{{ emp.email }}</td>
+          <td>{{ emp.get_position_display }}</td>
+          <td>{{ emp.department }}</td>
+          <td>{{ emp.joindate }}</td>
+          <td>{{ emp.reportto }}</td>
+          <td>
+            <a href="{% url 'update_employee' emp.id %}" class="btn btn-primary btn-sm">Update</a>
+            <a href="{% url 'delete_employee' emp.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this employee?')">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" class="text-center">No employees found</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'side bar.html' %}
+
+<title>User Timesheet Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f4;
+        }
+        h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        img {
+            max-height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Timesheet Records for {{ user.emp_name }}</h2>
+
+    {% if timesheets %}
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Task</th>
+                <th>Date</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Description</th>
+                <th>Attachment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in timesheets %}
+            <tr>
+                <td>{{ record.pname.project_name }}</td>
+                <td>{{ record.task }}</td>
+                <td>{{ record.date }}</td>
+                <td>{{ record.start_time }}</td>
+                <td>{{ record.end_time }}</td>
+                <td>{{ record.description }}</td>
+                <td>
+                    {% if record.attachment %}
+                        <img src="{{ record.attachment.url }}" alt="Attachment">
+                    {% else %}
+                        No File
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No records found for this user.</p>
+    {% endif %}
+
+
+{% endblock %}

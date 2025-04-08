@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'side bar.html' %}
+<div class="container">
+    <main class="content">
+        <h2>Update Timesheet</h2>
+        <form action="{% url 'update_timesheet' request.session.user_id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label class="checkbox-label">
+                <input type="checkbox" id="weekly" name="weekly" onclick="toggleWeeklyTimesheet()"> Fill Weekly Timesheet
+            </label>
+
+            <!-- Daily Timesheet -->
+            <div id="daily-timesheet">
+                <h3>Daily Entry</h3>
+                <div class="timesheet-entry grid-layout">
+                    <div>
+                        <label for="pname">Project Name:</label>
+                        <select id="pname" name="pname" required>
+                            <option value="">Select Project</option>
+                            {% for project in projects %}
+                                <option value="{{ project.id }}">{{ project.pname }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="task">Task:</label>
+                        <input type="text" id="task" name="task" required>
+                    </div>
+                    <div>
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div>
+                        <label for="start_time">Start Time:</label>
+                        <input type="time" id="start_time" name="start_time" required>
+                    </div>
+                    <div>
+                        <label for="end_time">End Time:</label>
+                        <input type="time" id="end_time" name="end_time" required>
+                    </div>
+                    <div class="full-width">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" rows="2" required></textarea>
+                    </div>
+                    <div class="full-width">
+                        <label for="attachment">Attachment (optional):</label>
+                        <input type="file" id="attachment" name="attachment" accept="image/*">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Timesheet -->
+            <div id="weekly-timesheet" class="weekly-timesheet">
+                <h3>Weekly Entry (Monday to Friday)</h3>
+                {% for day in days %}
+                    <div class="timesheet-entry grid-layout">
+                        <h4 style="grid-column: span 2;">{{ day }}</h4>
+                        <div>
+                            <label for="pname_{{ day }}">Project Name:</label>
+                            <select id="pname_{{ day }}" name="pname_{{ day }}">
+                                <option value="">Select Project</option>
+                                {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.pname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="task_{{ day }}">Task:</label>
+                            <input type="text" id="task_{{ day }}" name="task_{{ day }}">
+                        </div>
+                        <div>
+                            <div>
+    <label>Date:</label>
+    <input type="date" name="date_{{ day }}" id="date_{{ day }}" >
+</div>
+
+                            <label for="start_time_{{ day }}">Start Time:</label>
+                            <input type="time" id="start_time_{{ day }}" name="start_time_{{ day }}">
+                        </div>
+                        <div>
+                            <label for="end_time_{{ day }}">End Time:</label>
+                            <input type="time" id="end_time_{{ day }}" name="end_time_{{ day }}">
+                        </div>
+                        <div class="full-width">
+                            <label for="description_{{ day }}">Description:</label>
+                            <textarea id="description_{{ day }}" name="description_{{ day }}" rows="2"></textarea>
+                        </div>
+                        <div class="full-width">
+                            <label for="attachment_{{ day }}">Attachment:</label>
+                            <input type="file" id="attachment_{{ day }}" name="attachment_{{ day }}" accept="image/*">
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn-submit">Update Timesheet</button>
+        </form>
+    </main>
+</div>
+
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .content {
+        flex-grow: 1;
+        padding: 40px;
+        max-width: 900px;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f6f8;
+    }
+
+    form {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+        color: #222;
+    }
+
+    h3 {
+        margin: 25px 0 10px;
+        color: #333;
+    }
+
+    h4 {
+        margin-top: 10px;
+        color: #444;
+        font-weight: 500;
+    }
+
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 25px;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #007bff;
+        outline: none;
+    }
+
+    .timesheet-entry {
+        margin-top: 20px;
+        background-color: #fcfcfc;
+        border: 1px solid #ddd;
+        padding: 15px;
+        border-radius: 8px;
+        transition: box-shadow 0.3s;
+    }
+
+    .timesheet-entry:hover {
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    .checkbox-label {
+        font-size: 0.95rem;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+
+    .btn-submit {
+        margin-top: 25px;
+        padding: 12px 28px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .btn-submit:hover {
+        background: #0056b3;
+    }
+
+    .weekly-timesheet {
+        display: none;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+
+
+
+
+
+<script>
+    function toggleWeeklyTimesheet() {
+        const weeklyChecked = document.getElementById('weekly').checked;
+        document.getElementById('weekly-timesheet').style.display = weeklyChecked ? 'block' : 'none';
+        document.getElementById('daily-timesheet').style.display = weeklyChecked ? 'none' : 'block';
+
+        if (weeklyChecked) {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - currentDay + 1); // shift to Monday
+
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            for (let i = 0; i < days.length; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const formatted = date.toISOString().split('T')[0];
+                const dateInput = document.getElementById('date_' + days[i]);
+                if (dateInput) {
+                    dateInput.value = formatted;
+                }
+            }
+        }
+    }
+
+    // Trigger on page load if weekly checkbox is already checked
+    window.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('weekly').checked) {
+            toggleWeeklyTimesheet();
+        }
+    });
+</script>
+
+{% endblock %}

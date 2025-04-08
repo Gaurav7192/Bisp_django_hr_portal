@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <div class="container mt-5 px-0 ms-0">
+    <h2 class="mb-4">Filtered Leave Records</h2>
+
+    <!-- Table for displaying filtered leave records -->
+    <table class="table table-bordered table-striped mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>Name</th>
+          <th>Department</th>
+          <th> start Date</th>
+          <th> end date </th>
+          <th>Number of Days</th>
+          <th>Leave Type</th>
+          <th>Approval Status</th>
+          <th>Approved By</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in leave_record %}
+          <tr>
+            <td>{{ leave.emp_id.name }}</td>
+            <td>{{ leave.emp_id.department }}</td>
+            <td>{{ leave.start_date }}</td>
+            <td>{{ leave.end_date }}</td>
+            <td>{{ leave.no_of_days }}</td>
+            <td>{{ leave.leave_type }}</td>
+            <td id="status-{{ leave.id }}">
+              {% if leave.approval_status == "Approved" %}
+                <span class="badge bg-success">Approved</span>
+              {% elif leave.approval_status == "Rejected" %}
+                <span class="badge bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge bg-warning">Pending</span>
+              {% endif %}
+            </td>
+            <td>{{ leave.approved_by }}</td>
+            <td>
+              {% if leave.approval_status == "Pending" %}
+                <button class="btn btn-success" value="approve" onclick="updateStatus(event, '{{ leave.id }}')">Approve</button>
+                <button class="btn btn-danger" value="reject" onclick="updateStatus(event, '{{ leave.id }}')">Reject</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add the script here -->
+  <script>
+    function updateStatus(event, leaveId) {
+    event.preventDefault();
+    let action = event.target.value; // "approve" or "reject"
+    let statusElement = document.getElementById(`status-${leaveId}`);
+    let rowButtons = event.target.closest("td"); // Get the button container
+
+    fetch("{% url 'update_leave_status' request.session.user_id %}", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            "leave_id": leaveId,
+            "action": action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "Approved") {
+            statusElement.innerHTML = '<span class="badge bg-success">Approved</span>';
+        } else if (data.status === "Rejected") {  // Corrected here!
+            statusElement.innerHTML = '<span class="badge bg-danger">Rejected</span>';
+        }
+
+        // Remove buttons after update
+        rowButtons.innerHTML = "";
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+  </script>
+{% endblock %}

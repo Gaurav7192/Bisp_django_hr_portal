@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+{% include 'side bar.html' %}
+<div class="wrapper">
+
+  <!-- Preloader -->
+  <div class="preloader flex-column justify-content-center align-items-center">
+    <img class="animation__wobble" src="{% static 'img/AdminLTELogo.png' %}" alt="AdminLTELogo" height="60" width="60">
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mt-3" style="max-width: 1200px;">
+    <h2 style="text-align: center; margin-bottom: 15px;">User Registration Form</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}"
+             style="color: {% if message.tags == 'success' %}green{% else %}red{% endif %};">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" onsubmit="return validatePasswords()">
+      {% csrf_token %}
+      <div style="display: flex; gap: 20px; align-items: start;">
+
+        <!-- Left Column -->
+        <div style="width: 50%;">
+          <!-- Name -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Name</label>
+            {{ form.name }}
+          </div>
+
+          <!-- Email -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Email</label>
+            {{ form.email }}
+          </div>
+
+          <!-- Password -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Password</label>
+            <input type="password" name="password" id="password" class="form-control" required>
+          </div>
+
+          <!-- Confirm Password (Moved Just Below Password) -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Confirm Password</label>
+            <input type="password" name="confirm_password" id="confirm_password" class="form-control" required>
+            <span id="passwordError" style="color: red; display: none;">Passwords do not match.</span>
+          </div>
+
+          <!-- Join Date -->
+         <div style="margin-bottom: 6px;">
+  <label style="display: block; margin-bottom: 2px;">Join Date</label>
+  <input type="date" name="join_date" class="form-control" required>
+</div>
+          <!-- Position -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Position</label>
+            {{ form.position }}
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div style="width: 50%;">
+          <!-- Department -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Department</label>
+            {{ form.department }}
+          </div>
+
+          <!-- Report To -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Report To</label>
+            {{ form.report_to }}
+          </div>
+
+          <!-- Gender -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Gender</label>
+            {{ form.gender }}
+          </div>
+
+          <!-- Marriage Status -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Marriage Status</label>
+            {{ form.marriage_status }}
+          </div>
+
+          <!-- Aadhar Number -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Aadhar Number</label>
+            {{ form.aadhar_number }}
+          </div>
+
+          <!-- Date of Birth -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Date of Birth</label>
+            {{ form.dob }}
+          </div>
+
+          <!-- Nationality -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Nationality</label>
+            {{ form.nationality }}
+          </div>
+
+          <!-- Religion -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Religion</label>
+            {{ form.religion }}
+          </div>
+
+          <!-- Profile Picture -->
+          <div style="margin-bottom: 6px;">
+            <label style="display: block; margin-bottom: 2px;">Profile Picture</label>
+            <input type="file" name="profile_picture" class="form-control">
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-2" style="width: 100%;">Register</button>
+    </form>
+
+    {% if form.non_field_errors %}
+      <div style="color: red; text-align: center; margin-top: 10px;">
+        {% for error in form.non_field_errors %}
+          <p>{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <script>
+    function validatePasswords() {
+      let password = document.getElementById("password").value;
+      let confirmPassword = document.getElementById("confirm_password").value;
+      let errorSpan = document.getElementById("passwordError");
+
+      if (password !== confirmPassword) {
+        errorSpan.style.display = "block";
+        return false;
+      } else {
+        errorSpan.style.display = "none";
+        return true;
+      }
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

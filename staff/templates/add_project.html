@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+    <div class="container mt-5">
+        <h4>Create a New Project</h4>
+        <form method="post" action="{% url 'add_project' request.session.user_id %}">
+            {% csrf_token %}
+
+            <div class="row">
+                <!-- Project Name -->
+                <div class="col-md-6 mb-3">
+                    <label for="pname" class="form-label">Project Name</label>
+                    <input type="text" class="form-control" id="pname" name="pname" required>
+                </div>
+
+                <!-- Client Name -->
+                <div class="col-md-6 mb-3">
+                    <label for="client" class="form-label">Client Name</label>
+                    <input type="text" class="form-control" id="client" name="client" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Start Date -->
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+
+                <!-- End Date -->
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date">
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Completion Date -->
+                <div class="col-md-6 mb-3">
+                    <label for="complete_date" class="form-label">Complete Date</label>
+                    <input type="date" class="form-control" id="complete_date" name="complete_date">
+                </div>
+
+                <!-- Project Status -->
+                <div class="col-md-6 mb-3">
+                    <label for="status" class="form-label">Project Status</label>
+                    <select class="form-control" id="status" name="status">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="hold">Hold</option>
+                        <option value="claim_to_complete">Claim to Complete</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Rate -->
+                <div class="col-md-6 mb-3">
+                    <label for="rate" class="form-label">Rate</label>
+                    <input type="number" step="0.01" class="form-control" id="rate" name="rate" required>
+                </div>
+
+                <!-- Rate Status -->
+                <div class="col-md-6 mb-3">
+                    <label for="rate_status" class="form-label">Rate Status</label>
+                    <select class="form-control" id="rate_status" name="rate_status">
+                        <option value="fixed">Fixed</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="billable">Billable</option>
+                        <option value="non_billable">Non-Billable</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Priority -->
+                <div class="col-md-6 mb-3">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select class="form-control" id="priority" name="priority">
+                        <option value="1">Low</option>
+                        <option value="2" selected>Medium</option>
+                        <option value="3">High</option>
+                    </select>
+                </div>
+
+                <!-- Project Manager -->
+                <div class="col-md-6 mb-3">
+                    <label for="manager" class="form-label">Project Leader</label>
+                    <select class="form-control" id="manager" name="manager">
+                        <option value="">Select Manager</option>
+                        {% for manager in managers %}
+                            <option value="{{ manager.id }}">{{ manager.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Team Members -->
+                <div class="col-md-12 mb-3">
+                    <label class="form-label">Team Members</label>
+                    <select class="form-control team-select" name="team_members" multiple>
+                        {% for staff in staff_members %}
+                            <option value="{{ staff.id }}">{{ staff.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Project Description -->
+            <div class="mb-3">
+                <label for="description" class="form-label">Project Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Create Project</button>
+        </form>
+    </div>
+</div>
+
+<!-- Include Select2 for Multi-Select Dropdown -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('.team-select').select2({
+            placeholder: "Select Team Members",
+            allowClear: true
+        });
+    });
+</script>
+
+{% endblock %}

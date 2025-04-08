@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'side bar.html' %}
+
+<style>
+    .main-content {
+        margin-left: px;
+        padding: 20px 20px 20px 20px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .add-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+
+    .controls {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 10px;
+        border: 1px solid #ccc;
+        text-align: left;
+    }
+
+    th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    th.sortable:after {
+        content: ' 🔽'; /* default sort indicator */
+        font-size: 0.8em;
+        opacity: 0.6;
+    }
+
+    th.sortable.sorted-asc:after {
+        content: ' 🔼';
+    }
+
+    th.sortable.sorted-desc:after {
+        content: ' 🔽';
+    }
+</style>
+
+<div class="main-content">
+    <div class="header">
+        <div><strong>Total Tasks:</strong> {{ total_tasks }}</div>
+        <a href="{% url 'add_task' user_id %}" class="add-btn">+ Add Task</a>
+    </div>
+
+    <div class="controls">
+        <div>
+            Show
+            <select id="entriesPerPage">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+            </select>
+            entries
+        </div>
+        <div>
+            Search: <input type="search" id="searchInput" placeholder="Search tasks...">
+        </div>
+    </div>
+<table id="taskTable">
+    <thead>
+    <tr>
+        <th>Serial No</th>
+        <th class="sortable" data-col="1">Task</th>
+        <th class="sortable" data-col="2">Project</th>
+        <th class="sortable" data-col="3">Start Date</th>
+        <th class="sortable" data-col="4">End Date</th>
+
+        <th class="sortable" data-col="6">Status</th>
+        <th class="sortable" data-col="7">Priority</th>
+    </tr>
+    </thead>
+    <tbody id="taskTableBody">
+    {% for task in tasks %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
+            <td>{{ task.project.pname }}</td>
+            <td>{{ task.start_date }}</td>
+            <td>{{ task.due_date }}</td>
+
+            <td>{{ task.status }}</td>
+            <td>
+                {% if task.priority == 1 %}
+                    Low
+                {% elif task.priority == 2 %}
+                    Medium
+                {% elif task.priority == 3 %}
+                    High
+                {% else %}
+                    Unknown
+                {% endif %}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+<script>
+    const entriesPerPageSelect = document.getElementById("entriesPerPage");
+    const searchInput = document.getElementById("searchInput");
+    const table = document.getElementById("taskTable");
+    const tbody = document.getElementById("taskTableBody");
+    const sortableHeaders = document.querySelectorAll("th.sortable");
+
+    let originalRows = Array.from(tbody.rows);
+    let currentSort = { index: null, order: "asc" };
+
+    function renderTable(filteredRows, pageSize = 10) {
+        tbody.innerHTML = "";
+        filteredRows.slice(0, pageSize).forEach((row, i) => {
+            row.cells[0].innerText = i + 1;
+            tbody.appendChild(row);
+        });
+    }
+
+    entriesPerPageSelect.addEventListener("change", () => {
+        const pageSize = parseInt(entriesPerPageSelect.value);
+        renderTable(originalRows, pageSize);
+    });
+
+    searchInput.addEventListener("keyup", () => {
+        const value = searchInput.value.toLowerCase();
+        const filtered = originalRows.filter(row => {
+            return Array.from(row.cells).some(cell =>
+                cell.innerText.toLowerCase().includes(value)
+            );
+        });
+        renderTable(filtered, parseInt(entriesPerPageSelect.value));
+    });
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener("click", () => {
+            const colIndex = parseInt(header.dataset.col);
+            const isSameCol = currentSort.index === colIndex;
+            const newOrder = isSameCol && currentSort.order === "asc" ? "desc" : "asc";
+            currentSort = { index: colIndex, order: newOrder };
+
+            // Remove old sort indicators
+            sortableHeaders.forEach(h => h.classList.remove("sorted-asc", "sorted-desc"));
+
+            // Add sort indicator to active header
+            header.classList.add(newOrder === "asc" ? "sorted-asc" : "sorted-desc");
+
+            const sorted = [...originalRows].sort((a, b) => {
+                const aText = a.cells[colIndex].innerText.toLowerCase();
+                const bText = b.cells[colIndex].innerText.toLowerCase();
+                if (aText < bText) return newOrder === "asc" ? -1 : 1;
+                if (aText > bText) return newOrder === "asc" ? 1 : -1;
+                return 0;
+            });
+
+            originalRows = sorted;
+            renderTable(sorted, parseInt(entriesPerPageSelect.value));
+        });
+    });
+
+    renderTable(originalRows, parseInt(entriesPerPageSelect.value));
+</script>
+
+{% endblock %}

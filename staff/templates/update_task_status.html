@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'side bar.html' %}
+
+<style>
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .status-select {
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        color: white;
+        min-width: 150px;
+    }
+
+    .status-select.hold {
+       color: purple;
+    }
+
+    .status-select.complete {
+        color: green;
+    }
+
+    .status-select.pending {
+       color: red;
+    }
+
+    .status-select.claim-complete {
+        color: skyblue;
+    }
+
+    .status-select.incomplete {
+       color: orange;
+    }
+
+    .section {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+        margin-top: 20px;
+    }
+
+    .half {
+        flex: 1;
+        min-width: 300px;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h3 {
+        margin-bottom: 15px;
+        font-size: 20px;
+        border-bottom: 2px solid #ddd;
+        padding-bottom: 5px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-top: 15px;
+        display: block;
+        color: #333;
+    }
+
+    .value {
+        margin-top: 5px;
+        font-size: 16px;
+        color: #555;
+    }
+
+    button {
+        margin-left: 10px;
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #555;
+    }
+</style>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="top-bar">
+        <h2>Update Task Status</h2>
+        <div>
+     <form method="POST">
+  {% csrf_token %}
+  <label for="status">Update Status:</label>
+ <select name="status" id="status">
+  {% for value, label in status_options %}
+    <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
+
+  <button type="submit">Update</button>
+
+
+
+
+
+
+        </div>
+    </div>
+
+    <div class="section">
+        <!-- Left Half -->
+        <div class="half">
+            <h3>Project Overview</h3>
+            <label>Project Name:</label>
+            <div class="value">{{ task.project.pname }}</div>
+
+            <label>Last Updated:</label>
+            <div class="value">{{ task.last_update|date:"Y-m-d H:i" }}</div>
+
+            <label>Start Date:</label>
+            <div class="value">{{ task.start_date }}</div>
+
+            <label>Complete Date:</label>
+            <div class="value">{{ task.complete_date }}</div>
+
+            <label>Deadline:</label>
+            <div class="value">{{ task.due_date }}</div>
+
+            <label>Billing Status:</label>
+            <div class="value">{{ task.billing_status }}</div>
+
+            <label>Project Leader:</label>
+            <div class="value">{{ task.project.leader.report_to }}</div>
+        </div>
+
+        <!-- Right Half -->
+        <div class="half">
+            <h3>Task Details</h3>
+            <label>Task Name:</label>
+            <div class="value">{{ task.title }}</div>
+
+            <label>Project:</label>
+            <div class="value">{{ task.project.pname }}</div>
+
+            <label>Priority:</label>
+            <div class="value">
+                {% if task.priority == 1 %}
+                    Low
+                {% elif task.priority == 2 %}
+                    Medium
+                {% elif task.priority == 3 %}
+                    High
+                {% else %}
+                    Unknown
+                {% endif %}
+            </div>
+
+            <label>Status:</label>
+            <div class="value">{{ task.status }}</div>
+        </div>
+    </div>
+</form>
+
+<script>
+    const statusSelect = document.getElementById("statusSelect");
+
+    function updateSelectColor(selectElement) {
+        selectElement.className = "status-select";
+        const value = selectElement.value.toLowerCase().replace(/\s+/g, "-");
+        selectElement.classList.add(value);
+    }
+
+    statusSelect.addEventListener("change", function () {
+        updateSelectColor(this);
+    });
+
+    updateSelectColor(statusSelect);
+</script>
+
+{% endblock %}

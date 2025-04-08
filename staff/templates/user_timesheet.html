@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  form {
+    margin-bottom: 10px;
+    text-align: right;
+  }
+
+  select {
+    padding: 5px;
+    font-size: 14px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  img {
+    max-width: 50px;
+    height: auto;
+    border-radius: 5px;
+  }
+
+  .pagination {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .pagination a {
+    margin: 0 5px;
+    text-decoration: none;
+    color: #007bff;
+  }
+
+  .pagination a:hover {
+    text-decoration: underline;
+  }
+
+  .pagination span {
+    font-weight: bold;
+  }
+</style>
+
+<h2>My Timesheet</h2>
+
+<form method="get">
+  <label for="per_page">Items per page:</label>
+  <select name="per_page" id="per_page" onchange="this.form.submit()">
+    <option value="5" {% if request.GET.per_page == '5' %}selected{% endif %}>5</option>
+    <option value="10" {% if request.GET.per_page == '10' %}selected{% endif %}>10</option>
+    <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
+  </select>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>Task</th>
+      <th>Date</th>
+      <th>Start Time</th>
+      <th>End Time</th>
+      <th>Description</th>
+      <th>Attachment</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in timesheets %}
+      <tr>
+        <td>{{ item.pname.pname }}</td>
+        <td>{{ item.task }}</td>
+        <td>{{ item.date }}</td>
+        <td>{{ item.start_time }}</td>
+        <td>{{ item.end_time }}</td>
+        <td>{{ item.description }}</td>
+        <td>
+          {% if item.attachment %}
+            <img src="{{ item.attachment.url }}" alt="Attachment">
+          {% else %}
+            No Image
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="7">No timesheet records found.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pagination">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&per_page={{ request.GET.per_page }}">Previous</a>
+  {% endif %}
+
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&per_page={{ request.GET.per_page }}">Next</a>
+  {% endif %}
+</div>
+{% endblock %}

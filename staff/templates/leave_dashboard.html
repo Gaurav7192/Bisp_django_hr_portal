@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'side bar.html' %}
+  <div class="container mt-5">
+    <h2 class="mb-4">Filtered Leave Records</h2>
+
+    <!-- Table for displaying filtered leave records -->
+    <table class="table table-bordered table-striped mt-3">
+      <thead class="table-dark">
+        <tr>
+          <th>S.No.</th>
+
+          <th>Apply Date</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Leave Days</th>
+          <th>Reason</th>
+          <th>Status</th>
+          <th>Report To</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for leave in leave_data %}
+          <tr>
+            <td>{{ forloop.counter }}</td>  <!-- Serial Number -->
+           <!-- Employee Name -->
+            <td>{{ leave.current_date }}</td>  <!-- Apply Date -->
+            <td>{{ leave.start_date }}</td>  <!-- Start Date -->
+            <td>{{ leave.end_date }}</td>  <!-- End Date -->
+            <td>{{ leave.no_of_leaves }}</td>  <!-- Leave Days -->
+            <td>{{ leave.reason }}</td>  <!-- Leave Reason -->
+            <td id="status-{{ leave.leave_id }}">
+              {% if leave.approval_status == "Approved" %}
+                <span class="badge bg-success">Approved</span>
+              {% elif leave.approval_status == "Rejected" %}
+                <span class="badge bg-danger">Rejected</span>
+              {% elif leave.approval_status == "Withdrawn" %}
+                <span class="badge bg-secondary">Withdrawn</span>
+              {% else %}
+                <span class="badge bg-warning">Pending</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if leave.report_to %}
+                {{ leave.report_to }}
+              {% else %}
+                Not Assigned
+              {% endif %}
+            </td>
+            <td>
+              {% if leave.start_date >= today and leave.approval_status != "Rejected" %}
+                <button class="btn btn-warning" value="withdraw" onclick="updateStatus(event, '{{ leave.leave_id }}')">Withdraw</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="10" class="text-center">No leave records found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- CSRF Token for AJAX -->
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
+  <!-- JavaScript for Updating Status -->
+  <script>
+    function updateStatus(event, leaveId) {
+        event.preventDefault();
+        let action = event.target.value; // "withdraw"
+        let statusElement = document.getElementById(`status-${leaveId}`);
+        let rowButtons = event.target.closest("td"); // Get the button container
+
+        let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+
+        fetch("{% url 'update_leave_status' request.session.user_id %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": csrfToken,
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                "leave_id": leaveId,
+                "action": action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "Withdrawn") {
+                statusElement.innerHTML = '<span class="badge bg-secondary">Withdrawn</span>';
+                rowButtons.innerHTML = ""; // Remove the withdraw button
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'side bar.html' %}
+
+<style>
+    .main-content {
+        margin-left: 10px; /* Same width as sidebar */
+        padding: 20px 20px 20px 20px; /* Space for navbar */
+    }
+
+    h2 {
+        margin-bottom: 20px;
+    }
+
+    form {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 1000px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .form-column {
+        flex: 1 1 45%;
+        min-width: 300px;
+    }
+
+    label {
+        display: block;
+        margin-top: 10px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 8px;
+        margin-top: 4px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+
+    .full-width {
+        flex: 1 1 100%;
+    }
+
+    button {
+        margin-top: 15px;
+        padding: 10px 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+</style>
+
+<div class="main-content">
+    <h2>Add Task</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-column">
+            <label>Project:</label>
+            <select name="project" required>
+                <option value="">Select Project</option>
+                {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.pname }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Title:</label>
+            <input type="text" name="title" required>
+
+            <label>Assign To:</label>
+            <select name="assigned_to" required>
+                <option value="">Select Member</option>
+                {% for member in members %}
+                    <option value="{{ member.id }}">{{ member.name }}</option>
+                {% endfor %}
+            </select>
+
+
+        </div>
+
+        <div class="form-column">
+            <label>Description:</label>
+            <textarea name="description" required></textarea>
+
+            <label>Due Date:</label>
+            <input type="date" name="due_date">
+
+            <label>Priority:</label>
+            <select name="priority">
+                <option value="1">Low</option>
+                <option value="2" selected>Medium</option>
+                <option value="3">High</option>
+            </select>
+        </div>
+
+        <div class="full-width">
+            <button type="submit">Add Task</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

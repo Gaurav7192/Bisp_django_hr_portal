@@ -1,0 +1,53 @@
+from django.urls import path
+from .views import *
+from django.contrib.auth import views as auth_views
+urlpatterns = [
+    # path('', home_view, name='home'),
+    # path('about/', about_view, name='about'),
+
+
+#     path('d2/<int:id>/',d2, name='d2l'),
+    # path('contact/', contact_view, name='contact'),
+    path('apply_leave/<int:user_id>/',apply_leave, name='apply_leave'),
+  #  path('forgot_password/',forgot_password, name='forgot_password'),
+    path('add_project/<int:user_id>',add_project_view,name='add_project'),
+    path('project/<int:user_id>',project, name='project'),
+    path('login/',login_view, name='login'),
+    path('d1/<int:id>/', d1, name='d1'),
+    path('d2/<int:id>/', d2, name='d2'),
+
+path('team_task_report/<int:user_id>/', team_task_report, name='team_task_report'),
+    #path('create_project/',create_project, name='create_project'),
+    path('apply_leave/',apply_leave,name='apply_leave'),
+path('add_task/<int:user_id>/', add_task_view, name='add_task'),
+    path('task_list_view/<int:user_id>/',task_list_view, name='task_list_view'),
+path('logout/',auth_views.LogoutView.as_view(next_page='/'), name='logout'),
+    path('',login_view, name='login'),
+
+    path('staff_registration/<int:id>', staff_registration, name='staff_registration'),
+ #   path('staff_registration/<int:id>/',staff_registration,name='staff_registration'),
+    path('', login_view, name='login'),
+path('update/<int:id>/', update_employee, name='update_employee'),
+    path('delete/<int:id>/', delete_employee, name='delete_employee'),
+    path('employee_list,',employee_list,name="employee_list"),
+    path('add/', add_employee, name='add_employee'),
+    path('update_employee',update_employee,name='update_employee'),
+path('leave_record/<int:user_id>', leave_record_view, name='leave_record'),
+    # path('update_employee/', update_employee, name='update_employee'),
+    path('update_leaves_viewc',update_leaves_view,name='update_leaves_view'),
+    path('update-leave-status/<int:user_id>', update_leave_status, name='update_leave_status'),
+ path('leave_dashboard/<int:user_id>/', leave_dashboard, name='leave_dashboard'),
+    path("update_timesheet/<int:user_id>/", update_timesheet, name="update_timesheet"),
+path('task/update/<int:task_id>/',update_task_status_page, name='update_task_status_page'),
+path('user_timesheet',user_timesheet,name='user_timesheet'),
+    path('reset-password/',reset_password, name='reset_password'),
+#path('change-password/', change_password, name='change_password'),
+# path('profile/update/<int:user_id>',update_profile, name='update_profile'),
+
+]
+
+
+#     path('forgot-password/', forgot_password, name='forgot_password'),
+#     path('verify-otp/', verify_otp, name='verify_otp'),
+#     path('set-new-password/',set_new_password, name='set_new_password'),
+# ]

@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex">
+
+    <div class="container mt-5 px-0 ms-0">
+
+        <h2>Apply for Leave</h2>
+
+        <!-- Display Available and Used Leave -->
+        <div class="alert alert-info">
+            <strong>Available Leave:</strong> {{ balance_leave }} days <br>
+            <strong>Used Leave:</strong> {{ used_leave }} days
+        </div>
+
+        <!-- Display Messages -->
+        {% if messages %}
+        <div>
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+
+            <div class="mb-3">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="leave_type" class="form-label">Leave Type</label>
+                <select class="form-select" id="leave_type" name="leave_type" required>
+                    <option value="Sick Leave">Sick Leave</option>
+                    <option value="Casual Leave">Casual Leave</option>
+                    <option value="Compensation Leave">Compensation Leave</option>
+                    <option value="Half Day">Half Day</option>
+                </select>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="half_day_checkbox" name="half_day_checkbox">
+                <label class="form-check-label" for="half_day_checkbox">Apply Half Day for Selected Days</label>
+            </div>
+
+            <div id="half_day_section" style="display: none;"></div>
+
+            <div class="mb-3">
+                <label for="reason" class="form-label">Reason for Leave</label>
+                <textarea class="form-control" id="reason" name="reason" rows="4" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Leave Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const leaveTypeSelect = document.getElementById('leave_type');
+    const halfDayCheckbox = document.getElementById('half_day_checkbox');
+    const halfDaySection = document.getElementById('half_day_section');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+
+    // Set min attribute for start date to prevent past dates
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.setAttribute('min', today);
+
+    function generateHalfDayOptions(startDate, endDate) {
+        halfDaySection.innerHTML = '';
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        while (start <= end) {
+            const formattedDate = start.toISOString().split('T')[0];
+            const daySection = document.createElement('div');
+            daySection.classList.add('mb-2');
+
+            daySection.innerHTML = `
+                <label>${formattedDate}</label>
+                <select class="form-select half-day-option" name="half_day[]">
+                    <option value="">None</option>
+                    <option value="${formattedDate}-First Half">First Half</option>
+                    <option value="${formattedDate}-Second Half">Second Half</option>
+                </select>
+            `;
+            halfDaySection.appendChild(daySection);
+            start.setDate(start.getDate() + 1);
+        }
+    }
+
+    halfDayCheckbox.addEventListener('change', function () {
+        if (halfDayCheckbox.checked && startDateInput.value && endDateInput.value) {
+            generateHalfDayOptions(startDateInput.value, endDateInput.value);
+            halfDaySection.style.display = 'block';
+        } else {
+            halfDaySection.style.display = 'none';
+        }
+    });
+
+    startDateInput.addEventListener('change', () => {
+        if (startDateInput.value < today) {
+            alert('Start date cannot be before today.');
+            startDateInput.value = '';
+        }
+        if (endDateInput.value && startDateInput.value > endDateInput.value) {
+            alert('Start date cannot be after end date.');
+            startDateInput.value = '';
+        }
+    });
+
+    endDateInput.addEventListener('change', () => {
+        if (startDateInput.value && endDateInput.value < startDateInput.value) {
+            alert('End date cannot be before start date.');
+            endDateInput.value = '';
+        }
+        if (halfDayCheckbox.checked) {
+            generateHalfDayOptions(startDateInput.value, endDateInput.value);
+        }
+    });
+</script>
+
+{% endblock %}

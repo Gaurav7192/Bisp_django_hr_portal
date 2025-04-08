@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+
+
+
+
+{% block content %}
+<div class="container" style="width: 80%; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <h2 style="color: #007bff; margin-bottom: 20px;">Update Employee Details</h2>
+
+  <!-- Display Messages -->
+  {% for message in messages %}
+    <p style="color: {% if message.tags == 'error' %}#dc3545{% else %}#28a745{% endif %}; margin-bottom: 20px;">
+      {{ message }}
+    </p>
+  {% endfor %}
+
+  <!-- Display Form Errors -->
+  {% if form.errors %}
+    <div style="color: #dc3545; margin-bottom: 20px;">
+      <p>Please correct the errors below:</p>
+      <ul>
+        {% for field, errors in form.errors.items %}
+          <li>{{ field|title }}: {{ errors.0 }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Form Start -->
+  <form method="post">
+    {% csrf_token %}
+
+    <div style="display: flex; justify-content: space-between; gap: 20px;">
+      <!-- Left Section -->
+      <div style="width: 48%;">
+        <label for="id_name" style="display: block; margin-bottom: 8px; font-weight: bold;">Name</label>
+        {{ form.name }}
+
+        <label for="id_email" style="display: block; margin-bottom: 8px; font-weight: bold;">Email</label>
+        {{ form.email }}
+
+        <label for="id_password" style="display: block; margin-bottom: 8px; font-weight: bold;">Password</label>
+        {{ form.password }}
+
+        <label for="id_position" style="display: block; margin-bottom: 8px; font-weight: bold;">Position</label>
+        {{ form.position }}
+
+        <label for="id_department" style="display: block; margin-bottom: 8px; font-weight: bold;">Department</label>
+        {{ form.department }}
+
+        <label for="id_reportto" style="display: block; margin-bottom: 8px; font-weight: bold;">Report To</label>
+        {{ form.reportto }}
+      </div>
+
+      <!-- Right Section -->
+      <div style="width: 48%;">
+        <label for="id_joindate" style="display: block; margin-bottom: 8px; font-weight: bold;">Join Date</label>
+        {{ form.joindate }}
+
+        <label for="id_gender" style="display: block; margin-bottom: 8px; font-weight: bold;">Gender</label>
+        {{ form.gender }}
+
+        <label for="id_marriage_status" style="display: block; margin-bottom: 8px; font-weight: bold;">Marriage Status</label>
+        {{ form.marriage_status }}
+
+        <label for="id_aadhar_no" style="display: block; margin-bottom: 8px; font-weight: bold;">Aadhar Number</label>
+        {{ form.aadhar_no }}
+
+        <label for="id_dob" style="display: block; margin-bottom: 8px; font-weight: bold;">Date of Birth</label>
+        {{ form.dob }}
+
+        <label for="id_nationality" style="display: block; margin-bottom: 8px; font-weight: bold;">Nationality</label>
+        {{ form.nationality }}
+
+        <label for="id_religion" style="display: block; margin-bottom: 8px; font-weight: bold;">Religion</label>
+        {{ form.religion }}
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" style="background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+      Update Employee
+    </button>
+  </form>
+
+  <!-- Back to Employee List -->
+  <p style="margin-top: 20px;">
+    <a href="{% url 'employee_list' %}" style="color: #007bff;">Back to Employee List</a>
+  </p>
+</div>
+{% endblock %}
