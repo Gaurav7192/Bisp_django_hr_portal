@@ -4,6 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
   <title>Bisp Solotion</title>
 
   <!-- Google Font: Source Sans Pro -->
@@ -174,19 +176,11 @@
   <!-- /.navbar -->
   {% include 'side bar.html' %}
   <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
+
     <div class="content-header">
       <div class="container-fluid">
         <div class="row mb-2">
-          <div class="col-sm-6">
-            <h1 class="m-0">Dashboard</h1>
-          </div><!-- /.col -->
-          <div class="col-sm-6">
-            <ol class="breadcrumb float-sm-right">
-              <li class="breadcrumb-item"><a href="#">Home</a></li>
-              <li class="breadcrumb-item active">Dashboard v1</li>
-            </ol>
-          </div><!-- /.col -->
+
         </div><!-- /.row -->
       </div><!-- /.container-fluid -->
     </div>
@@ -197,10 +191,10 @@
 {% endblock %}
      </section>
 
-<footer class="main-footer" >
+<footer class="main-footer" style="margin:10px">
   <strong>
     Copyright &copy; 2010-2025
-<!--    <a href="https://bispsolutions.com/">Bisp solution</a>.-->
+   <a href="https://bispsolutions.com/">Bisp solution</a>
   </strong>
   All rights reserved.
   <div class="float-right d-none d-sm-inline-block">

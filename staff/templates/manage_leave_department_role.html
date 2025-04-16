@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .top-bar button {
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .leave-type-container {
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .leave-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .leave-table th, .leave-table td {
+      padding: 10px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    .record-details {
+      display: none;
+      padding: 10px;
+      background-color: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .active-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: green;
+      color: white;
+      cursor: pointer;
+    }
+
+    .deactive-btn {
+      background-color: red;
+    }
+
+    .plus-btn {
+      background-color: #888;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <button onclick="alert('Add Leave Type Modal')">Add Leave Type</button>
+  </div>
+
+  <div class="leave-type-container">
+    <table class="leave-table">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Leave Type</th>
+          <th>Leave Code</th>
+          <th>Payable</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="leaveContainer">
+        <!-- Leave rows will be inserted here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const leaveMasters = [
+      { id: 1, name: "Sick Leave", code: "SL", payable: true, status: true },
+      { id: 2, name: "Casual Leave", code: "CL", payable: false, status: false },
+    ];
+
+    const leaveRecords = [
+      { id: 101, leave_type: "Sick Leave", emp_id: 1, date: "2025-04-01" },
+      { id: 102, leave_type: "Sick Leave", emp_id: 2, date: "2025-04-03" },
+      { id: 103, leave_type: "Casual Leave", emp_id: 3, date: "2025-04-05" },
+    ];
+
+    function toggleRecords(index) {
+      const el = document.getElementById('records-' + index);
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function toggleStatus(button) {
+      const isActive = button.classList.contains('active-btn') && !button.classList.contains('deactive-btn');
+      if (isActive) {
+        button.classList.add('deactive-btn');
+        button.innerText = "Inactive";
+      } else {
+        button.classList.remove('deactive-btn');
+        button.innerText = "Active";
+      }
+    }
+
+    const container = document.getElementById('leaveContainer');
+    leaveMasters.forEach((leave, index) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${leave.name}</td>
+        <td>${leave.code}</td>
+        <td>${leave.payable ? 'Yes' : 'No'}</td>
+        <td>
+          <button class="active-btn ${leave.status ? '' : 'deactive-btn'}" onclick="toggleStatus(this)">
+            ${leave.status ? 'Active' : 'Inactive'}
+          </button>
+        </td>
+        <td>
+          <button class="plus-btn" onclick="toggleRecords(${index})">+</button>
+        </td>
+      `;
+      container.appendChild(tr);
+
+      const detailRow = document.createElement('tr');
+      detailRow.innerHTML = `
+        <td colspan="6">
+          <div class="record-details" id="records-${index}">
+            <strong>Leave Records:</strong>
+            <table>
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Emp ID</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${leaveRecords
+                  .filter(record => record.leave_type === leave.name)
+                  .map(record => `
+                    <tr>
+                      <td>${record.id}</td>
+                      <td>${record.emp_id}</td>
+                      <td>${record.date}</td>
+                    </tr>
+                  `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </td>
+      `;
+      container.appendChild(detailRow);
+    });
+  </script>
+{% endblock %}

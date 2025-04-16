@@ -31,60 +31,42 @@
 
   <!-- Form Start -->
   <form method="post">
-    {% csrf_token %}
+  {% csrf_token %}
 
-    <div style="display: flex; justify-content: space-between; gap: 20px;">
-      <!-- Left Section -->
-      <div style="width: 48%;">
-        <label for="id_name" style="display: block; margin-bottom: 8px; font-weight: bold;">Name</label>
-        {{ form.name }}
+  <div style="display: flex; justify-content: space-between; gap: 20px;">
+    <!-- Left Section -->
+    <div style="width: 48%;">
+      <label for="id_name" style="display: block; margin-bottom: 8px; font-weight: bold;">Name</label>
+      {{ form.name }}
 
-        <label for="id_email" style="display: block; margin-bottom: 8px; font-weight: bold;">Email</label>
-        {{ form.email }}
+      <label for="id_email" style="display: block; margin-bottom: 8px; font-weight: bold;">Email</label>
+      {{ form.email }}
 
-        <label for="id_password" style="display: block; margin-bottom: 8px; font-weight: bold;">Password</label>
-        {{ form.password }}
+      <label for="id_password" style="display: block; margin-bottom: 8px; font-weight: bold;">Password</label>
+      {{ form.password }}
 
-        <label for="id_position" style="display: block; margin-bottom: 8px; font-weight: bold;">Position</label>
-        {{ form.position }}
-
-        <label for="id_department" style="display: block; margin-bottom: 8px; font-weight: bold;">Department</label>
-        {{ form.department }}
-
-        <label for="id_reportto" style="display: block; margin-bottom: 8px; font-weight: bold;">Report To</label>
-        {{ form.reportto }}
-      </div>
-
-      <!-- Right Section -->
-      <div style="width: 48%;">
-        <label for="id_joindate" style="display: block; margin-bottom: 8px; font-weight: bold;">Join Date</label>
-        {{ form.joindate }}
-
-        <label for="id_gender" style="display: block; margin-bottom: 8px; font-weight: bold;">Gender</label>
-        {{ form.gender }}
-
-        <label for="id_marriage_status" style="display: block; margin-bottom: 8px; font-weight: bold;">Marriage Status</label>
-        {{ form.marriage_status }}
-
-        <label for="id_aadhar_no" style="display: block; margin-bottom: 8px; font-weight: bold;">Aadhar Number</label>
-        {{ form.aadhar_no }}
-
-        <label for="id_dob" style="display: block; margin-bottom: 8px; font-weight: bold;">Date of Birth</label>
-        {{ form.dob }}
-
-        <label for="id_nationality" style="display: block; margin-bottom: 8px; font-weight: bold;">Nationality</label>
-        {{ form.nationality }}
-
-        <label for="id_religion" style="display: block; margin-bottom: 8px; font-weight: bold;">Religion</label>
-        {{ form.religion }}
-      </div>
+      <label for="id_position" style="display: block; margin-bottom: 8px; font-weight: bold;">Position</label>
+      {{ form.position }}
     </div>
 
-    <!-- Submit Button -->
-    <button type="submit" style="background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
-      Update Employee
-    </button>
-  </form>
+    <!-- Right Section -->
+    <div style="width: 48%;">
+      <label for="id_department" style="display: block; margin-bottom: 8px; font-weight: bold;">Department</label>
+      {{ form.department }}
+
+      <label for="id_reportto" style="display: block; margin-bottom: 8px; font-weight: bold;">Report To</label>
+      {{ form.reportto }}
+
+      <label for="id_joindate" style="display: block; margin-bottom: 8px; font-weight: bold;">Join Date</label>
+      {{ form.joindate }}
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <button type="submit" style="background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+    Update Employee
+  </button>
+</form>
 
   <!-- Back to Employee List -->
   <p style="margin-top: 20px;">

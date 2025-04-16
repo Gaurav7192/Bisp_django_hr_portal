@@ -19,7 +19,7 @@
         </div>
         <div class="info">
           <a href="#" class="d-block">{{ request.session.name }}</a>
-<!--            <a href="#" class="d-block">{{ request.session.postion }} </a>-->
+            <a href="#" class="d-block">{{ request.session.postion }} </a>
         </div>
       </div>
 
@@ -68,13 +68,14 @@
         <p>MY Task</p>
       </a>
     </li>
+       {% if request.session.postion != 'Employee' %}
      <li class="nav-item">
       <a href="{% url 'team_task_report' request.session.user_id %}" class="nav-link">
 
         <i class="far fa-circle nav-icon"></i>
         <p> Team Task Record</p>
       </a>
-    </li>
+    </li>{% endif %}
    </ul>
         </li>
 
@@ -102,16 +103,17 @@
         <p> MY Leave Records </p>
       </a>
     </li>
+      {% if request.session.postion != 'Employee' %}
     <li class="nav-item">
       <a href="{% url 'leave_record' request.session.user_id %}" class="nav-link">
         <i class="far fa-circle nav-icon"></i>
         <p> Team Leave Record</p>
       </a>
-    </li>
+    </li>{% endif %}
   </ul>
 </li>
 
-<li class="nav-item">
+<li class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-book"></i>
               <p>
@@ -135,7 +137,7 @@
               <li class="nav-item">
                 <a href="pages/examples/e-commerce.html" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>E-commerce</p>
+                  <p>Previous Week TimeSheet</p>
                 </a>
               </li>
             </ul>
@@ -143,9 +145,9 @@
 </li>
 
 
+{% if request.session.postion != 'Employee' %}
 
-
-    <li class="nav-item">
+    <li class="nav-item has-treeview">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-book"></i>
               <p>
@@ -163,9 +165,9 @@
               <li class="nav-item">
 <!--                -->
               <li class="nav-item">
-                <a href="pages/examples/e-commerce.html" class="nav-link">
+                <a href="{% url 'leave_type_panel' %}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>E-commerce</p>
+                  <p>Add leaves</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -214,19 +216,19 @@
           </li>
 
  <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="#" class="nav-link has-treeview">
               <i class="nav-icon fas fa-search"></i>
               <p>
-                add member
+                add employee
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-               <a href="{% url 'staff_registration' request.session.user_id %}" class="nav-link">
+               <a href="{% url 'employee_registration' request.session.user_id %}" class="nav-link">
 
                   <i class="far fa-circle nav-icon"></i>
-                  <p>add staff</p>
+                  <p>add employee</p>
                 </a>
               </li>
 
@@ -235,7 +237,7 @@
           </li>
 
 
-
+{% endif %}
 
 
 

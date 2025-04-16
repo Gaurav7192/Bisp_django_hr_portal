@@ -54,7 +54,12 @@
     <div class="main-content container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>Total Projects: {{ total_projects }}</h4>
+
+
+         {% if request.session.postion != 'Employee' %}
             <a href="{% url 'add_project' request.session.user_id %}" class="btn btn-primary">Add Project</a>
+
+            {% endif %}
         </div>
 
         <!-- Search & Rows Per Page -->
@@ -84,11 +89,13 @@
             <tbody>
                 {% for project in projects %}
                 <tr>
+
                     <td></td> <!-- S.No will be filled dynamically -->
-                    <td>{{ project.pname }}</td>
+                   <td><a href="{% url 'project_detail' pk=project.id %}">{{ project.pname }}</a></td>
+
                     <td>{{ project.end_date|default:"Not Set" }}</td>
-                    <td>{{ project.get_rate_status_display }}</td>
-                    <td>{{ project.get_status_display }}</td>
+                    <td>{{ project.rate_status }}</td>
+                    <td>{{ project.status }}</td>
                     <td>{{ project.manager }}</td>
                     <td>
                         {% for member in project.team_members.all %}

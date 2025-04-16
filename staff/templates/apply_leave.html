@@ -42,10 +42,9 @@
             <div class="mb-3">
                 <label for="leave_type" class="form-label">Leave Type</label>
                 <select class="form-select" id="leave_type" name="leave_type" required>
-                    <option value="Sick Leave">Sick Leave</option>
-                    <option value="Casual Leave">Casual Leave</option>
-                    <option value="Compensation Leave">Compensation Leave</option>
-                    <option value="Half Day">Half Day</option>
+                     {% for leave_type in leave_types %}
+            <option value="{{ leave_type.id }}">{{ leave_type.name }}</option>
+        {% endfor %}
                 </select>
             </div>
 

@@ -1,12 +1,26 @@
 {% extends 'base.html' %}
-
 {% load static %}
 
 {% block content %}
-<div>  {% include 'side bar.html' %}
+<div>
+  {% include 'side bar.html' %}
 
-  <div class="container mt-5">
-    <h1 class="mb-4">Employee List</h1>
+  <div class="container mt-3"> <!-- Reduced top margin -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="mb-0">Employee List</h1>
+
+      <!-- Page Size Selector -->
+      <form method="get" class="d-flex align-items-center">
+        <label for="page_size" class="me-2">Show</label>
+        <select name="page_size" id="page_size" class="form-control form-select me-2" onchange="this.form.submit()">
+          <option value="5" >{% if request.GET.page_size == "5" %}selected{% endif %}>5</option>
+          <option value="10"> {% if request.GET.page_size == "10" %}selected{% endif %}>10</option>
+          <option value="15"> {% if request.GET.page_size == "15" %}selected{% endif %}>15</option>
+        </select>
+        <input type="hidden" name="position" value="{{ request.GET.position }}">
+        <input type="hidden" name="department" value="{{ request.GET.department }}">
+      </form>
+    </div>
 
     <!-- Success Messages -->
     {% if messages %}
@@ -18,28 +32,30 @@
     {% endif %}
 
     <!-- Add Member Button -->
-    <a href="{% url 'staff_registration' request.session.user_id %}" class="btn btn-success mb-3">Add Member</a>
+    <a href="{% url 'employee_registration' request.session.user_id %}" class="btn btn-success mb-3">Add Member</a>
 
     <!-- Filters -->
-    <form method="get" class="mb-4">
-      <div class="row">
+    <form method="get" class="mb-3">
+      <div class="row g-3">
         <div class="col-md-4">
           <select name="position" class="form-control">
             <option value="">All Positions</option>
-            <option value="HR" {% if request.GET.position == 'HR' %}selected{% endif %}>HR</option>
-            <option value="Manager" {% if request.GET.position == 'Manager' %}selected{% endif %}>Manager</option>
-            <option value="Staff" {% if request.GET.position == 'Staff' %}selected{% endif %}>Staff</option>
+            <option value="HR" >{% if request.GET.position == 'HR' %}selected{% endif %}>HR</option>
+            <option value="Manager"> {% if request.GET.position == 'Manager' %}selected{% endif %}>Manager</option>
+            <option value="Employee" >{% if request.GET.position == 'Employee' %}selected{% endif %}>Employee</option>
           </select>
         </div>
         <div class="col-md-4">
           <select name="department" class="form-control">
             <option value="">All Departments</option>
             {% for dept in department_choices %}
-              <option value="{{ dept }}" {% if request.GET.department == dept %}selected{% endif %}>{{ dept }}</option>
+              <option value="{{ dept.id }}" {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                {{ dept.name }}
+              </option>
             {% endfor %}
           </select>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 d-flex align-items-center gap-2">
           <button type="submit" class="btn btn-primary">Filter</button>
           <a href="{% url 'employee_list' %}" class="btn btn-secondary">Reset</a>
         </div>
@@ -47,7 +63,7 @@
     </form>
 
     <!-- Employee Table -->
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered table-striped mt-3">
       <thead class="table-dark">
         <tr>
           <th>ID</th>
@@ -66,7 +82,7 @@
           <td>{{ emp.id }}</td>
           <td>{{ emp.name }}</td>
           <td>{{ emp.email }}</td>
-          <td>{{ emp.get_position_display }}</td>
+          <td>{{ emp.position.role }}</td>
           <td>{{ emp.department }}</td>
           <td>{{ emp.joindate }}</td>
           <td>{{ emp.reportto }}</td>
@@ -82,6 +98,39 @@
         {% endfor %}
       </tbody>
     </table>
+
+    <!-- Pagination Controls -->
+    {% if employees.has_other_pages %}
+    <nav>
+      <ul class="pagination">
+        {% if employees.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ employees.previous_page_number }}&page_size={{ request.GET.page_size }}&position={{ request.GET.position }}&department={{ request.GET.department }}">Previous</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for num in employees.paginator.page_range %}
+          {% if employees.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% else %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}&page_size={{ request.GET.page_size }}&position={{ request.GET.position }}&department={{ request.GET.department }}">{{ num }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if employees.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ employees.next_page_number }}&page_size={{ request.GET.page_size }}&position={{ request.GET.position }}&department={{ request.GET.department }}">Next</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
   </div>
 </div>
 

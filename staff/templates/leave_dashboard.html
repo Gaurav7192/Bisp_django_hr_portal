@@ -2,100 +2,224 @@
 
 {% block content %}
 {% include 'side bar.html' %}
-  <div class="container mt-5">
-    <h2 class="mb-4">Filtered Leave Records</h2>
 
-    <!-- Table for displaying filtered leave records -->
-    <table class="table table-bordered table-striped mt-3">
-      <thead class="table-dark">
-        <tr>
-          <th>S.No.</th>
+<div class="container-fluid px-0 py-4" style="background-color: white;">
+  <div class="d-flex justify-content-between align-items-center mb-3 px-3">
+    <h3 class="fw-bold">Leave Records</h3>
+    <a href="{% url 'apply_leave' request.session.user_id %}" class="btn btn-primary">Add Leave</a>
+  </div>
 
-          <th>Apply Date</th>
-          <th>Start Date</th>
-          <th>End Date</th>
-          <th>Leave Days</th>
-          <th>Reason</th>
-          <th>Status</th>
-          <th>Report To</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+  <div class="table-responsive px-3">
+    <div class="d-flex justify-content-end mb-2">
+      <input type="text" id="searchInput" class="form-control w-25 me-2" placeholder="Search...">
+      <select id="rowsPerPage" class="form-select w-auto">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+      </select>
+    </div>
+
+    <table class="table table-bordered table-hover" id="leaveTable">
+      <thead style="background-color: #ffffff; color: #000000;">
+  <tr>
+    <th data-sort="number">S.No.</th>
+    <th data-sort="string">Apply Date</th>
+    <th data-sort="string">Start Date</th>
+    <th data-sort="string">End Date</th>
+    <th data-sort="number">Leave Days</th>
+
+    <th data-sort="string">Status</th>
+    <th data-sort="string">Action By</th>
+    <th data-sort="string">Action Reason</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+
       <tbody>
         {% for leave in leave_data %}
-          <tr>
-            <td>{{ forloop.counter }}</td>  <!-- Serial Number -->
-           <!-- Employee Name -->
-            <td>{{ leave.current_date }}</td>  <!-- Apply Date -->
-            <td>{{ leave.start_date }}</td>  <!-- Start Date -->
-            <td>{{ leave.end_date }}</td>  <!-- End Date -->
-            <td>{{ leave.no_of_leaves }}</td>  <!-- Leave Days -->
-            <td>{{ leave.reason }}</td>  <!-- Leave Reason -->
-            <td id="status-{{ leave.leave_id }}">
-              {% if leave.approval_status == "Approved" %}
-                <span class="badge bg-success">Approved</span>
-              {% elif leave.approval_status == "Rejected" %}
-                <span class="badge bg-danger">Rejected</span>
-              {% elif leave.approval_status == "Withdrawn" %}
-                <span class="badge bg-secondary">Withdrawn</span>
-              {% else %}
-                <span class="badge bg-warning">Pending</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if leave.report_to %}
-                {{ leave.report_to }}
-              {% else %}
-                Not Assigned
-              {% endif %}
-            </td>
-            <td>
-              {% if leave.start_date >= today and leave.approval_status != "Rejected" %}
-                <button class="btn btn-warning" value="withdraw" onclick="updateStatus(event, '{{ leave.leave_id }}')">Withdraw</button>
-              {% endif %}
-            </td>
-          </tr>
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ leave.current_date }}</td>
+          <td>{{ leave.start_date }}</td>
+          <td>{{ leave.end_date }}</td>
+          <td>{{ leave.no_of_leaves }}</td>
+
+          <td id="status-{{ leave.leave_id }}">
+            {% if leave.approval_status == 1 %}
+              <span class="badge bg-success">Approved</span>
+            {% elif leave.approval_status == 2 %}
+              <span class="badge bg-danger">Rejected</span>
+            {% elif leave.approval_status == 3 %}
+              <span class="badge bg-secondary">Withdrawn</span>
+            {% else %}
+              <span class="badge bg-warning">Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if leave.approval_status != 4 %}
+              {{ leave.approved_by }}
+            {% else %}
+              Not Assigned
+            {% endif %}
+          </td>
+          <td>{{ leave.approve_reason }}</td>
+          <td>
+            {% if leave.start_date >= today and leave.approval_status != 2 and leave.approval_status != 3 %}
+              <button class="btn btn-warning btn-sm"
+                      value="Withdrawn"
+                      onclick="updateStatus(event, '{{ leave.leave_id }}')">
+                Withdraw
+              </button>
+            {% endif %}
+          </td>
+        </tr>
         {% empty %}
-          <tr>
-            <td colspan="10" class="text-center">No leave records found.</td>
-          </tr>
+        <tr>
+          <td colspan="10" class="text-center">No leave records found.</td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+    <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+      <small id="showingInfo"></small>
+      <div>
+        <button id="prevPage" class="btn btn-sm btn-outline-dark me-2">Prev</button>
+        <button id="nextPage" class="btn btn-sm btn-outline-dark">Next</button>
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- CSRF Token for AJAX -->
-  <meta name="csrf-token" content="{{ csrf_token }}">
+<script>
+  const table = document.getElementById("leaveTable");
+  const searchInput = document.getElementById("searchInput");
+  const rowsPerPageSelect = document.getElementById("rowsPerPage");
+  const showingInfo = document.getElementById("showingInfo");
+  const prevBtn = document.getElementById("prevPage");
+  const nextBtn = document.getElementById("nextPage");
 
-  <!-- JavaScript for Updating Status -->
-  <script>
-    function updateStatus(event, leaveId) {
-        event.preventDefault();
-        let action = event.target.value; // "withdraw"
-        let statusElement = document.getElementById(`status-${leaveId}`);
-        let rowButtons = event.target.closest("td"); // Get the button container
+  let currentPage = 1;
+  let rowsPerPage = parseInt(rowsPerPageSelect.value);
 
-        let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+  function filterTable() {
+    const searchText = searchInput.value.toLowerCase();
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach(row => {
+      const match = row.innerText.toLowerCase().includes(searchText);
+      row.style.display = match ? "" : "none";
+    });
+    paginateTable();
+  }
 
-        fetch("{% url 'update_leave_status' request.session.user_id %}", {
-            method: "POST",
-            headers: {
-                "X-CSRFToken": csrfToken,
-                "Content-Type": "application/x-www-form-urlencoded"
-            },
-            body: new URLSearchParams({
-                "leave_id": leaveId,
-                "action": action
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === "Withdrawn") {
-                statusElement.innerHTML = '<span class="badge bg-secondary">Withdrawn</span>';
-                rowButtons.innerHTML = ""; // Remove the withdraw button
-            }
-        })
-        .catch(error => console.error("Error:", error));
+  function paginateTable() {
+    const rows = Array.from(table.querySelectorAll("tbody tr")).filter(row => row.style.display !== "none");
+    const totalRows = rows.length;
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    rows.forEach((row, index) => {
+      row.style.display = index >= start && index < end ? "" : "none";
+    });
+
+    showingInfo.innerText = `Showing ${Math.min(start + 1, totalRows)} to ${Math.min(end, totalRows)} of ${totalRows} entries`;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = end >= totalRows;
+  }
+
+  function sortTableByColumn(th) {
+    const columnIndex = Array.from(th.parentNode.children).indexOf(th);
+    const type = th.getAttribute("data-sort");
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+
+    const sorted = rows.sort((a, b) => {
+      const aText = a.children[columnIndex].innerText.trim();
+      const bText = b.children[columnIndex].innerText.trim();
+
+      if (type === "number") {
+        return parseFloat(aText) - parseFloat(bText);
+      } else {
+        return aText.localeCompare(bText);
+      }
+    });
+
+    if (th.classList.contains("asc")) {
+      sorted.reverse();
+      th.classList.remove("asc");
+      th.classList.add("desc");
+    } else {
+      th.classList.remove("desc");
+      th.classList.add("asc");
     }
-  </script>
+
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
+    sorted.forEach(row => tbody.appendChild(row));
+    paginateTable();
+  }
+
+  searchInput.addEventListener("input", () => {
+    currentPage = 1;
+    filterTable();
+  });
+
+  rowsPerPageSelect.addEventListener("change", () => {
+    rowsPerPage = parseInt(rowsPerPageSelect.value);
+    currentPage = 1;
+    paginateTable();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      paginateTable();
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    currentPage++;
+    paginateTable();
+  });
+
+  document.querySelectorAll("th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => sortTableByColumn(th));
+  });
+
+  // Initial load
+  filterTable();
+
+  function updateStatus(event, leaveId) {
+    event.preventDefault();
+    const action = event.target.value;  // e.g., "Withdrawn"
+    const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+
+    const statusElement = document.getElementById(`status-${leaveId}`);
+    const rowButtons = event.target.closest("td");
+
+    fetch("{% url 'update_leave_status' request.session.user_id %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrfToken,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        "leave_id": leaveId,
+        "action": action
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "Withdrawn") {
+        statusElement.innerHTML = '<span class="badge bg-secondary">Withdrawn</span>';
+        rowButtons.innerHTML = "";  // Remove button
+      } else if (data.error) {
+        alert(data.error);
+      }
+    })
+    .catch(error => {
+      console.error("AJAX Error:", error);
+      alert("Something went wrong. Try again.");
+    });
+  }
+</script>
+
 {% endblock %}

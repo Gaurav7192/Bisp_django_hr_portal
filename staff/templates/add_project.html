@@ -2,128 +2,154 @@
 {% load static %}
 
 {% block content %}
+<style>
+    .card {
+        margin-top: 10px !important;
+        background-color: #ffffff;
+        border: 1px solid #dee2e6;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .form-label {
+        font-weight: 600;
+        color: #212529;
+    }
+    .form-control, .form-select {
+        border-radius: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.95rem;
+        border: 1px solid #ced4da;
+        background-color: #fdfdfd;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
+    }
+    .form-group {
+        margin-bottom: 0.8rem;
+    }
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        padding: 0.45rem 1.5rem;
+        font-size: 0.95rem;
+        border-radius: 0.4rem;
+    }
+    textarea.form-control {
+        resize: none;
+    }
+    .error-message {
+        color: red;
+        font-size: 0.875rem;
+        margin-bottom: 10px;
+    }
+</style>
 
+<div class="container mt-2">
+    <div class="card shadow p-4 rounded-4">
+        <h4 class="mb-4">Create a New Project</h4>
 
-    <div class="container mt-5">
-        <h4>Create a New Project</h4>
-        <form method="post" action="{% url 'add_project' request.session.user_id %}">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'add_project' request.session.user_id %}" id="projectForm">
             {% csrf_token %}
 
             <div class="row">
                 <!-- Project Name -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 form-group">
                     <label for="pname" class="form-label">Project Name</label>
-                    <input type="text" class="form-control" id="pname" name="pname" required>
+                    <input type="text" class="form-control" id="pname" name="pname" value="{{ request.POST.pname }}" required>
                 </div>
 
                 <!-- Client Name -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 form-group">
                     <label for="client" class="form-label">Client Name</label>
-                    <input type="text" class="form-control" id="client" name="client" required>
+                    <input type="text" class="form-control" id="client" name="client" value="{{ request.POST.client }}" required>
                 </div>
-            </div>
 
-            <div class="row">
                 <!-- Start Date -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 form-group">
                     <label for="start_date" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.POST.start_date }}" required>
                 </div>
 
                 <!-- End Date -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 form-group">
                     <label for="end_date" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date">
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Completion Date -->
-                <div class="col-md-6 mb-3">
-                    <label for="complete_date" class="form-label">Complete Date</label>
-                    <input type="date" class="form-control" id="complete_date" name="complete_date">
-                </div>
-
-                <!-- Project Status -->
-                <div class="col-md-6 mb-3">
-                    <label for="status" class="form-label">Project Status</label>
-                    <select class="form-control" id="status" name="status">
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="hold">Hold</option>
-                        <option value="claim_to_complete">Claim to Complete</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Rate -->
-                <div class="col-md-6 mb-3">
-                    <label for="rate" class="form-label">Rate</label>
-                    <input type="number" step="0.01" class="form-control" id="rate" name="rate" required>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.POST.end_date }}">
                 </div>
 
                 <!-- Rate Status -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6 form-group">
                     <label for="rate_status" class="form-label">Rate Status</label>
-                    <select class="form-control" id="rate_status" name="rate_status">
-                        <option value="fixed">Fixed</option>
-                        <option value="hourly">Hourly</option>
-                        <option value="billable">Billable</option>
-                        <option value="non_billable">Non-Billable</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="row">
-                <!-- Priority -->
-                <div class="col-md-6 mb-3">
-                    <label for="priority" class="form-label">Priority</label>
-                    <select class="form-control" id="priority" name="priority">
-                        <option value="1">Low</option>
-                        <option value="2" selected>Medium</option>
-                        <option value="3">High</option>
+                    <select class="form-select" id="rate_status" name="rate_status" required>
+                        <option value="">Select Status</option>
+                        {% for rate_status in rate_status_list %}
+                            <option value="{{ rate_status.id }}" {% if request.POST.rate_status == rate_status.id|stringformat:"s" %}selected{% endif %}>
+                                {{ rate_status.status }}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
 
-                <!-- Project Manager -->
-                <div class="col-md-6 mb-3">
+                <!-- Rate -->
+                <div class="col-md-6 form-group">
+                    <label for="rate" class="form-label">Rate</label>
+                    <input type="number" class="form-control" id="rate" name="rate" step="0.01" min="0" placeholder="Enter Rate" value="{{ request.POST.rate }}">
+                </div>
+
+                <!-- Project Leader -->
+                <div class="col-md-6 form-group">
                     <label for="manager" class="form-label">Project Leader</label>
-                    <select class="form-control" id="manager" name="manager">
+                    <select class="form-select" id="manager" name="manager" required>
                         <option value="">Select Manager</option>
                         {% for manager in managers %}
-                            <option value="{{ manager.id }}">{{ manager.name }}</option>
+                            <option value="{{ manager.id }}" {% if request.POST.manager == manager.id|stringformat:"s" %}selected{% endif %}>{{ manager.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
 
-            <div class="row">
-                <!-- Team Members -->
-                <div class="col-md-12 mb-3">
+                <!-- Priority -->
+                <div class="col-md-6 form-group">
+                    <label for="priority" class="form-label">Priority</label>
+                    <select class="form-select" id="priority" name="priority" required>
+                        <option value="">Select Priority</option>
+                        {% for priority in priority_list %}
+                            <option value="{{ priority.id }}" {% if request.POST.priority == priority.id|stringformat:"s" %}selected{% endif %}>{{ priority.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Team Members (No prefill) -->
+                <div class="col-md-12 form-group">
                     <label class="form-label">Team Members</label>
-                    <select class="form-control team-select" name="team_members" multiple>
-                        {% for staff in staff_members %}
-                            <option value="{{ staff.id }}">{{ staff.name }}</option>
+                   <select class="form-select team-select w-100" name="team_members" multiple required>
+
+                        {% for employee in employee_members %}
+                            <option value="{{ employee.id }}">{{ employee.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
+
+                <!-- Project Description -->
+                <div class="col-md-12 form-group">
+                    <label for="description" class="form-label">Project Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter a brief description">{{ request.POST.description }}</textarea>
+                </div>
             </div>
 
-            <!-- Project Description -->
-            <div class="mb-3">
-                <label for="description" class="form-label">Project Description</label>
-                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Create Project</button>
             </div>
-
-            <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary">Create Project</button>
         </form>
     </div>
 </div>
 
-<!-- Include Select2 for Multi-Select Dropdown -->
+<!-- Include Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 
@@ -131,9 +157,69 @@
     $(document).ready(function() {
         $('.team-select').select2({
             placeholder: "Select Team Members",
-            allowClear: true
+            allowClear: true,
+            width: '100%'
+        });
+
+        const startInput = document.getElementById("start_date");
+        const endInput = document.getElementById("end_date");
+        const todayDate = new Date().toISOString().split("T")[0];
+        startInput.setAttribute("min", todayDate);
+
+        startInput.addEventListener("change", function () {
+            const selectedStart = startInput.value;
+            if (selectedStart) {
+                endInput.min = selectedStart;
+            } else {
+                endInput.removeAttribute("min");
+            }
         });
     });
-</script>
 
+    document.getElementById("projectForm").addEventListener("submit", function(e) {
+        const start = new Date(document.getElementById("start_date").value);
+        const endInput = document.getElementById("end_date");
+        const end = new Date(endInput.value);
+        const rate = parseFloat(document.getElementById("rate").value);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        start.setHours(0, 0, 0, 0);
+
+        if (start < today) {
+            e.preventDefault();
+            alert("Start Date cannot be before today's date.");
+            return;
+        }
+
+        if (endInput.value && end < start) {
+            e.preventDefault();
+            alert("End Date cannot be before Start Date.");
+            return;
+        }
+
+        if (!isNaN(rate) && rate < 0) {
+            e.preventDefault();
+            alert("Rate cannot be negative.");
+            return;
+        }
+
+        const requiredSelects = ["manager", "priority", "rate_status"];
+        for (const id of requiredSelects) {
+            const val = document.getElementById(id).value;
+            if (!val) {
+                e.preventDefault();
+                alert("Please fill all required fields.");
+                return;
+            }
+        }
+
+        const team = $(".team-select").val();
+        if (!team || team.length === 0) {
+            e.preventDefault();
+            alert("Please select at least one team member.");
+            return;
+        }
+    });
+</script>
 {% endblock %}

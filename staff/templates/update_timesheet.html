@@ -2,7 +2,6 @@
 {% load static %}
 
 {% block content %}
-{% include 'side bar.html' %}
 <div class="container">
     <main class="content">
         <h2>Update Timesheet</h2>
@@ -19,7 +18,7 @@
                 <div class="timesheet-entry grid-layout">
                     <div>
                         <label for="pname">Project Name:</label>
-                        <select id="pname" name="pname" required>
+                        <select id="pname" name="pname" required onchange="loadTasks(this.value)">
                             <option value="">Select Project</option>
                             {% for project in projects %}
                                 <option value="{{ project.id }}">{{ project.pname }}</option>
@@ -28,7 +27,12 @@
                     </div>
                     <div>
                         <label for="task">Task:</label>
-                        <input type="text" id="task" name="task" required>
+                        <select id="task" name="task" required>
+                            <option value="">Select Task</option>
+                            {% for t in tasks %}
+                                <option value="{{ t.id }}">{{ t.title }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div>
                         <label for="date">Date:</label>
@@ -56,51 +60,133 @@
             <!-- Weekly Timesheet -->
             <div id="weekly-timesheet" class="weekly-timesheet">
                 <h3>Weekly Entry (Monday to Friday)</h3>
-                {% for day in days %}
-                    <div class="timesheet-entry grid-layout">
-                        <h4 style="grid-column: span 2;">{{ day }}</h4>
-                        <div>
-                            <label for="pname_{{ day }}">Project Name:</label>
-                            <select id="pname_{{ day }}" name="pname_{{ day }}">
-                                <option value="">Select Project</option>
-                                {% for project in projects %}
-                                    <option value="{{ project.id }}">{{ project.pname }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div>
-                            <label for="task_{{ day }}">Task:</label>
-                            <input type="text" id="task_{{ day }}" name="task_{{ day }}">
-                        </div>
-                        <div>
+                <div class="timesheet-entry weekly-grid-layout">
+                    {% for day in days %}
+                        <div class="weekly-column">
+                            <h4>{{ day }}</h4>
                             <div>
-    <label>Date:</label>
-    <input type="date" name="date_{{ day }}" id="date_{{ day }}" >
-</div>
-
-                            <label for="start_time_{{ day }}">Start Time:</label>
-                            <input type="time" id="start_time_{{ day }}" name="start_time_{{ day }}">
+                                <label for="pname_{{ day }}">Project Name:</label>
+                                <select id="pname_{{ day }}" name="pname_{{ day }}" onchange="loadTasksForDay(this.value, '{{ day }}')">
+                                    <option value="">Select Project</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.pname }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="task_{{ day }}">Task:</label>
+                                <select id="task_{{ day }}" name="task_{{ day }}">
+                                    <option value="">Select Task</option>
+                                    {% for t in tasks %}
+                                        <option value="{{ t.id }}">{{ t.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="date_{{ day }}">Date:</label>
+                                <input type="date" name="date_{{ day }}" id="date_{{ day }}">
+                            </div>
+                            <div>
+                                <label for="start_time_{{ day }}">Start Time:</label>
+                                <input type="time" id="start_time_{{ day }}" name="start_time_{{ day }}">
+                            </div>
+                            <div>
+                                <label for="end_time_{{ day }}">End Time:</label>
+                                <input type="time" id="end_time_{{ day }}" name="end_time_{{ day }}">
+                            </div>
+                            <div class="full-width">
+                                <label for="description_{{ day }}">Description:</label>
+                                <textarea id="description_{{ day }}" name="description_{{ day }}" rows="2"></textarea>
+                            </div>
+                            <div class="full-width">
+                                <label for="attachment_{{ day }}">Attachment:</label>
+                                <input type="file" id="attachment_{{ day }}" name="attachment_{{ day }}" accept="image/*">
+                            </div>
                         </div>
-                        <div>
-                            <label for="end_time_{{ day }}">End Time:</label>
-                            <input type="time" id="end_time_{{ day }}" name="end_time_{{ day }}">
-                        </div>
-                        <div class="full-width">
-                            <label for="description_{{ day }}">Description:</label>
-                            <textarea id="description_{{ day }}" name="description_{{ day }}" rows="2"></textarea>
-                        </div>
-                        <div class="full-width">
-                            <label for="attachment_{{ day }}">Attachment:</label>
-                            <input type="file" id="attachment_{{ day }}" name="attachment_{{ day }}" accept="image/*">
-                        </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
 
             <button type="submit" class="btn-submit">Update Timesheet</button>
         </form>
     </main>
 </div>
+
+<script>
+    function toggleWeeklyTimesheet() {
+        const weeklyChecked = document.getElementById('weekly').checked;
+        document.getElementById('weekly-timesheet').style.display = weeklyChecked ? 'block' : 'none';
+        document.getElementById('daily-timesheet').style.display = weeklyChecked ? 'none' : 'block';
+
+        if (weeklyChecked) {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - currentDay + 1); // shift to Monday
+
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            for (let i = 0; i < days.length; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const formatted = date.toISOString().split('T')[0];
+                const dateInput = document.getElementById('date_' + days[i]);
+                if (dateInput) {
+                    dateInput.value = formatted;
+                }
+            }
+        }
+    }
+
+    function loadTasks(projectId) {
+        // Use AJAX to get tasks for the selected project
+        fetch(`/get-tasks/?project_id=${projectId}`)
+            .then(response => response.json())
+            .then(data => {
+                const taskSelect = document.getElementById('task');
+                taskSelect.innerHTML = '<option value="">Select Task</option>';
+                data.tasks.forEach(task => {
+                    taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
+                });
+            })
+            .catch(error => {
+                console.error('Error loading tasks:', error);
+            });
+    }
+
+    function loadTasksForDay(projectId, day) {
+        // Use AJAX to get tasks for the selected project for a specific day
+        if (projectId) { // Ensure a project is selected before attempting to load tasks
+            fetch(`/get-tasks/?project_id=${projectId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const taskSelect = document.getElementById('task_' + day);
+                    taskSelect.innerHTML = '<option value="">Select Task</option>';
+                    data.tasks.forEach(task => {
+                        taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading tasks:', error);
+                });
+        }
+    }
+
+    // Auto-fill today's date in the Daily Timesheet when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        // Set today's date in the daily timesheet, but allow user to change it
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            dateInput.value = formattedDate; // Set today’s date by default
+        }
+
+        // Trigger on page load if weekly checkbox is already checked
+        if (document.getElementById('weekly').checked) {
+            toggleWeeklyTimesheet();
+        }
+    });
+</script>
 
 <style>
     .container {
@@ -110,8 +196,8 @@
 
     .content {
         flex-grow: 1;
-        padding: 40px;
-        max-width: 900px;
+        padding: 10px;
+        max-width: 1500px;
         font-family: 'Segoe UI', sans-serif;
         background-color: #f4f6f8;
     }
@@ -211,48 +297,20 @@
         animation: fadeIn 0.3s ease-in-out;
     }
 
+    .weekly-grid-layout {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .weekly-column {
+        width: 18%;
+        margin-bottom: 20px;
+    }
+
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+        0% { opacity: 0; }
+        100% { opacity: 1; }
     }
 </style>
-
-
-
-
-
-
-<script>
-    function toggleWeeklyTimesheet() {
-        const weeklyChecked = document.getElementById('weekly').checked;
-        document.getElementById('weekly-timesheet').style.display = weeklyChecked ? 'block' : 'none';
-        document.getElementById('daily-timesheet').style.display = weeklyChecked ? 'none' : 'block';
-
-        if (weeklyChecked) {
-            const today = new Date();
-            const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
-            const monday = new Date(today);
-            monday.setDate(today.getDate() - currentDay + 1); // shift to Monday
-
-            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-            for (let i = 0; i < days.length; i++) {
-                const date = new Date(monday);
-                date.setDate(monday.getDate() + i);
-                const formatted = date.toISOString().split('T')[0];
-                const dateInput = document.getElementById('date_' + days[i]);
-                if (dateInput) {
-                    dateInput.value = formatted;
-                }
-            }
-        }
-    }
-
-    // Trigger on page load if weekly checkbox is already checked
-    window.addEventListener('DOMContentLoaded', () => {
-        if (document.getElementById('weekly').checked) {
-            toggleWeeklyTimesheet();
-        }
-    });
-</script>
-
 {% endblock %}

@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .leave-container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .tabs {
+      display: flex;
+      margin-top: 30px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .tabs button {
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #555;
+    }
+
+    .tabs button.active {
+      border-bottom: 3px solid #007bff;
+      color: #007bff;
+    }
+
+    .tabs-content > div {
+      display: none;
+      padding: 20px 0;
+    }
+
+    .tabs-content > div.active {
+      display: block;
+    }
+
+    .submit-btn {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+      display: block;
+    }
+
+    .multi-select {
+      height: 150px;
+      width: 100%;
+    }
+  </style>
+
+  <div class="leave-container">
+    <h2>Add Leave</h2>
+    <form method="POST" action="{% url 'add_leave_type' %}">
+      {% csrf_token %}
+
+      <!-- Basic Info -->
+      <div class="form-group">
+        <label for="leave_name">Leave Name</label>
+        <input type="text" name="name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="leave_code">Leave Code</label>
+        <input type="text" name="leavecode" required>
+      </div>
+
+      <div class="form-group">
+        <label for="payable">Payable</label>
+        <select name="payable" required>
+          <option value="True">Paid</option>
+          <option value="False">UnPaid</option>
+        </select>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button type="button" class="tab-btn active">Applicable</button>
+        <button type="button" class="tab-btn">Entitlement</button>
+        <button type="button" class="tab-btn">Restriction</button>
+      </div>
+
+      <div class="tabs-content">
+        <!-- Applicable Tab -->
+        <div class="tab-content active">
+          <div class="form-group">
+            <label>Gender</label>
+            <select name="applicable_gender">
+              <option value="All">All</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Marital Status</label>
+            <select name="applicable_marital_status">
+              <option value="All">All</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Divorced">Divorced</option>
+              <option value="Widow">Widow</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Department</label>
+            <select name="applicable_department" multiple class="form-control">
+  <option value="all"
+    {% if 'all' in form.applicable_department.value %}selected{% endif %}>
+    All
+  </option>
+
+              {% for department in departments %}
+                <option value="{{ department.id }}" {% if department.id == form.applicable_department.value %}selected{% endif %}>{{ department.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Specific Employees -->
+          <div class="form-group">
+            <label>Specific Employees</label>
+            <select name="specific_employees" class="multi-select" multiple>
+              {% for employee in employees %}
+                <option value="{{ employee.id }}" {% if employee.id in form.specific_employees.value %}selected{% endif %}>{{ employee.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Entitlement Tab -->
+        <div class="tab-content">
+          <div class="form-group">
+            <label>Max Days Allowed</label>
+            <input type="number" name="max_days_allowed">
+          </div>
+
+          <div class="form-group">
+            <label>Carry Forward</label>
+            <select name="carry_forward">
+              <option value="True">Yes</option>
+              <option value="False">No</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Restriction Tab -->
+      <!-- Restriction Tab -->
+<div class="tab-content">
+  <div class="form-group">
+    <label>Count Holidays Between Leave</label>
+    <select name="count_holiday" required>
+      <option value="False">No</option>
+      <option value="True">Yes</option>
+
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label>Count Weekends Between Leave</label>
+    <select name="count_weekend" required>
+         <option value="False">No</option>
+      <option value="True">Yes</option>
+
+    </select>
+  </div>
+</div>
+
+
+      <button type="submit" class="submit-btn">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const tabContents = document.querySelectorAll(".tab-content");
+
+      tabButtons.forEach((btn, index) => {
+        btn.addEventListener("click", () => {
+          tabButtons.forEach(b => b.classList.remove("active"));
+          tabContents.forEach(c => c.classList.remove("active"));
+
+          btn.classList.add("active");
+          tabContents[index].classList.add("active");
+        });
+      });
+    });
+  </script>
+
+{% endblock %}

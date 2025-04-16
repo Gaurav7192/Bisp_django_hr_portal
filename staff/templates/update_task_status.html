@@ -104,9 +104,10 @@
   <label for="status">Update Status:</label>
  <select name="status" id="status">
   {% for value, label in status_options %}
-    <option value="{{ value }}" {% if task.status == value %}selected{% endif %}>
-      {{ label }}
-    </option>
+    <option value="{{ value }}" {% if task.status.status|lower == value|lower %}selected{% endif %}>
+    {{ label }}
+</option>
+
   {% endfor %}
 </select>
 
@@ -140,10 +141,10 @@
             <div class="value">{{ task.due_date }}</div>
 
             <label>Billing Status:</label>
-            <div class="value">{{ task.billing_status }}</div>
+            <div class="value">{{ project.rate_status.status}}</div>
 
             <label>Project Leader:</label>
-            <div class="value">{{ task.project.leader.report_to }}</div>
+            <div class="value">{{ task.leader }}</div>
         </div>
 
         <!-- Right Half -->
@@ -157,11 +158,11 @@
 
             <label>Priority:</label>
             <div class="value">
-                {% if task.priority == 1 %}
+                {% if task.priority.level == 1 %}
                     Low
-                {% elif task.priority == 2 %}
+                {% elif task.priority.level == 2 %}
                     Medium
-                {% elif task.priority == 3 %}
+                {% elif task.priority.level == 3 %}
                     High
                 {% else %}
                     Unknown

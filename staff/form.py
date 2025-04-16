@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from .models import *
@@ -17,63 +18,52 @@ GENDER_CHOICES = [
     ('other', 'Other'),
 ]
 
-# class EmployeeForm(forms.ModelForm):
-#     # Basic Information
-#     name = models.CharField(max_length=100, null=False)
-#     email = models.EmailField(unique=True, null=False)
-#     password = models.CharField(max_length=128, null=False)
-#
-#     # Role & Department
-#     position = models.CharField(max_length=10, choices=ROLE_CHOICES, null=True)
-#     department = models.CharField(max_length=100, blank=True, null=True)
-#
-#     # Date Fields
-#     registration_date = models.DateTimeField(auto_now_add=True)
-#     joindate = models.DateField(null=True)
-#
-#     # Reporting & Personal Details
-#     reportto = models.CharField(max_length=100, null=False)
-#     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True)
-#     marriage_status = models.CharField(max_length=20, null=True)
-#     aadhar_no = models.CharField(max_length=12, unique=True, null=True)
-#     dob = models.DateField(null=True)
-#     nationality = models.CharField(max_length=30, null=True)
-#     religion = models.CharField(max_length=30, null=True)
-#
-#     # Additional Meta Information
-#     class Meta:
-#         model = emp_registers
-#         fields = '__all__'
-#
-#     def __str__(self):
-#         return f"{self.name} - {self.position}"
+
+
 
 
 class EmployeeForm(forms.ModelForm):
+    # Dropdown for Position (Foreign Key)
+    position = forms.ModelChoiceField(
+        queryset=RoleMaster.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    # Dropdown for Department (Foreign Key)
+    department = forms.ModelChoiceField(
+        queryset=DepartmentMaster.objects.all(),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    # Dropdown for Reporting Manager (only non-Staff)
+    # Generate dropdown with employee names
+    reportto = forms.ModelChoiceField(
+        queryset=emp_registers.objects.exclude(position__role__iexact='Staff'),
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=False
+    )
+
     class Meta:
         model = emp_registers
         fields = [
             'name', 'email', 'password', 'position', 'department',
-            'joindate', 'reportto', 'gender', 'marriage_status',
-            'aadhar_no', 'dob', 'nationality', 'religion','profile_pic'
+            'joindate', 'reportto', 'salary'
         ]
-
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Name'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter Email'}),
             'password': forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Enter Password'}),
-            'position': forms.Select(attrs={'class': 'form-control'}),
-            'department': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Department'}),
             'joindate': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'reportto': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Reporting Manager'}),
-            'gender': forms.Select(attrs={'class': 'form-control'}),
-            'marriage_status': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Marriage Status'}),
-            'aadhar_no': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Aadhar Number'}),
-            'dob': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'nationality': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Nationality'}),
-            'religion': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter Religion'}),
-            'profile_pic': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'salary': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Enter Salary'}),
         }
+        salary = forms.DecimalField(
+            max_digits=10,
+            decimal_places=2,
+            required=True,
+            validators=[MinValueValidator(0)]  # Ensures the salary is non-negative
+        )
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
@@ -84,55 +74,32 @@ class EmployeeForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         name = cleaned_data.get('name')
-        email = cleaned_data.get('email')
         password = cleaned_data.get('password')
-        rpassword = cleaned_data.get('rpassword')
-        position = cleaned_data.get('position')
-        department = cleaned_data.get('department')
         joindate = cleaned_data.get('joindate')
-        reportto = cleaned_data.get('reportto')
-        gender = cleaned_data.get('gender')
-        marriage_status = cleaned_data.get('marriage_status')
-        aadhar_no = cleaned_data.get('aadhar_no')
-        dob = cleaned_data.get('dob')
-        nationality = cleaned_data.get('nationality')
-        religion = cleaned_data.get('religion')
 
-        if name:
-            if not re.match(r'^[a-zA-Z ]+$', name):
-                self.add_error('name', 'Invalid name. Only letters and spaces are allowed.')
-            if name.startswith(' '):
-                self.add_error('name', 'Name should not start with a space.')
-        if email:
-            if emp_registers.objects.exclude(id=self.instance.id).filter(email=email).exists():
-                self.add_error('email', "This email is already used by another employee.")
-            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email):
-                self.add_error('email', 'Invalid email address.')
+        # Validate name format
+        if name and not re.match(r'^[a-zA-Z ]+$', name):
+            self.add_error('name', 'Invalid name. Only letters and spaces are allowed.')
+
+        # Password strength validation
         if password:
-            if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[0-9]',
-                                                                                       password) or not re.search(
-                    r'[!@#$%^&*]', password):
-                self.add_error('password',
-                               'Password must be at least 8 characters, including one uppercase letter, one number, and one special character.')
-        if dob:
-            if dob >= datetime.today().date():
-                self.add_error('dob', 'Invalid Date of Birth.')
-            if dob < date(1980, 1, 1):
-                self.add_error('dob', 'date of birth not more than 1980.')
-            if dob > datetime.today().date() - timedelta(days=18 * 365):
-                self.add_error('dob', 'Staff must be at least 18 years old.')
-        if joindate:
-            if joindate < datetime(2025, 1, 1).date():
-                self.add_error('joindate', 'Joining date cannot be before January 1, 2025.')
-        if aadhar_no:
-            if emp_registers.objects.exclude(id=self.instance.id).filter(aadhar_no=aadhar_no).exists():
-                self.add_error('aadhar_no', "This Aadhar number is already used by another employee.")
-            if not re.match(r'^\d{12}$', aadhar_no):
-                self.add_error('aadhar_no', 'Invalid Aadhar number. It must be 12 digits.')
+            if (
+                len(password) < 8 or
+                not re.search(r'[A-Z]', password) or
+                not re.search(r'[0-9]', password) or
+                not re.search(r'[!@#$%^&*]', password)
+            ):
+                self.add_error('password', 'Password must be at least 8 characters, including one uppercase letter, one number, and one special character.')
+
+        # Join date check
+        if joindate and joindate < datetime(2025, 1, 1).date():
+            self.add_error('joindate', 'Joining date cannot be before January 1, 2025.')
+
         return cleaned_data
+
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.password = instance.password
+        instance.password = instance.password  # Note: Apply hashing elsewhere if needed
         if commit:
             instance.save()
         return instance

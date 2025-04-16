@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .active-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: green;
+    color: white;
+    cursor: pointer;
+  }
+  .deactive-btn {
+    background-color: red !important;
+  }
+</style>
+<div class="leave-type-container">
+  <div class="top-bar">
+    <a href="{% url 'add_leave_type' %}">
+      <button>Add Leave</button>
+    </a>
+  </div>
+<div class="leave-type-container">
+  <table class="leave-table">
+    <thead>
+      <tr>
+        <th>S.No</th>
+        <th>Leave Type</th>
+        <th>Leave Code</th>
+        <th>Payable</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for leave in leave_masters %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ leave.name }}</td>
+        <td>{{ leave.leavecode }}</td>
+        <td>{{ leave.payable|yesno:"Yes,No" }}</td>
+        <td>
+          <button class="active-btn {% if not leave.leave_status %}deactive-btn{% endif %}"
+                  data-leave-id="{{ leave.id }}"
+                  onclick="toggleStatus(this)">
+            {% if leave.leave_status %}Active{% else %}Inactive{% endif %}
+          </button>
+        </td>
+        <td>
+          <button onclick="toggleRecords({{ forloop.counter0 }})">+</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6">
+
+         <div class="record-details" id="records-{{ forloop.counter0 }}">
+  <strong>Leave Type Details:</strong>
+ <table class="leave-details-table">
+  <tr>
+    <th>Description</th><td>{{ leave.description|default:"N/A" }}</td>
+    <th>Gender</th><td>{{ leave.applicable_gender }}</td>
+    <th>Marital Status</th><td>{{ leave.applicable_marital_status }}</td>
+  </tr>
+  <tr>
+    <th>Department</th><td>{{ leave.applicable_department.name|default:"All" }}</td>
+    <th>Holidays Counted</th><td>{{ leave.count_holidays|yesno:"Yes,No" }}</td>
+    <th>Weekends Counted</th><td>{{ leave.count_weekends|yesno:"Yes,No" }}</td>
+  </tr>
+  <tr>
+    <th>Max Days Allowed</th><td>{{ leave.max_days_allowed|default:"No Limit" }}</td>
+    <th>Carry Forward</th><td>{{ leave.carry_forward|yesno:"Yes,No" }}</td>
+    <th>Valid From - To</th>
+    <td>{{ leave.start_from|date:"Y-m-d" }} – {{ leave.end_from|date:"Y-m-d" }}</td>
+  </tr>
+  <tr>
+    <th>Apply on</th>
+    <td colspan="5">
+      {% if leave.specific_employees.all %}
+        {% for emp in leave.specific_employees.all %}
+          {{ emp.name }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      {% else %}
+        All
+      {% endif %}
+    </td>
+  </tr>
+</table>
+
+</div>
+
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<style>
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 20px;
+  background-color: #f5f7fa;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.top-bar button {
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.top-bar button:hover {
+  background-color: #0056b3;
+}
+
+.leave-type-container {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 1800px;
+  margin: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leave-table th, .leave-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.leave-table thead {
+  background-color: #f1f3f5;
+}
+
+.record-details {
+  display: none;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.active-btn {
+  padding: 6px 14px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.active-btn:hover {
+  background-color: #218838;
+}
+
+.deactive-btn {
+  background-color: #dc3545 !important;
+}
+
+.deactive-btn:hover {
+  background-color: #c82333 !important;
+}
+
+.plus-btn {
+  background-color: #6c757d;
+  color: white;
+  padding: 5px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.plus-btn:hover {
+  background-color: #5a6268;
+}
+
+
+
+  .leave-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background-color: #fff;
+}
+
+.leave-details-table th {
+  background-color: #f1f3f5;
+  padding: 8px;
+  text-align: left;
+  width: 15%;
+}
+
+.leave-details-table td {
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  width: 18%;
+}
+
+</style>
+
+<script>
+function toggleRecords(index) {
+  const el = document.getElementById('records-' + index);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleStatus(button) {
+  const leaveId = button.getAttribute('data-leave-id');
+  const isCurrentlyActive = !button.classList.contains('deactive-btn');
+  const newStatus = !isCurrentlyActive;
+
+  fetch("{% url 'leave_type_panel' %}", {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': '{{ csrf_token }}',
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({
+      id: leaveId,
+      status: newStatus
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      if (newStatus) {
+        button.classList.remove('deactive-btn');
+        button.innerText = 'Active';
+      } else {
+        button.classList.add('deactive-btn');
+        button.innerText = 'Inactive';
+      }
+    } else {
+      alert('Status change failed');
+    }
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    alert('Error changing status');
+  });
+}
+</script>
+{% endblock %}
