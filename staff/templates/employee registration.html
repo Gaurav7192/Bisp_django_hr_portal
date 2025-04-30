@@ -15,11 +15,14 @@
     <h2 style="text-align: center; margin-bottom: 15px;">New Employee Details</h2>
 
     {% if messages %}
-      {% for message1 in messages %}
-        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
-          {{ message1 }}
+    {% for message in messages %}
+    {% if "register" in message.tags %}
+        <div class="alert alert-danger {{ message.tags }}">
+            {{ message }}
         </div>
-      {% endfor %}
+    {% endif %}
+{% endfor %}
+
     {% endif %}
 
     <form method="post" enctype="multipart/form-data">

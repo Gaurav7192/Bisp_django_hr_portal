@@ -6,8 +6,11 @@
 
 <style>
     .main-content {
-        margin-left: px;
-        padding: 20px 20px 20px 20px;
+        padding: 20px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        box-sizing: border-box;
     }
 
     .header {
@@ -30,10 +33,16 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+
+    .controls > div {
+        margin-bottom: 10px;
     }
 
     table {
-        width: 100%;
+        width: auto;
+        min-width: 100%;
         border-collapse: collapse;
     }
 
@@ -41,6 +50,7 @@
         padding: 10px;
         border: 1px solid #ccc;
         text-align: left;
+        white-space: nowrap;
     }
 
     th.sortable {
@@ -49,7 +59,7 @@
     }
 
     th.sortable:after {
-        content: ' 🔽'; /* default sort indicator */
+        content: ' 🔽';
         font-size: 0.8em;
         opacity: 0.6;
     }
@@ -83,51 +93,40 @@
             Search: <input type="search" id="searchInput" placeholder="Search tasks...">
         </div>
     </div>
-<table id="taskTable">
-    <thead>
-    <tr>
-        <th>Serial No</th>
-        <th class="sortable" data-col="1">Task</th>
-        <th class="sortable" data-col="2">Project</th>
-        <th class="sortable" data-col="3">Start Date</th>
-        <th class="sortable" data-col="4">End Date</th>
 
-        <th class="sortable" data-col="6">Status</th>
-        <th class="sortable" data-col="7">Priority</th>
-    </tr>
-    </thead>
-    <tbody id="taskTableBody">
-    {% for task in tasks %}
-        <tr>
-            <td>{{ forloop.counter }}</td>
-            <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
-            <td>{{ task.project.pname }}</td>
-            <td>{{ task.start_date }}</td>
-            <td>{{ task.due_date }}</td>
-
-            <td>{{ task.status }}</td>
-            <td>
-                {% if task.priority == 1 %}
-                    Low
-                {% elif task.priority == 2 %}
-                    Medium
-                {% elif task.priority == 3 %}
-                    High
-                {% else %}
-                    Unknown
-                {% endif %}
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
+    <div style="overflow-x: auto;">
+        <table id="taskTable">
+            <thead>
+                <tr>
+                    <th>Serial No</th>
+                    <th class="sortable" data-col="1">Task</th>
+                    <th class="sortable" data-col="2">Project</th>
+                    <th class="sortable" data-col="3">Start Date</th>
+                    <th class="sortable" data-col="4">End Date</th>
+                    <th class="sortable" data-col="6">Status</th>
+                    <th class="sortable" data-col="7">Priority</th>
+                </tr>
+            </thead>
+            <tbody id="taskTableBody">
+                {% for task in tasks %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
+                    <td>{{ task.project.pname }}</td>
+                    <td>{{ task.start_date }}</td>
+                    <td>{{ task.due_date }}</td>
+                    <td>{{ task.status }}</td>
+                    <td>{{ task.priority.label }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
     const entriesPerPageSelect = document.getElementById("entriesPerPage");
     const searchInput = document.getElementById("searchInput");
-    const table = document.getElementById("taskTable");
     const tbody = document.getElementById("taskTableBody");
     const sortableHeaders = document.querySelectorAll("th.sortable");
 
@@ -164,10 +163,7 @@
             const newOrder = isSameCol && currentSort.order === "asc" ? "desc" : "asc";
             currentSort = { index: colIndex, order: newOrder };
 
-            // Remove old sort indicators
             sortableHeaders.forEach(h => h.classList.remove("sorted-asc", "sorted-desc"));
-
-            // Add sort indicator to active header
             header.classList.add(newOrder === "asc" ? "sorted-asc" : "sorted-desc");
 
             const sorted = [...originalRows].sort((a, b) => {

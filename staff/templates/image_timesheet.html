@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <main class="content">
+        <h2>Upload Attachment</h2>
+        <form action="{% url 'upload_attachment' %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label class="checkbox-label">
+                <input type="checkbox" id="previous-week" onclick="toggleWeek()"> Previous Week
+            </label>
+
+            <!-- Date Range -->
+            <div id="date-range">
+                <div>
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" id="start_date" name="start_date">
+                </div>
+                <div>
+                    <label for="end_date">End Date:</label>
+                    <input type="date" id="end_date" name="end_date">
+                </div>
+            </div>
+
+            <!-- Attachment -->
+            <div>
+                <label for="attachment">Attachment:</label>
+                <input type="file" id="attachment" name="attachment" accept="image/*">
+            </div>
+
+            <button type="submit" class="btn-submit">Upload</button>
+        </form>
+    </main>
+</div>
+
+<script>
+    function toggleWeek() {
+        const previousWeekChecked = document.getElementById('previous-week').checked;
+        const today = new Date();
+        let startDate, endDate;
+
+        if (previousWeekChecked) {
+            // Calculate start and end date for previous week (Monday to Saturday)
+            const currentDay = today.getDay();
+            const daysToLastMonday = currentDay === 0 ? 6 : currentDay - 1; // Days from today to last Monday
+            const lastMonday = new Date(today);
+            lastMonday.setDate(today.getDate() - daysToLastMonday); // Move to last Monday
+
+            startDate = new Date(lastMonday);
+            endDate = new Date(lastMonday);
+            endDate.setDate(startDate.getDate() + 5); // Move to Saturday
+
+        } else {
+            // Set current week (Monday to Sunday)
+            const currentDay = today.getDay();
+            const daysToThisMonday = currentDay === 0 ? 6 : currentDay - 1; // Days from today to this Monday
+            const thisMonday = new Date(today);
+            thisMonday.setDate(today.getDate() - daysToThisMonday); // Move to this Monday
+
+            startDate = new Date(thisMonday);
+            endDate = new Date(thisMonday);
+            endDate.setDate(startDate.getDate() + 6); // Move to Sunday
+        }
+
+        // Format the dates as YYYY-MM-DD and set the input values
+        const formattedStartDate = startDate.toISOString().split('T')[0];
+        const formattedEndDate = endDate.toISOString().split('T')[0];
+
+        document.getElementById('start_date').value = formattedStartDate;
+        document.getElementById('end_date').value = formattedEndDate;
+    }
+
+    // Initialize page with current week selected
+    window.addEventListener('DOMContentLoaded', () => {
+        toggleWeek(); // Auto fill with current week when the page loads
+    });
+</script>
+
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .content {
+        flex-grow: 1;
+        padding: 10px;
+        max-width: 1500px;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f6f8;
+    }
+
+    form {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+        color: #222;
+    }
+
+    label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="file"] {
+        padding: 0;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #4D90FE;
+    }
+
+    .checkbox-label {
+        display: block;
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+
+    .btn-submit {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        background-color: #45a049;
+    }
+</style>
+{% endblock %}

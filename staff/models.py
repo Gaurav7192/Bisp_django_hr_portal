@@ -8,7 +8,6 @@ from django.db.models import JSONField
 
 
 
-
 class RoleMaster(models.Model):
     role = models.CharField(max_length=50, unique=True)  # No need for choices anymore
 
@@ -226,9 +225,6 @@ class PriorityMaster(models.Model):
         return f"{self.get_level_display()}"
 
 class Project(models.Model):
-
-
-
     emp_id=models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING)
 
     pname = models.CharField(max_length=100,null=True)
@@ -262,7 +258,8 @@ class Task(models.Model):
     project= models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
     description = models.TextField()
-    assigned_to = models.ForeignKey(Member, on_delete=models.CASCADE)
+    assigned_to = models.ManyToManyField(Member)
+
     due_date = models.DateField(null=True, blank=True)
     status = models.ForeignKey(StatusMaster, on_delete=models.SET_NULL, null=True, default=None)
 
@@ -294,8 +291,7 @@ class EmployeeDetail(models.Model):
     marriage_status = models.CharField(max_length=20, null=True)
     aadhar_no = models.CharField(max_length=12, unique=True, null=True)
     dob = models.DateField(null=True)
-    nationality = models.CharField(max_length=30, null=True)
-    religion = models.CharField(max_length=30, null=True)
+
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     passport = models.CharField(max_length=100, blank=True, null=True)
     passport_no = models.CharField(max_length=50, blank=True, null=True)
@@ -374,10 +370,7 @@ class EmployeeDetail(models.Model):
         self.save()
 
     def __str__(self):
-        return f'{self.emp_id.name} - {self.emp_id.email} - {self.get_job_status_display()}'
-
-    def __str__(self):
-        return f'{self.emp_id.name} - {self.emp_id.email} - {self.get_job_status_display()}'
+        return f'{self.emp_id.name} - {self.emp_id.email} '
 
 
 
@@ -418,6 +411,15 @@ class Document(models.Model):
         return f"{self.emp_id} - {self.document_type}"
 
 
+class LeaveHalfDay(models.Model):
+    """
+    This model links a half-day entry to a specific leave record and allows tracking of the date and type of half-day.
+    """
+    half_day_type = models.ForeignKey(HalfDayTypeMaster, on_delete=models.CASCADE)  # Link to half-day type
+    half_day_date = models.DateField()  # The date of the half-day
+
+    def __str__(self):
+        return f"Half Day Type: {self.half_day_type.type_name} on {self.half_day_date}"
 
 class LeaveRecord(models.Model):
 
@@ -428,12 +430,17 @@ class LeaveRecord(models.Model):
 
     # ForeignKeys instead of choices
     leave_type = models.ForeignKey(LeaveTypeMaster, on_delete=models.SET_NULL, null=True)
-    half_day = models.ForeignKey(HalfDayTypeMaster, on_delete=models.SET_NULL, null=True, blank=True)
+
+
     approval_status = models.ForeignKey(LeaveStatusMaster, on_delete=models.SET_NULL, null=True, default=None)
     approve_reason=models.TextField(null=True)
     reason = models.TextField()
     approved_by = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    compensatory_leave=models.BooleanField(default=False)
+    compensatory_leave_reason=models.TextField(null =True )
+    document = models.FileField(upload_to='leave_documents/',null=True)
+    half_day = models.ManyToManyField(LeaveHalfDay, blank=True)
 
     # def __str__(self):
     #     return f"{self.emp_id.name} - {self.leave_type} - {self.approval_status}"
@@ -445,6 +452,22 @@ class LeaveRecord(models.Model):
         else:
             return f"Leave Record (No Employee) - {self.leave_type} - {self.approval_status}"
 
+
+#
+# class LeaveHalfDay(models.Model):
+#     """
+#     This model links a half-day entry to a specific leave record and allows tracking of the date and type of half-day.
+#     """
+#     leave_record = models.ForeignKey(LeaveRecord, related_name='half_day_entries', on_delete=models.CASCADE)
+#     half_day_type = models.ForeignKey(HalfDayTypeMaster, on_delete=models.CASCADE)  # Link to half-day type
+#     half_day_date = models.DateField()  # The date of the half-day
+#
+#     def __str__(self):
+#         return f"Leave ID: {self.leave_record.id} - Half Day Type: {self.half_day_type.type_name} on {self.half_day_date}"
+
+
+
+
 from django import forms
 
 class EmployeeForm(forms.ModelForm):
@@ -453,17 +476,24 @@ class EmployeeForm(forms.ModelForm):
         fields = '__all__'
 
 
-from django.db import models
 
+# class TimesheetAttachmentModel(models.Model):
+#     attachment = models.ImageField(upload_to='attachments/')  # your file
+#     start_date = models.DateField()
+#     end_date = models.DateField()
+#     emp_id=models.ForeignKey(emp_registers)
+#
+#     def __str__(self):
+#         return f"Attachment {self.id}"
 
 class Timesheet(models.Model):
     emp_id = models.ForeignKey('emp_registers', on_delete=models.DO_NOTHING)
     pname = models.ForeignKey('Project', on_delete=models.DO_NOTHING)
     task = models.CharField(max_length=255)
     date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
-    description = models.TextField()
+    start_time = models.TimeField(null=True)
+    end_time = models.TimeField(null=True)
+    description = models.TextField(null=True)
     attachment = models.ImageField(upload_to='attachments/')
 
     def __str__(self):

@@ -23,6 +23,10 @@ path('add_task/<int:user_id>/', add_task_view, name='add_task'),
     path('task_list_view/<int:user_id>/',task_list_view, name='task_list_view'),
 path('logout/',auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('',login_view, name='login'),
+# urls.py
+
+
+    path('leave-type/<int:leave_type_id>/details/', leave_type_detail_view, name='leave_type_detail'),
 
     path('employee_registration/<int:id>',employee_registration, name='employee_registration'),
  #   path('employee_registration/<int:id>/',employee_registration,name='employee_registration'),
@@ -46,6 +50,9 @@ path('user_timesheet',user_timesheet,name='user_timesheet'),
     path('leave-type-panel/', leave_type_panel, name='leave_type_panel'),
     path('add-leave-type/',add_leave_type, name='add_leave_type'),
     path('project_detail/<int:pk>/',project_detail_view, name='project_detail'),
+path('project_edit/<int:project_id>/', project_edit_view, name='project_edit'),
+    path('team_timesheet_record',team_timesheet_record,name='team_timesheet_record'),
+    path('get-members/<int:project_id>/', get_project_members, name='get_project_members'),
 #path('change-password/', change_password, name='change_password'),
 # path('profile/update/<int:user_id>',update_profile, name='update_profile'),
 

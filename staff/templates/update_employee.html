@@ -11,12 +11,13 @@
   <h2 style="color: #007bff; margin-bottom: 20px;">Update Employee Details</h2>
 
   <!-- Display Messages -->
-  {% for message in messages %}
-    <p style="color: {% if message.tags == 'error' %}#dc3545{% else %}#28a745{% endif %}; margin-bottom: 20px;">
-      {{ message }}
-    </p>
-  {% endfor %}
-
+{% for message in messages %}
+    {% if "update_emp" in message.tags %}
+        <div class="alert alert-danger {{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endif %}
+{% endfor %}
   <!-- Display Form Errors -->
   {% if form.errors %}
     <div style="color: #dc3545; margin-bottom: 20px;">

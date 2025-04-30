@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Team Timesheet Records</h2>
+
+<input type="text" id="searchInput" placeholder="Search tasks..." style="margin-bottom: 10px; padding: 6px; width: 300px;">
+
+<table id="taskTable" border="1" cellspacing="0" cellpadding="5">
+  <thead>
+    <tr>
+      <th onclick="sortTable(0)">Project</th>
+      <th onclick="sortTable(1)">Task</th>
+      <th onclick="sortTable(2)">Date</th>
+      <th onclick="sortTable(3)">Start</th>
+      <th onclick="sortTable(4)">End</th>
+      <th onclick="sortTable(5)">Hours</th>
+      <th>Description</th>
+      <th>Attachment</th>
+    </tr>
+  </thead>
+  <tbody id="taskTableBody">
+    <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+  </tbody>
+</table>
+
+<div id="pagination" style="margin-top: 15px;"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let tasks = [
+    {% for t in tasks %}
+    {
+      project: "{{ t.pname.name|escapejs }}",
+      task: "{{ t.task|escapejs }}",
+      date: "{{ t.date }}",
+      start: "{{ t.start_time }}",
+      end: "{{ t.end_time }}",
+      hours: getTimeDiff("{{ t.start_time }}", "{{ t.end_time }}"),
+      description: `{{ t.description|default_if_none:""|escapejs }}`,
+      attachment: `{% if t.attachment %}<a href="{{ t.attachment.url }}">Download</a>{% else %}No attachment{% endif %}`
+    },
+    {% endfor %}
+  ];
+
+  const rowsPerPage = 5;
+  let currentPage = 1;
+  let sortDir = true;
+  let filteredTasks = tasks;
+
+  function getTimeDiff(start, end) {
+    if (!start || !end) return '';
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let diff = (eh * 60 + em) - (sh * 60 + sm);
+    return (diff / 60).toFixed(2);
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('taskTableBody');
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+      return;
+    }
+
+    const start = (currentPage - 1) * rowsPerPage;
+    const paginated = data.slice(start, start + rowsPerPage);
+
+    paginated.forEach(task => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${task.project}</td>
+          <td>${task.task}</td>
+          <td>${task.date}</td>
+          <td>${task.start}</td>
+          <td>${task.end}</td>
+          <td>${task.hours}</td>
+          <td>${task.description.length > 50 ? task.description.slice(0, 50) + "..." : task.description}</td>
+          <td>${task.attachment}</td>
+        </tr>`;
+    });
+
+    renderPagination(data.length);
+  }
+
+  function renderPagination(total) {
+    const container = document.getElementById('pagination');
+    container.innerHTML = '';
+    const totalPages = Math.ceil(total / rowsPerPage);
+
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.style.margin = '2px';
+      btn.onclick = () => {
+        currentPage = i;
+        renderTable(filteredTasks);
+      };
+      if (i === currentPage) btn.style.fontWeight = 'bold';
+      container.appendChild(btn);
+    }
+  }
+
+  function sortTable(index) {
+    const keys = ['project', 'task', 'date', 'start', 'end', 'hours'];
+    const key = keys[index];
+    filteredTasks.sort((a, b) => {
+      let A = a[key].toString().toLowerCase();
+      let B = b[key].toString().toLowerCase();
+      return sortDir ? A.localeCompare(B) : B.localeCompare(A);
+    });
+    sortDir = !sortDir;
+    renderTable(filteredTasks);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    filteredTasks = tasks.filter(task =>
+      task.project.toLowerCase().includes(q) ||
+      task.task.toLowerCase().includes(q) ||
+      task.date.toLowerCase().includes(q) ||
+      task.description.toLowerCase().includes(q)
+    );
+    currentPage = 1;
+    renderTable(filteredTasks);
+  });
+
+  renderTable(filteredTasks);
+</script>
+{% endblock %}

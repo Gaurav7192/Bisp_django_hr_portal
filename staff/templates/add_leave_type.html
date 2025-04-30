@@ -86,6 +86,30 @@
       height: 150px;
       width: 100%;
     }
+
+    .leave-details {
+      margin-top: 30px;
+    }
+
+    .leave-details table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .leave-details th, .leave-details td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .leave-details th {
+      background-color: #f7f7f7;
+    }
+
+    .leave-details td {
+      background-color: #fff;
+    }
   </style>
 
   <div class="leave-container">
@@ -146,11 +170,9 @@
           <div class="form-group">
             <label>Department</label>
             <select name="applicable_department" multiple class="form-control">
-  <option value="all"
-    {% if 'all' in form.applicable_department.value %}selected{% endif %}>
-    All
-  </option>
-
+              <option value="all" {% if 'all' in form.applicable_department.value %}selected{% endif %}>
+                All
+              </option>
               {% for department in departments %}
                 <option value="{{ department.id }}" {% if department.id == form.applicable_department.value %}selected{% endif %}>{{ department.name }}</option>
               {% endfor %}
@@ -185,30 +207,30 @@
         </div>
 
         <!-- Restriction Tab -->
-      <!-- Restriction Tab -->
-<div class="tab-content">
-  <div class="form-group">
-    <label>Count Holidays Between Leave</label>
-    <select name="count_holiday" required>
-      <option value="False">No</option>
-      <option value="True">Yes</option>
+        <div class="tab-content">
+          <div class="form-group">
+            <label>Count Holidays Between Leave</label>
+            <select name="count_holidays" required>
+              <option value="False">No</option>
+              <option value="True">Yes</option>
+            </select>
+          </div>
 
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label>Count Weekends Between Leave</label>
-    <select name="count_weekend" required>
-         <option value="False">No</option>
-      <option value="True">Yes</option>
-
-    </select>
-  </div>
-</div>
-
+          <div class="form-group">
+            <label>Count Weekends Between Leave</label>
+            <select name="count_weekends" required>
+              <option value="False">No</option>
+              <option value="True">Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
       <button type="submit" class="submit-btn">Submit</button>
     </form>
+
+    <!-- Display Leave Type Details -->
+
   </div>
 
   <script>

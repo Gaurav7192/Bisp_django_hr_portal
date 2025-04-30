@@ -2,66 +2,106 @@
 {% load static %}
 
 {% block content %}
-<div class="d-flex">
-
-    <div class="container mt-5 px-0 ms-0">
-
-        <h2>Apply for Leave</h2>
-
-        <!-- Display Available and Used Leave -->
-        <div class="alert alert-info">
-            <strong>Available Leave:</strong> {{ balance_leave }} days <br>
-            <strong>Used Leave:</strong> {{ used_leave }} days
+<div class="container mt-5">
+    <h2>Apply for Leave</h2>
+    <div class="row">
+        <!-- Left Column: Leave Summary -->
+        <div class="col-md-5">
+            <h5 class="mt-3">Leave Summary</h5>
+            <table class="table table-bordered table-striped">
+                <thead class="table-primary">
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Total</th>
+                        <th>Used</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for leave_type, details in leave_details_summary.items %}
+                        {% if details.total != 0 or details.used != 0 or details.balance != 0 %}
+                        <tr>
+                            <td>{{ leave_type }}</td>
+                            <td>{{ details.total|default:0 }}</td>
+                            <td>{{ details.used|default:0 }}</td>
+                            <td>{{ details.balance|default:0 }}</td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
-        <!-- Display Messages -->
-        {% if messages %}
-        <div>
-            {% for message in messages %}
-            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
-                {{ message }}
+        <!-- Right Column: Leave Application Form -->
+        <div class="col-md-7">
+            {% if messages %}
+            <div class="alert-container">
+                {% for applymessage in messages %}
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                    {{ applmessage }}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ user_id }}">
+
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="leave_type" class="form-label">Leave Type</label>
+                    <select class="form-select" id="leave_type" name="leave_type" required>
+                        {% for leave_type in new_leave_type_queryset %}
+                        <option value="{{ leave_type.id }}">{{ leave_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+
+
+                <!-- Compensatory Leave Checkbox -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="compensatory_leave" name="compensatory_leave">
+                    <label class="form-check-label" for="compensatory_leave">Compensatory Leave</label>
+                </div>
+
+                <!-- Compensatory Leave Reason Section -->
+                <div id="compensatory_leave_reason_section" class="mb-3" style="display: none;">
+                    <label for="compensatory_leave_reason" class="form-label">Reason for Compensatory Leave</label>
+                    <textarea class="form-control" id="compensatory_leave_reason" name="compensatory_leave_reason" rows="4"></textarea>
+                </div>
+
+                <!-- Half Day Checkbox -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="half_day_checkbox" name="half_day_checkbox">
+                    <label class="form-check-label" for="half_day_checkbox">Apply Half Day for Selected Days</label>
+                </div>
+
+                <div id="half_day_section" style="display: none;"></div>
+
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason for Leave</label>
+                    <textarea class="form-control" id="reason" name="reason" rows="4" required></textarea>
+                </div>
+                 <!-- Document Upload Section (Moved Above Submit) -->
+                <div class="mb-3">
+                    <label for="document" class="form-label">Attach Document (Optional)</label>
+                    <input type="file" class="form-control" id="document" name="document">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Leave Request</button>
+            </form>
         </div>
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="user_id" value="{{ user_id }}">
-
-            <div class="mb-3">
-                <label for="start_date" class="form-label">Start Date</label>
-                <input type="date" class="form-control" id="start_date" name="start_date" required />
-            </div>
-
-            <div class="mb-3">
-                <label for="end_date" class="form-label">End Date</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" required />
-            </div>
-
-            <div class="mb-3">
-                <label for="leave_type" class="form-label">Leave Type</label>
-                <select class="form-select" id="leave_type" name="leave_type" required>
-                     {% for leave_type in leave_types %}
-            <option value="{{ leave_type.id }}">{{ leave_type.name }}</option>
-        {% endfor %}
-                </select>
-            </div>
-
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="half_day_checkbox" name="half_day_checkbox">
-                <label class="form-check-label" for="half_day_checkbox">Apply Half Day for Selected Days</label>
-            </div>
-
-            <div id="half_day_section" style="display: none;"></div>
-
-            <div class="mb-3">
-                <label for="reason" class="form-label">Reason for Leave</label>
-                <textarea class="form-control" id="reason" name="reason" rows="4" required></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Submit Leave Request</button>
-        </form>
     </div>
 </div>
 
@@ -71,8 +111,9 @@
     const halfDaySection = document.getElementById('half_day_section');
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
+    const compensatoryLeaveCheckbox = document.getElementById('compensatory_leave');
+    const compensatoryLeaveReasonSection = document.getElementById('compensatory_leave_reason_section');
 
-    // Set min attribute for start date to prevent past dates
     const today = new Date().toISOString().split('T')[0];
     startDateInput.setAttribute('min', today);
 
@@ -80,21 +121,28 @@
         halfDaySection.innerHTML = '';
         const start = new Date(startDate);
         const end = new Date(endDate);
+        const options = { weekday: 'long' };
 
         while (start <= end) {
             const formattedDate = start.toISOString().split('T')[0];
-            const daySection = document.createElement('div');
-            daySection.classList.add('mb-2');
+            const weekday = start.toLocaleDateString('en-US', options);
 
-            daySection.innerHTML = `
-                <label>${formattedDate}</label>
-                <select class="form-select half-day-option" name="half_day[]">
-                    <option value="">None</option>
-                    <option value="${formattedDate}-First Half">First Half</option>
-                    <option value="${formattedDate}-Second Half">Second Half</option>
-                </select>
-            `;
-            halfDaySection.appendChild(daySection);
+            // Skip rendering input for Sundays (day === 0)
+            if (start.getDay() !== 0) {
+                const daySection = document.createElement('div');
+                daySection.classList.add('mb-2');
+
+                daySection.innerHTML = `
+                    <label>${formattedDate} <strong>(${weekday})</strong></label>
+                    <select class="form-select half-day-option" name="half_day[]">
+                        <option value="">None</option>
+                        <option value="${formattedDate}-First Half">First Half</option>
+                        <option value="${formattedDate}-Second Half">Second Half</option>
+                    </select>
+                `;
+                halfDaySection.appendChild(daySection);
+            }
+
             start.setDate(start.getDate() + 1);
         }
     }
@@ -105,6 +153,14 @@
             halfDaySection.style.display = 'block';
         } else {
             halfDaySection.style.display = 'none';
+        }
+    });
+
+    compensatoryLeaveCheckbox.addEventListener('change', function () {
+        if (compensatoryLeaveCheckbox.checked) {
+            compensatoryLeaveReasonSection.style.display = 'block';
+        } else {
+            compensatoryLeaveReasonSection.style.display = 'none';
         }
     });
 
@@ -129,5 +185,4 @@
         }
     });
 </script>
-
 {% endblock %}

@@ -1,265 +1,244 @@
-
 {% load static %}
 
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <!-- Brand Logo -->
+  <a href="index3.html" class="brand-link">
+    <img src="https://bispsolutions.com/wp-content/uploads/2023/06/colorchange.png"
+         alt="BISP Solution Logo"
+         class="brand-image img-circle elevation-3"
+         style="opacity: .8">
+    <span class="brand-text font-weight-light">BISP Solution</span>
+  </a>
 
-  <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <!-- Brand Logo -->
-    <a href="index3.html" class="brand-link">
-      <img src="https://bispsolutions.com/wp-content/uploads/2023/06/colorchange.png" alt="BISP Solution  Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
-   <br>
-        <span class="brand-text font-weight-light">BISP Solution</span>
-    </a>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- User Panel -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="image">
+        <!-- Optional user image -->
+        <!-- <img src="#" class="img-circle elevation-2" alt="User Image"> -->
+      </div>
+      <div class="info">
+        <a href="#" class="d-block">{{ request.session.name }}</a>
+        <a href="#" class="d-block">{{ request.session.postion }}</a>
+      </div>
+    </div>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- Sidebar user panel (optional) -->
-      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-<!--          <img src="#" class="img-circle elevation-2" alt="User Image">-->
-        </div>
-        <div class="info">
-          <a href="#" class="d-block">{{ request.session.name }}</a>
-            <a href="#" class="d-block">{{ request.session.postion }} </a>
+    <!-- Search Form -->
+    <div class="form-inline">
+      <div class="input-group" data-widget="sidebar-search">
+        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+        <div class="input-group-append">
+          <button class="btn btn-sidebar">
+            <i class="fas fa-search fa-fw"></i>
+          </button>
         </div>
       </div>
+    </div>
 
-      <!-- SidebarSearch Form -->
-      <div class="form-inline">
-        <div class="input-group" data-widget="sidebar-search">
-          <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-          <div class="input-group-append">
-            <button class="btn btn-sidebar">
-              <i class="fas fa-search fa-fw"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <!-- Sidebar Menu -->
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
-              <a href="{% url 'd2'  request.session.user_id %}" class="nav-link">
-  <i class="far fa-circle nav-icon"></i>
-  <p>Dashboard v2</p>
-</a>
-              </li>
-          <li class="nav-item">
-            <a href="{% url 'project' request.session.user_id %}" class="nav-link">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-                Project
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-          </li>
-<li>
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-              Task
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-   <ul class="nav nav-treeview">
-    <li class="nav-item">
-    <a href="{% url 'task_list_view' user_id=request.session.user_id %}" class="nav-link">
-
-        <i class="far fa-circle nav-icon"></i>
-        <p>MY Task</p>
-      </a>
-    </li>
-       {% if request.session.postion != 'Employee' %}
-     <li class="nav-item">
-      <a href="{% url 'team_task_report' request.session.user_id %}" class="nav-link">
-
-        <i class="far fa-circle nav-icon"></i>
-        <p> Team Task Record</p>
-      </a>
-    </li>{% endif %}
-   </ul>
+        <!-- Dashboard -->
+        <li class="nav-item">
+          <a href="{% url 'd2' request.session.user_id %}" class="nav-link">
+            <i class="far fa-circle nav-icon"></i>
+            <p>Dashboard v2</p>
+          </a>
         </li>
 
+        <!-- Project -->
+        <li class="nav-item">
+          <a href="{% url 'project' request.session.user_id %}" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Project</p>
+          </a>
+        </li>
 
+        <!-- Task -->
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Task<i class="fas fa-angle-left right"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
             <li class="nav-item">
-  <a href="#" class="nav-link">
-    <i class="nav-icon far fa-calendar-alt"></i>
-    <p>
-      Leave
-      <span class="badge badge-info right">2</span>
-    </p>
-  </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item">
-    <a href="{% url 'apply_leave' user_id=request.session.user_id %}" class="nav-link">
+              <a href="{% url 'task_list_view' user_id=request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>MY Task</p>
+              </a>
+            </li>
+            {% if request.session.postion != 'Employee' %}
+            <li class="nav-item">
+              <a href="{% url 'team_task_report' request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Team Task Record</p>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </li>
 
-        <i class="far fa-circle nav-icon"></i>
-        <p>Apply Leave</p>
-      </a>
-    </li>
-     <li class="nav-item">
-      <a href="{% url 'leave_dashboard' request.session.user_id %}" class="nav-link">
+        <!-- Leave -->
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon far fa-calendar-alt"></i>
+            <p>Leave<span class="badge badge-info right">2</span></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'apply_leave' user_id=request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Apply Leave</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'leave_dashboard' request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>MY Leave Records</p>
+              </a>
+            </li>
+            {% if request.session.postion != 'Employee' %}
+            <li class="nav-item">
+              <a href="{% url 'leave_record' request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Team Leave Record</p>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </li>
 
-        <i class="far fa-circle nav-icon"></i>
-        <p> MY Leave Records </p>
-      </a>
-    </li>
-      {% if request.session.postion != 'Employee' %}
-    <li class="nav-item">
-      <a href="{% url 'leave_record' request.session.user_id %}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i>
-        <p> Team Leave Record</p>
-      </a>
-    </li>{% endif %}
-  </ul>
-</li>
+        <!-- Time Sheet -->
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Time Sheet<i class="fas fa-angle-left right"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'user_timesheet' %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Time Sheet Record</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'update_timesheet' request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Fill Time Sheet</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/e-commerce.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Previous Week </p>
+              </a>
+            </li>
+            {% if request.session.postion != 'Employee' %}
+            <li class="nav-item">
+              <a href="{% url 'team_timesheet_record' %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Team TimeSheet Record</p>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </li>
 
-<li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-                Time Sheet
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{% url 'user_timesheet' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Time Sheet Record</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{% url 'update_timesheet' request.session.user_id %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Fill Time sheet </p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/e-commerce.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Previous Week TimeSheet</p>
-                </a>
-              </li>
-            </ul>
+        {% if request.session.postion != 'Employee' %}
+        <!-- Configure -->
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Configure<i class="fas fa-angle-left right"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'employee_list' %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Employees Record</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{% url 'leave_type_panel' %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Add Leaves</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/projects.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Projects</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/project-add.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Project Add</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/project-edit.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Project Edit</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/project-detail.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Project Detail</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/contacts.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Contacts</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/faq.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>FAQ</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="pages/examples/contact-us.html" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Contact Us</p>
+              </a>
+            </li>
+          </ul>
+        </li>
 
-</li>
+        <!-- Add Employee -->
+        <li class="nav-item has-treeview">
+          <a href="#" class="nav-link">
+            <i class="nav-icon fas fa-search"></i>
+            <p>Add Employee<i class="fas fa-angle-left right"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+            <li class="nav-item">
+              <a href="{% url 'employee_registration' request.session.user_id %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Add Employee</p>
+              </a>
+            </li>
+          </ul>
+        </li>
+        {% endif %}
 
+        <!-- Logout -->
+        <li class="nav-item">
+          <form id="logout-form" action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="nav-link btn btn-link">Logout</button>
+          </form>
+        </li>
 
-{% if request.session.postion != 'Employee' %}
-
-    <li class="nav-item has-treeview">
-            <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-                configure
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{% url 'employee_list' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Employees record</p>
-                </a>
-              </li>
-              <li class="nav-item">
-<!--                -->
-              <li class="nav-item">
-                <a href="{% url 'leave_type_panel' %}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Add leaves</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/projects.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Projects</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/project-add.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Project Add</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/project-edit.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Project Edit</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/project-detail.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Project Detail</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/contacts.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Contacts</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/faq.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>FAQ</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="pages/examples/contact-us.html" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Contact us</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-
- <li class="nav-item">
-            <a href="#" class="nav-link has-treeview">
-              <i class="nav-icon fas fa-search"></i>
-              <p>
-                add employee
-                <i class="fas fa-angle-left right"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-               <a href="{% url 'employee_registration' request.session.user_id %}" class="nav-link">
-
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>add employee</p>
-                </a>
-              </li>
-
-
-            </ul>
-          </li>
-
-
-{% endif %}
-
-
-
-
-
-
-
-
-
-       </ul>
-    <li>
-  <form id="logout-form" action="{% url 'logout' %}" method="post">
-    {% csrf_token %}
-    <button type="submit" class="nav-link btn btn-link">Logout</button>
-  </form>
-</li>
-
-      </nav>
-      <!-- /.sidebar-menu -->
-    </div>
-    <!-- /.sidebar -->
-
-
-
-  </aside>
+      </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+  </div>
+  <!-- /.sidebar -->
+</aside>

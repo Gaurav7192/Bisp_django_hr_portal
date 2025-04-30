@@ -99,7 +99,9 @@
                 <!-- Rate -->
                 <div class="col-md-6 form-group">
                     <label for="rate" class="form-label">Rate</label>
-                    <input type="number" class="form-control" id="rate" name="rate" step="0.01" min="0" placeholder="Enter Rate" value="{{ request.POST.rate }}">
+           <input type="text" class="form-control" id="rate" name="rate" inputmode="numeric" pattern="[0-9]*" placeholder="Enter Rate" value="{{ request.POST.rate }}">
+
+
                 </div>
 
                 <!-- Project Leader -->
@@ -221,5 +223,31 @@
             return;
         }
     });
+
+
+    const rateVal = document.getElementById("rate").value;
+if (rateVal && (!Number.isInteger(Number(rateVal)) || Number(rateVal) < 0)) {
+    e.preventDefault();
+    alert("Rate must be a non-negative integer.");
+    return;
+}
+    <script>
+    document.getElementById("rate").addEventListener("keydown", function (e) {
+        // Allow: backspace, delete, arrows, tab
+        if ([8, 9, 37, 38, 39, 40, 46].includes(e.keyCode)) return;
+
+        // Block anything not a digit (keyCode 48–57 for main keyboard, 96–105 for numpad)
+        if ((e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+
+    // Also clean up pasted values
+    document.getElementById("rate").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, ''); // Remove non-digit characters
+    });
+</script>
+
+
 </script>
 {% endblock %}

@@ -13,9 +13,10 @@
       <form method="get" class="d-flex align-items-center">
         <label for="page_size" class="me-2">Show</label>
         <select name="page_size" id="page_size" class="form-control form-select me-2" onchange="this.form.submit()">
-          <option value="5" >{% if request.GET.page_size == "5" %}selected{% endif %}>5</option>
-          <option value="10"> {% if request.GET.page_size == "10" %}selected{% endif %}>10</option>
-          <option value="15"> {% if request.GET.page_size == "15" %}selected{% endif %}>15</option>
+         <option value="5" {% if request.GET.page_size == "5" %}selected{% endif %}>5</option>
+          <option value="10" {% if request.GET.page_size == "10" %}selected{% endif %}>10</option>
+          <option value="15" {% if request.GET.page_size == "15" %}selected{% endif %}>15</option>
+
         </select>
         <input type="hidden" name="position" value="{{ request.GET.position }}">
         <input type="hidden" name="department" value="{{ request.GET.department }}">

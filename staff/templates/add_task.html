@@ -2,12 +2,10 @@
 {% load static %}
 
 {% block content %}
-
-
 <style>
     .main-content {
-        margin-left: 10px; /* Same width as sidebar */
-        padding: 20px 20px 20px 20px; /* Space for navbar */
+        margin-left: 10px;
+        padding: 20px;
     }
 
     h2 {
@@ -65,21 +63,21 @@
 <div class="main-content">
     <h2>Add Task</h2>
     {% if task_messages %}
-    <ul style="list-style: none; padding: 0;">
-        {% for message in task_messages %}
-            <li style="color: {% if message.tags == 'error' %}red{% else %}green{% endif %}; margin-bottom: 10px;">
-                {{ message }}
-            </li>
-        {% endfor %}
-    </ul>
-{% endif %}
+        <ul style="list-style: none; padding: 0;">
+            {% for message in messages %}
+                {% if "task" in message.tags %}
+                    <div class="alert alert-danger {{ message.tags }}">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
 
     <form method="post">
         {% csrf_token %}
 
         <div class="form-column">
             <label>Project:</label>
-            <select name="project" required>
+            <select name="project" id="project-select" required>
                 <option value="">Select Project</option>
                 {% for project in projects %}
                     <option value="{{ project.id }}">{{ project.pname }}</option>
@@ -90,14 +88,9 @@
             <input type="text" name="title" required>
 
             <label>Assign To:</label>
-            <select name="assigned_to" required>
-                <option value="">Select Member</option>
-                {% for member in members %}
-                    <option value="{{ member.id }}">{{ member.name }}</option>
-                {% endfor %}
+            <select name="assigned_to" id="member-select" multiple required>
+                <!-- Options will be loaded dynamically -->
             </select>
-
-
         </div>
 
         <div class="form-column">
@@ -120,5 +113,37 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById('project-select').addEventListener('change', function() {
+        const projectId = this.value;
+        const memberSelect = document.getElementById('member-select');
+
+        if (!projectId) {
+            memberSelect.innerHTML = '<option value="">Select Member</option>';
+            return;
+        }
+
+        fetch(`/get-members/${projectId}/`)
+            .then(response => response.json())
+            .then(data => {
+                memberSelect.innerHTML = ''; // clear old options
+                if (data.length === 0) {
+                    memberSelect.innerHTML = '<option value="">No members found</option>';
+                } else {
+                    data.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.id;
+                        option.textContent = member.name;
+                        memberSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                memberSelect.innerHTML = '<option value="">Error loading members</option>';
+            });
+    });
+</script>
 
 {% endblock %}

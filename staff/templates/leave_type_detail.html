@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Leave Type: {{ leave_type.leave_code }} - {{ leave_type.description }}</h2>
+
+<!-- Delete Button -->
+<form action="{% url 'leave_type_detail' leave_type.id %}" method="post" onsubmit="return confirm('Are you sure you want to delete this leave type?');">
+    {% csrf_token %}
+    <button type="submit" style="padding: 6px 12px; background-color: red; color: white; border: none; border-radius: 4px; cursor: pointer;">
+        Delete Leave Type
+    </button>
+</form>
+
+<!-- Limit Selector -->
+<form method="get" class="limit-select" style="margin-top: 10px;">
+    Show:
+    <select name="limit" onchange="this.form.submit()">
+        <option value="5" {% if limit == '5' %}selected{% endif %}>5</option>
+        <option value="10" {% if limit == '10' %}selected{% endif %}>10</option>
+        <option value="20" {% if limit == '20' %}selected{% endif %}>20</option>
+    </select>
+    entries per page
+</form>
+
+<table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+    <thead>
+        <tr style="background-color: #eee;">
+            <th style="border: 1px solid #aaa; padding: 8px;">Employee ID</th>
+            <th style="border: 1px solid #aaa; padding: 8px;">Name</th>
+            <th style="border: 1px solid #aaa; padding: 8px;">Leave From</th>
+            <th style="border: 1px solid #aaa; padding: 8px;">Leave To</th>
+            <th style="border: 1px solid #aaa; padding: 8px;">Total Days</th>
+            <th style="border: 1px solid #aaa; padding: 8px;">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for record in page_obj %}
+            <tr>
+                <td style="border: 1px solid #aaa; padding: 8px;">{{ record.emp_id.id }}</td>
+                <td style="border: 1px solid #aaa; padding: 8px;">{{ record.emp_id.name }}</td>
+                <td style="border: 1px solid #aaa; padding: 8px;">{{ record.start_date }}</td>
+                <td style="border: 1px solid #aaa; padding: 8px;">{{ record.end_date }}</td>
+                <td style="border: 1px solid #aaa; padding: 8px;">{{ record.no_of_days }}</td>
+<td style="border: 1px solid #aaa; padding: 8px;">
+    <span style="padding: 4px 8px;
+        {% if record.approval_status.status == 'Rejected' %}
+            background-color: red; color: white;
+        {% elif record.approval_status.status == 'Pending' %}
+            background-color: orange; color: white;
+        {% elif record.approval_status.status == 'Approved' %}
+            background-color: green; color: white;
+        {% elif record.approval_status.status == 'Withdrawn' %}
+            background-color: gray; color: white;
+        {% endif %}">
+        {{ record.approval_status.status }}
+    </span>
+</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6" style="border: 1px solid #aaa; padding: 8px;">No records found for this leave type.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Links -->
+<div class="pagination" style="margin-top: 20px;">
+    {% if page_obj.has_previous %}
+        <a href="?page=1&limit={{ limit }}">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}&limit={{ limit }}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&limit={{ limit }}">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}&limit={{ limit }}">Last</a>
+    {% endif %}
+</div>
+{% endblock %}

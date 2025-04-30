@@ -141,10 +141,10 @@
             <div class="value">{{ task.due_date }}</div>
 
             <label>Billing Status:</label>
-            <div class="value">{{ project.rate_status.status}}</div>
+            <div class="value">{{ task.project.rate_status}}</div>
 
             <label>Project Leader:</label>
-            <div class="value">{{ task.leader }}</div>
+            <div class="value">{{ project.manager}}</div>
         </div>
 
         <!-- Right Half -->
@@ -155,6 +155,14 @@
 
             <label>Project:</label>
             <div class="value">{{ task.project.pname }}</div>
+            <label>Assigned To:</label>
+         <div class="value">
+    {% for person in task.assigned_to.all %}
+        {{ person.name }}{% if not forloop.last %}, {% endif %}
+    {% empty %}
+        No one assigned.
+    {% endfor %}
+</div>
 
             <label>Priority:</label>
             <div class="value">
@@ -171,7 +179,14 @@
 
             <label>Status:</label>
             <div class="value">{{ task.status }}</div>
+               <label>Descrition:</label>
+            <div class="value">{{ task.description }}</div>
         </div>
+              </div>
+
+
+        </div>
+
     </div>
 </form>
 

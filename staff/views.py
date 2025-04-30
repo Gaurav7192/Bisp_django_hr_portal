@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
 from datetime import datetime,date
-from django.contrib import messages
+
 from django.shortcuts import get_object_or_404
 import re
 from django.utils.dateparse import parse_date
@@ -21,20 +21,29 @@ from decimal import Decimal
 import random
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
-from django.contrib import messages
+from .form import *
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import LeaveTypeMaster, LeaveRecord
 import json
+from django.db import transaction
 
 def d1(request,id):
     user = get_object_or_404(emp_registers, id=id)
+    #manual_leave_details_update()
+    # if request.session.get('position') == 'HR':
+        # Example: initialize for all employees
+
+
+        # for emp in EmployeeDetail.objects.filter(job_status=True):
+        #     initialize_leave_details(emp)
     return render(request, '1.html', {'user': user})
 
 def d2(request,id):
     user = get_object_or_404(emp_registers, id=id)
+
     return render(request, '2.html', {'user': user})
 
 
@@ -46,6 +55,12 @@ def home_view(request):
 
 
 
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime
+import re
+
+from .models import emp_registers
 
 def update_employee(request, id):
     employee = get_object_or_404(emp_registers, id=id)
@@ -64,38 +79,42 @@ def update_employee(request, id):
 
             # 1. Check required fields manually
             if not all([name, email, position, department, joindate, reportto]):
-                messages.error(request, 'All fields are required!')
+                messages.error(request, 'All fields are required!', extra_tags="update_emp")
                 return redirect('update_employee', id=id)
 
             # 2. Validate Password (if entered)
             if password:
                 if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password) or not re.search(r'[!@#$%^&*]', password):
-                    messages.error(request, 'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.')
+                    messages.error(request, 'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.', extra_tags="update_emp")
                     return redirect('update_employee', id=id)
 
             # 3. Check join date logic
             try:
                 if joindate > datetime.today().date():
-                    messages.error(request, 'Joining date cannot be in the future.')
+                    messages.error(request, 'Joining date cannot be in the future.', extra_tags="update_emp")
                     return redirect('update_employee', id=id)
 
                 if joindate < datetime(2025, 1, 1).date():
-                    messages.error(request, 'Joining date cannot be before January 1, 2025.')
+                    messages.error(request, 'Joining date cannot be before January 1, 2025.', extra_tags="update_emp")
                     return redirect('update_employee', id=id)
             except ValueError:
-                messages.error(request, 'Invalid join date format.')
+                messages.error(request, 'Invalid join date format.', extra_tags="update_emp")
                 return redirect('update_employee', id=id)
 
             # 4. Save the form data
             form.save()
-            messages.success(request, "Employee details updated successfully!")
+            messages.success(request, "Employee details updated successfully!", extra_tags="update_emp")
             return redirect('employee_list')
+
         else:
-            messages.error(request, "Failed to update. Please correct the errors in the form.")
+            messages.error(request, "Failed to update. Please correct the errors in the form.", extra_tags="update_emp")
+
     else:
         form = EmployeeForm(instance=employee)
 
     return render(request, 'update_employee.html', {'form': form, 'employee': employee})
+
+
 
 
 def login_view(request):
@@ -105,7 +124,7 @@ def login_view(request):
         remember_me = request.POST.get('remember_me', False)
 
         if not email or not password:
-            messages.error(request, 'Email and password are required.')
+            messages.error(request, 'Email and password are required.', extra_tags='login')
             return render(request, 'login.html')
 
         try:
@@ -115,27 +134,28 @@ def login_view(request):
                 request.session['name'] = user.name
                 request.session['postion'] = user.position.role
 
-                # request.session['img']=user.profile_pic.url
+                # request.session['img'] = user.profile_pic.url
 
                 if remember_me:
                     request.session.set_expiry(604800)  # 1 week
                 else:
                     request.session.set_expiry(0)
 
-                if user.position.role  == 'HR':
+                if user.position.role == 'HR':
                     return redirect('d1', id=user.id)
                 else:
                     return redirect('d2', id=user.id)
             else:
-                messages.error(request, 'Invalid email or password.')
+                messages.error(request, 'Invalid email or password.', extra_tags='login')
         except emp_registers.DoesNotExist:
-            messages.error(request, 'Invalid email or password.')
+            messages.error(request, 'Invalid email or password.', extra_tags='login')
 
     return render(request, 'login.html')
 
 
 
-#
+
+
 
 
 
@@ -146,7 +166,7 @@ def employee_registration(request, id):
 
     # If the user is not found, redirect to an error page
     if not user:
-        messages.error(request, "User not found.")
+        messages.error(request, "User not found.", extra_tags="register")
         return redirect('some_error_page')  # Redirect to an error page or a safe place.
 
     # Fetch all positions (from RoleMaster) and departments (from DepartmentMaster)
@@ -188,12 +208,12 @@ def employee_registration(request, id):
                 initialize_leave_details(employee_detail)
 
             # Success message
-            messages.success(request, 'Employee registration successful!')
+            messages.success(request, 'Employee registration successful!', extra_tags="register")
             return redirect('employee_registration', id=id)  # Redirect to the same page
 
         else:
             # Error message if form is not valid
-            messages.error(request, 'Please correct the errors below.')
+            messages.error(request, 'Please correct the errors below.', extra_tags="register")
 
     else:
         # If it's a GET request, create an empty form
@@ -207,6 +227,7 @@ def employee_registration(request, id):
         'positions': positions,  # Pass positions to the template
         'departments': departments  # Pass departments to the template
     })
+
 
 
 
@@ -286,7 +307,9 @@ def update_profile(request,user_id):
 
 
 def project(request, user_id):
-    projects = Project.objects.prefetch_related('team_members__emp_id').all().order_by('-id')
+    projects = Project.objects.prefetch_related('team_members__emp_id').filter(
+        Q(admin=request.session['name']) | Q(manager=request.session['user_id'])
+    ).order_by('-id')
     total_projects = projects.count()
 
     context = {
@@ -434,11 +457,9 @@ def forgot_password(request):
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from datetime import date
+
 from django.utils.dateparse import parse_date
-from .models import emp_registers, Project, RateStatusMaster, PriorityMaster, StatusMaster, Member
+
 
 def add_project_view(request, user_id):
     user_id = request.session.get('user_id')
@@ -605,7 +626,7 @@ def add_project_view(request, user_id):
             pname=pname,
             start_date=start_date,
             end_date=end_date,
-            rate=rate,
+            rate=float(rate),
             rate_status=rate_status_obj,
             priority=priority_obj,
             description=description,
@@ -655,12 +676,18 @@ def add_employee(request):
 
 
 
+
+
 def employee_list(request):
     # Get filters from request
     position_filter = request.GET.get('position', '')
     department_filter = request.GET.get('department', '')
-    page_size = int(request.GET.get('page_size', 10))  # Default to 10
     page_number = request.GET.get('page', 1)
+
+    # Only allow specific page sizes
+    allowed_page_sizes = ['5', '10', '20']
+    page_size_str = request.GET.get('page_size', '10')
+    page_size = int(page_size_str) if page_size_str in allowed_page_sizes else 10
 
     # Base queryset
     employees = emp_registers.objects.all()
@@ -681,9 +708,10 @@ def employee_list(request):
     department_choices = DepartmentMaster.objects.all()
 
     return render(request, 'employee_list.html', {
-        'employees': page_obj,  # paginated queryset
+        'employees': page_obj,
         'department_choices': department_choices,
     })
+
 
 
 def leave_record_view(request,user_id):
@@ -743,34 +771,36 @@ def delete_employee(request, id):
 
 
 
-
+from datetime import datetime, timedelta
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import LeaveRecord, LeaveHalfDay, HalfDayTypeMaster, LeaveTypeMaster, LeaveStatusMaster, Holiday, emp_registers, EmployeeDetail
 
 def apply_leave(request, user_id):
     try:
         employee = EmployeeDetail.objects.get(emp_id=user_id)
+        emp = emp_registers.objects.get(id=user_id)
     except EmployeeDetail.DoesNotExist:
         messages.error(request, "Employee details not found.")
         return redirect('login')
 
-    # Fetch only necessary fields
-    leave_types = LeaveTypeMaster.objects.filter(leave_status=True).values(
-        'id', 'name', 'applicable_gender', 'payable', 'applicable_marital_status',
-        'applicable_department', 'leavecode', 'leave_status',
-        'count_holidays', 'count_weekends'
-    )
+    leave_types = LeaveTypeMaster.objects.filter(leave_status=True)
 
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        leave_type_id = request.POST.get('leave_type')
+        leave_type_id = int(request.POST.get('leave_type'))
         reason = request.POST.get('reason')
 
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
         leave_type = LeaveTypeMaster.objects.get(id=leave_type_id)
+        leave_code = leave_type.leavecode
+        compensatory_leave = request.POST.get('compensatory_leave', False) == 'on'
+        compensatory_leave_reason = request.POST.get('compensatory_leave_reason', None)
+        document = request.FILES.get('document', None)
 
-        # Half-day logic
         half_day_data = request.POST.getlist('half_day[]')
         half_day_dict = {}
         for entry in half_day_data:
@@ -778,50 +808,106 @@ def apply_leave(request, user_id):
                 date, half = entry.rsplit('-', 1)
                 half_day_dict[date] = half
 
-        # Calculate leave days
         leave_days = 0.0
         current_date = start_date
+        holidays = set(Holiday.objects.filter(date__range=[start_date, end_date]).values_list('date', flat=True))
+
+        def is_weekend_off(date):
+            if date.weekday() == 6:  # Sunday
+                return True
+            if date.weekday() == 5:  # Saturday
+                week_number = (date.day - 1) // 7 + 1
+                return week_number in [2, 3]  # 2nd or 3rd Saturday
+            return False
+
         while current_date <= end_date:
-            # half_day_entry = HalfdayMaster.objects.filter(
-            #     date=current_date,
-            #     emp_id=employee  # EmployeeDetail object
-            # ).select_related('half_day_type').first()
             str_date = str(current_date)
-            leave_days += 0.5 if str_date in half_day_dict else 1.0
+            is_edge_date = current_date == start_date or current_date == end_date
+
+            if not is_edge_date and not leave_type.count_weekends:
+                if is_weekend_off(current_date):
+                    current_date += timedelta(days=1)
+                    continue
+
+            if current_date in holidays and not leave_type.count_holidays:
+                current_date += timedelta(days=1)
+                continue
+
+            if str_date in half_day_dict:
+                leave_days += 0.5
+            else:
+                leave_days += 1.0
+
             current_date += timedelta(days=1)
 
-        # Check leave balance
-        if employee.balance_leave >= leave_days:
-            emp_instance = employee.emp_id  # This is from ForeignKey in EmployeeDetail
+        leave_details = employee.leave_details or {}
 
-            # Default pending status (optional — better to fetch from LeaveStatusMaster if needed)
-            pending_status = LeaveStatusMaster.objects.filter(status__iexact='pending').first()
-
-            leave_application = LeaveRecord(
-                emp_id=emp_instance,
-                start_date=start_date,
-                end_date=end_date,
-                no_of_days=leave_days,
-                leave_type=leave_type,
-                reason=reason,
-                approval_status=pending_status
-            )
-            leave_application.save()
-
-            messages.success(request, "Leave application submitted successfully!")
+        if leave_code not in leave_details:
+            messages.error(request, f"No leave details found for {leave_code}.")
             return redirect('apply_leave', user_id=user_id)
-        else:
+
+        available_balance = leave_details[leave_code].get('balance', 0)
+
+        if available_balance < leave_days:
             messages.error(request, "Insufficient leave balance.")
+            return redirect('apply_leave', user_id=user_id)
 
+        pending_status = LeaveStatusMaster.objects.filter(status__iexact='pending').first()
+
+        # Create the LeaveRecord
+        leave_record = LeaveRecord.objects.create(
+            emp_id=employee.emp_id,
+            start_date=start_date,
+            end_date=end_date,
+            no_of_days=leave_days,
+            leave_type=leave_type,
+            reason=reason,
+            approval_status=pending_status,
+            compensatory_leave=compensatory_leave,
+            compensatory_leave_reason=compensatory_leave_reason,
+            document=document
+        )
+
+        # Create LeaveHalfDay entries and link via ManyToMany
+        for entry in half_day_data:
+            if entry:
+                date_str, half = entry.rsplit('-', 1)
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                try:
+                    half_day_obj = HalfDayTypeMaster.objects.get(part=half)
+                    leave_half_day = LeaveHalfDay.objects.create(
+                        half_day_type=half_day_obj,
+                        half_day_date=date
+                    )
+                    leave_record.half_day.add(leave_half_day)  # Link via M2M
+                except HalfDayTypeMaster.DoesNotExist:
+                    continue
+
+        messages.success(request, "Leave application submitted successfully!")
+        return redirect('apply_leave', user_id=user_id)
+
+    leave_details = employee.leave_details
+    leave_types = LeaveTypeMaster.objects.filter(leave_status=True)
+    leave_details_summary = {}
+    new_leave_type = []
+
+    for leave_code, details in leave_details.items():
+        if leave_code not in [leave.leavecode for leave in leave_types]:
+            continue
+        if details.get('total', 0) == 0 and details.get('used', 0) == 0 and details.get('balance', 0) == 0:
+            continue
+        leave_details_summary[leave_code] = {
+            'total': details.get('total', 0),
+            'used': details.get('used', 0),
+            'balance': details.get('balance', 0)
+        }
+        new_leave_type.append(LeaveTypeMaster.objects.get(leavecode=leave_code))
+
+    new_leave_type_queryset = LeaveTypeMaster.objects.filter(id__in=[leave.id for leave in new_leave_type])
     return render(request, 'apply_leave.html', {
-        'employee': employee,
-        'balance_leave': employee.balance_leave,
-        'used_leave': employee.used_leave,
-        'leave_types': leave_types
+        'leave_details_summary': leave_details_summary,
+        'new_leave_type_queryset': new_leave_type_queryset
     })
-
-
-
 
 
 
@@ -872,6 +958,9 @@ def update_total_leaves():
 
 def update_leaves_view(request):
     update_total_leaves()
+    emp =EmployeeDetail.objects.all()
+    for e in emp:
+        initialize_leave_details(e)
     return JsonResponse({'status': 'Total leaves updated successfully!'})
 
 
@@ -949,35 +1038,54 @@ def leave_dashboard(request, user_id):
     today = now().date()
 
     # Fetch leave records for the logged-in employee
-    leave_records = LeaveRecord.objects.filter(emp_id=user_id).order_by('-id').values(
-        'id', 'created_at', 'start_date', 'end_date', 'no_of_days', 'reason', 'approval_status', 'emp_id','approved_by','approve_reason'
-    )
+    leave_records = LeaveRecord.objects.filter(emp_id=user_id).order_by('-id')
     emp=emp_registers.objects.filter(id=user_id)
     # Prepare data to be passed to the template
     leave_data = []
 
+
+    # ✅ Fetch all half-day entries related to this leave record
+    # half_days = LeaveHalfDay.objects.filter(leave_record=leave_records.id)
     for leave in leave_records:
         try:
-            emp_data = emp_registers.objects.get(id=leave['emp_id'])
+
+            leave_type_obj = LeaveTypeMaster.objects.get(id=leave.leave_type.id)
+
+            emp_data = emp_registers.objects.get(id=leave.emp_id.id)
+
+            half_day_list = [(half.half_day_date, half.half_day_type.part) for half in leave.half_day.all()]
             report_to = emp_data.reportto if emp_data.reportto else 'Not Assigned'
             leave_data.append({
                 's_no': len(leave_data) + 1,  # Serial number
-                'name':emp_data.name,
-                'current_date': leave['created_at'],
-                'start_date': leave['start_date'],
-                'end_date': leave['end_date'],
-                'no_of_leaves': leave['no_of_days'],
-                'reason': leave['reason'],
-                'approval_status': leave['approval_status'],
+                'name': emp_data.name,
+                'current_date': leave.created_at,  # Corrected to use dot notation
+                'start_date': leave.start_date,  # Corrected to use dot notation
+                'end_date': leave.end_date,  # Corrected to use dot notation
+                'no_of_leaves': leave.no_of_days,  # Corrected to use dot notation
+                'reason': leave.reason,  # Corrected to use dot notation
+                'approval_status': leave.approval_status,  # Corrected to use dot notation
                 'report_to': report_to,
-                'leave_id': leave['id'],
-                'approved_by':leave['approved_by'],
-                'approve_reason':leave['approve_reason']
+                'leave_id': leave.id,  # Corrected to use dot notation
+                'approved_by': leave.approved_by,  # Corrected to use dot notation
+                'approve_reason': leave.approve_reason,  # Corrected to use dot notation
+                'compensatory_leave': leave.compensatory_leave,  # Corrected to use dot notation
+                'compensatory_leave_reason': leave.compensatory_leave_reason,  # Corrected to use dot notation
+                'leave_type': leave_type_obj,  # leave_type is a LeaveTypeMaster object
+                'half_day': half_day_list,  # Corrected to use previously generated half_day_list
             })
+
+            # Same field as in LeaveRecord,
+                # 'half_day': leave['half_day'],  # Same field as in LeaveRecord,
+                # 'half_day': list(leave.leavehalfday_set.values('half_day_date', 'half_day_type__part')),
+                # 'half_day': [(half.half_day_date, half.half_day_type.part) for half in half_days],
+
         except emp_registers.DoesNotExist:
             continue  # Skip if employee data not found
 
     # Render the dashboard template with the leave data
+
+    # If this is an AJAX request, return JSON response with updated data
+
     return render(request, 'leave_dashboard.html', {
         'leave_data': leave_data,
         'username': username,
@@ -989,60 +1097,71 @@ def leave_dashboard(request, user_id):
 
 
 
+
 def update_leave_status(request, user_id):
-    approver = emp_registers.objects.get(id=user_id)  # Get the approver (manager, HR, etc.)
+    approver = emp_registers.objects.get(id=user_id)
 
     if request.method == "POST":
         leave_id = request.POST.get("leave_id")
-        action = request.POST.get("action")  # Expected: Approved, Rejected, Withdrawn
-        reason = request.POST.get('reason', '')  # Get reason from form (if any)
+        action = request.POST.get("action")
+        reason = request.POST.get("approve_reason", "")
 
         leave_record = get_object_or_404(LeaveRecord, id=leave_id)
-        employee = EmployeeDetail.objects.get(emp_id=leave_record.emp_id.id)  # Get the employee who applied for leave
+        employee = EmployeeDetail.objects.get(emp_id=leave_record.emp_id.id)
+        leave_type = leave_record.leave_type
+        leave_code = leave_type.leavecode  # Make sure this matches what's used in leave_details
 
         status_obj = LeaveStatusMaster.objects.filter(status=action).first()
+
         if not status_obj:
             return JsonResponse({"error": f"'{action}' status not configured."}, status=500)
 
         previous_status = leave_record.approval_status.status if leave_record.approval_status else ""
+        leave_details = employee.leave_details or {}
+
+        # Ensure leave_code exists in leave_details
+        if leave_code not in leave_details:
+            leave_details[leave_code] = {'total': 0, 'used': 0, 'balance': 0}
 
         # Withdraw logic
         if action == "Withdrawn":
             if now().date() > leave_record.start_date:
                 return JsonResponse({"error": "Cannot withdraw, start date has passed."}, status=400)
 
-            if previous_status == "Approved":
-                # If the leave was approved before, update the balance and used leave for the employee who applied
-                employee.balance_leave += leave_record.no_of_days
-                employee.used_leave -= leave_record.no_of_days
-                employee.save()
+            if previous_status == "Approved" and not leave_record.compensatory_leave:
+                leave_details[leave_code]['used'] = max(0, leave_details[leave_code]['used'] - leave_record.no_of_days)
+                leave_details[leave_code]['balance'] += leave_record.no_of_days
+                # Cap the balance at total
+                leave_details[leave_code]['balance'] = min(
+                    leave_details[leave_code]['balance'],
+                    leave_details[leave_code]['total'])
 
         # Approve logic
         elif action == "Approved":
-            # If leave is already approved, update balance and used leave for the employee who applied
-            if previous_status == "Approved":
-                employee.balance_leave -= leave_record.no_of_days
-                employee.used_leave += leave_record.no_of_days
-                employee.save()
+            if previous_status != "Approved" and not leave_record.compensatory_leave:
+                if leave_details[leave_code]['balance'] < leave_record.no_of_days:
+                    return JsonResponse({"error": "Insufficient leave balance."}, status=400)
+                leave_details[leave_code]['used'] += leave_record.no_of_days
+                leave_details[leave_code]['balance'] -= leave_record.no_of_days
 
-            leave_record.approval_status = status_obj
-            leave_record.approved_by = approver.name
-            employee.balance_leave -= leave_record.no_of_days
-            employee.used_leave += leave_record.no_of_days
-            employee.save()
+                leave_details[leave_code]['used'] = min(
+                    leave_details[leave_code]['used'],
+                    leave_details[leave_code]['total']
+                )
+                leave_details[leave_code]['balance'] = max(0, leave_details[leave_code]['balance'])
 
         # Reject logic
         elif action == "Rejected":
-            if previous_status == "Approved":
-                # If previously approved, revert balance and used leave for the employee who applied
-                employee.balance_leave += leave_record.no_of_days
-                employee.used_leave -= leave_record.no_of_days
-                employee.save()
-
-            leave_record.approval_status = status_obj
-            leave_record.approved_by = approver.name
+            # if previous_status == "Approved":
+            #     leave_details[leave_code]['used'] -= leave_record.no_of_days
+            #     leave_details[leave_code]['balance'] += leave_record.no_of_days
             leave_record.approve_reason = reason
-        # Final update for all status changes
+
+
+        # Save the updated leave_details and leave record
+        employee.leave_details = leave_details
+        employee.save()
+
         leave_record.approval_status = status_obj
         leave_record.approved_by = approver.name
         leave_record.save()
@@ -1055,27 +1174,96 @@ def update_leave_status(request, user_id):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-from django.contrib import messages
-from .models import LeaveTypeMaster, DepartmentMaster, emp_registers
+
+
+
+
+
+
+
+from django.utils import timezone
 
 def initialize_leave_details(emp_detail):
-    leave_data = {}
+    print(f"--- Initializing leave details for employee {emp_detail.id} ---")
 
-    # Get all active leave types
-    leave_types = LeaveTypeMaster.objects.filter(leave_status=True)
+    current_date = timezone.now().date()
+    leave_data = emp_detail.leave_details or {}
+
+    is_jan_first = current_date.month == 1 and current_date.day == 1
+    last_renewed = leave_data.get("_last_renewed")
+
+    leave_types = LeaveTypeMaster.objects.all()
 
     for leave_type in leave_types:
         code = leave_type.leavecode or leave_type.name[:3].upper()
-        total = leave_type.max_days_allowed or 0
-        leave_data[code] = {
-            "used": 0,
-            "balance": total,
-            "total": total
-        }
 
-    # Set leave_details
+        # Eligibility checks
+        if leave_type.applicable_gender != 'All' and leave_type.applicable_gender != emp_detail.gender:
+            continue
+
+        if leave_type.applicable_marital_status != 'All' and leave_type.applicable_marital_status != emp_detail.marital_status:
+            continue
+
+        department = emp_detail.emp_id.department
+        if leave_type.applicable_department.exists() and not leave_type.applicable_department.filter(pk=department.pk).exists():
+            continue
+
+        if leave_type.specific_employees.exists() and not leave_type.specific_employees.filter(id=emp_detail.id).exists():
+            continue
+
+        if leave_type.start_from and leave_type.end_from:
+            if not (leave_type.start_from <= current_date <= leave_type.end_from):
+                continue
+
+        total = leave_type.max_days_allowed or 4
+
+        # If leave already exists
+        if code in leave_data:
+            existing = leave_data[code]
+
+            if leave_type.carry_forward and is_jan_first and last_renewed != str(current_date):
+                # Carry forward only on Jan 1st and not done already
+                prev_balance = existing.get("balance", 0)
+                leave_data[code]["used"] = 0
+                leave_data[code]["balance"] = prev_balance
+                leave_data[code]["total"] = prev_balance + total
+            elif not leave_type.carry_forward:
+                # Reset values if not carry forward
+                leave_data[code]["used"] = 0
+                leave_data[code]["balance"] = total
+                leave_data[code]["total"] = total
+            # Else: don't touch anything if not Jan 1st and carry forward
+        else:
+            # First time adding this leave
+            leave_data[code] = {
+                "used": 0,
+                "balance": total,
+                "total": total
+            }
+
+    # Set renewal marker only on Jan 1st
+    if is_jan_first:
+        leave_data["_last_renewed"] = str(current_date)
+
     emp_detail.leave_details = leave_data
     emp_detail.save()
+    print(f"Leave details updated for employee {emp_detail.id}: {emp_detail.leave_details}")
+
+
+
+
+
+
+
+
+def is_leave_type_valid_today(leave_type, today):
+    # Check start and end date validity only if given
+    if leave_type.start_from and today < leave_type.start_from.date():
+        return False
+    if leave_type.end_from and today > leave_type.end_from.date():
+        return False
+    return True
+
 
 def add_leave_type(request):
     if request.method == 'POST':
@@ -1095,13 +1283,13 @@ def add_leave_type(request):
         carry_forward = request.POST.get('carry_forward') == 'True'
 
         # Restriction tab fields
-        count_holidays = request.POST.get('count_holidays') == 'True'
-        count_weekends = request.POST.get('count_weekends') == 'True'
+        count_holidays = request.POST.get('count_holidays')=='True'
+        count_weekends = request.POST.get('count_weekends')=='True'
 
         # Start and End Date fields
         start_from = request.POST.get('start_from')  # Ensure these are datetime formatted
         end_from = request.POST.get('end_from')
-
+        print(count_holidays,"    ","  wekended=",count_weekends)
         # Create the LeaveTypeMaster instance
         leave_type = LeaveTypeMaster.objects.create(
             name=leave_name,
@@ -1111,8 +1299,8 @@ def add_leave_type(request):
             applicable_marital_status=marital_status,
             max_days_allowed=max_days_allowed or 0,
             carry_forward=carry_forward,
-            count_holidays=count_holidays,
-            count_weekends=count_weekends,
+            count_holidays=bool(count_holidays),
+            count_weekends=bool(count_weekends),
             start_from=start_from,
             end_from=end_from,
         )
@@ -1125,24 +1313,20 @@ def add_leave_type(request):
 
         # Handle specific employees (if applicable)
         if specific_employees:
-            leave_type.specific_employees.set(specific_employees)
+            # Ensure you're passing only IDs, not the entire objects
+            employee_ids = [int(emp_id) for emp_id in specific_employees]  # Convert string IDs to integers
+            leave_type.specific_employees.set(employee_ids)  # Set employee IDs directly
 
-
-
-        # Initialize leave for all or specific employees
-
-
-        if specific_employees:
-            for emp_id in specific_employees:
-                emp_detail = EmployeeDetail.objects.filter(emp_id_id=emp_id).first()
-                if emp_detail:
-                    initialize_leave_details(emp_detail)
-        else:
-            for emp_detail in EmployeeDetail.objects.all():
+            # Optionally initialize leave details for each employee
+            employee_objects = EmployeeDetail.objects.filter(id__in=employee_ids)
+            for emp_detail in employee_objects:
                 initialize_leave_details(emp_detail)
 
-        messages.success(request, "Leave type added successfully!")
-
+        else:
+            # If no specific employees are selected, initialize leave details for all employees
+            all_employees = EmployeeDetail.objects.all()
+            for emp_detail in all_employees:
+                initialize_leave_details(emp_detail)
 
         messages.success(request, "Leave type added successfully!")
         return redirect('leave_type_panel')
@@ -1150,6 +1334,7 @@ def add_leave_type(request):
     # GET request - render form
     departments = DepartmentMaster.objects.all()
     employees = emp_registers.objects.all()
+
     return render(request, 'add_leave_type.html', {
         'departments': departments,
         'employees': employees
@@ -1195,53 +1380,64 @@ def update_timesheet(request, user_id):
         is_weekly = 'weekly' in request.POST
 
         if is_weekly:
-            print("adedfsgfghfdhhgdghgfhghhdfhghhgh")
+            # Loop over each day in the week to handle weekly timesheet data
             for day in days:
                 date = request.POST.get(f'date_{day}')
-                pname = request.POST.get(f'pname_{day}')
-                task = request.POST.get(f'task_{day}')
+                pname = request.POST.get(f'pname_{day}')  # Project ID
+                task_id = request.POST.get(f'task_{day}')  # Task ID
                 start_time = request.POST.get(f'start_time_{day}')
                 end_time = request.POST.get(f'end_time_{day}')
                 description = request.POST.get(f'description_{day}')
                 attachment = request.FILES.get(f'attachment_{day}')
 
-                if date and pname and task:
-                    Timesheet.objects.create(
-                        emp_id_id=emp_id,
-                        pname_id=pname,
-                        task=task,
-                        date=parse_date(date),
-                        start_time=start_time or None,
-                        end_time=end_time or None,
-                        description=description or '',
-                        attachment=attachment
-                    )
+                # Only store the timesheet entry if the project and task are selected
+                if date and pname and task_id and  start_time:
+                    try:
+                        task_obj = Task.objects.get(id=task_id)
+                        Timesheet.objects.create(
+                            emp_id_id=emp_id,
+                            pname_id=pname,  # Store project ID
+                            task=task_obj.title,
+                            date=parse_date(date),
+                            start_time=start_time or None,
+                            end_time=end_time or None,
+                            description=description or '',
+                            attachment=attachment if attachment else None
+                        )
+                    except Task.DoesNotExist:
+                        continue  # Skip if task is not found
         else:
+            # For single-day entry (not weekly), handle daily timesheet data
             date = request.POST.get('date')
-            pname = request.POST.get('pname')
-            task = request.POST.get('task')
+            pname = request.POST.get('pname')  # Project ID
+            task_id = request.POST.get('task')  # Task ID
             start_time = request.POST.get('start_time')
             end_time = request.POST.get('end_time')
             description = request.POST.get('description')
             attachment = request.FILES.get('attachment')
-            task_obj = Task.objects.get(id=task)
-            if pname and task:
-                Timesheet.objects.create(
-                    emp_id_id=emp_id,
-                    pname_id=pname,
-                    task=task_obj.title,
-                    date=parse_date(date),
-                    start_time=start_time or None,
-                    end_time=end_time or None,
-                    description=description or '',
-                    attachment=attachment if attachment else None
-                )
+
+            # Ensure both project and task are selected
+            if pname and task_id:
+                try:
+                    task_obj = Task.objects.get(id=task_id)
+                    Timesheet.objects.create(
+                        emp_id_id=emp_id,
+                        pname_id=pname,  # Store project ID
+                        task=task_obj.title,
+                        date=parse_date(date),
+                        start_time=start_time or None,
+                        end_time=end_time or None,
+                        description=description or '',
+                        attachment=attachment if attachment else None
+                    )
+                except Task.DoesNotExist:
+                    pass  # silently skip if task not found
 
         return redirect('update_timesheet', user_id=user_id)
 
-
-    projects = Project.objects.filter(team_members__id=emp_id)
-    tasks = Task.objects.filter(assigned_to_id=emp_id).select_related('project')
+    # Retrieve projects and tasks related to the logged-in employee
+    projects = Project.objects.filter(team_members__emp_id=emp_id)
+    tasks = Task.objects.filter(assigned_to__emp_id=emp_id)
 
     return render(request, 'update_timesheet.html', {
         'projects': projects,
@@ -1250,20 +1446,51 @@ def update_timesheet(request, user_id):
     })
 
 
+def upload_attachment(request):
+    if request.method == 'POST':
+        attachment = request.FILES.get('attachment')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        emp=request.session.user_id
+        if not attachment:
+            messages.error(request, "Please upload a file.")
+            return redirect('upload_attachment')
+
+        try:
+            # Save to database
+            new_attachment = Timesheet.objects.create(
+                attachment=attachment,
+                start_date=start_date,
+                end_date=end_date,
+                emp_id=emp
+
+            )
+            messages.success(request, "Attachment uploaded successfully!")
+            return redirect('upload_attachment')
+        except Exception as e:
+            messages.error(request, f"Error: {e}")
+            return redirect('upload_attachment')
+    else:
+        return render(request, 'image_timesheet.html')
+
 
 def team_task_report(request, user_id):
     user_id = request.session.get('user_id')  # get from session
     if not user_id:
         messages.error(request, "User not logged in.")
         return redirect('login')
-
+    emp = emp_registers.objects.get(id=user_id)
     # Get tasks assigned to the user
-    tasks = Task.objects.filter(emp_id=user_id).order_by('-id')
+    tasks = Task.objects.filter(
+        leader=emp.name  ).order_by('-id')
+
 
     context = {
         'tasks': tasks,
         'total_tasks': tasks.count(),
         'user_id': user_id,
+
+
     }
 
     return render(request, 'team_task_report.html', context)
@@ -1301,39 +1528,39 @@ def task_list_view(request, user_id):
 def add_task_view(request, user_id):
     user_id = request.session.get('user_id')
     if not user_id:
-        messages.error(request, "User not logged in.")
+        messages.error(request, "User not logged in.", extra_tags='task')
         return redirect('login')
 
     emp = emp_registers.objects.filter(id=user_id).first()
     if not emp:
-        messages.error(request, "Employee not found.")
+        messages.error(request, "Employee not found.", extra_tags="task")
         return redirect('login')
 
-    projects = Project.objects.filter(emp_id=emp)
-    members = Member.objects.all()
+    projects = Project.objects.filter(Q(manager=emp) | Q(admin=emp.name))
+    members = Member.objects.filter(projects__in=projects).distinct()
 
     if request.method == "POST":
         project_id = request.POST.get('project')
         title = request.POST.get('title')
         description = request.POST.get('description')
-        assigned_to_id = request.POST.get('assigned_to')
+        assigned_to_ids = request.POST.getlist('assigned_to')  # Using getlist for ManyToMany field
         due_date = request.POST.get('due_date')
 
         #status = request.POST.get('status')
         priority = request.POST.get('priority')
-        p=PriorityMaster.objects.get(level=priority)
+        p = PriorityMaster.objects.get(level=priority)
         if due_date:
             try:
                 due_date_obj = date.fromisoformat(due_date)
                 if due_date_obj < date.today():
-                    messages.error(request, "Due date cannot be before today.")
+                    messages.error(request, "Due date cannot be before today.", extra_tags='task')
                     return render(request, 'add_task.html', {
                         'projects': projects,
                         'members': members,
                         'user_id': user_id
                     })
             except ValueError:
-                messages.error(request, "Invalid due date format.")
+                messages.error(request, "Invalid due date format.", 'task')
                 return render(request, 'add_task.html', {
                     'projects': projects,
                     'members': members,
@@ -1341,24 +1568,26 @@ def add_task_view(request, user_id):
                 })
         try:
             project = Project.objects.get(id=project_id)
-            assigned_to = Member.objects.get(id=assigned_to_id)
-            status =StatusMaster.objects.get(id=1)
-            Task.objects.create(
+            assigned_to_members = Member.objects.filter(id__in=assigned_to_ids)  # Fetch members based on selected IDs
+            status = StatusMaster.objects.get(id=1)
+            task = Task.objects.create(
                 emp_id=emp,
                 start_date=date.today(),
                 project=project,
                 title=title,
                 description=description,
-                assigned_to=assigned_to,
-                due_date=due_date if due_date else None,
                 status=status,
                 priority=p,
                 leader=emp.name
             )
-            messages.success(request, "Task added successfully.")
-            return redirect('task_list', user_id=user_id)
+            task.assigned_to.set(assigned_to_members)  # Set ManyToMany relationship
+            task.due_date = due_date if due_date else None
+            task.save()
+
+            messages.success(request, "Task added successfully.", 'task')
+            return redirect('team_task_report', user_id=user_id)
         except Exception as e:
-            messages.error(request, f"Error: {e}")
+            messages.error(request, f"Error: {e}", 'task')
 
     return render(request, 'add_task.html', {
         'projects': projects,
@@ -1367,7 +1596,18 @@ def add_task_view(request, user_id):
     })
 
 
+def get_members(request, project_id):
+    # Retrieve the selected project
+    project = get_object_or_404(Project, id=project_id)
 
+    # Get all members associated with this project via team_members (ManyToMany)
+    team_members = project.team_members.all()  # Assuming 'team_members' is a ManyToManyField in Project
+
+    # Prepare the list of members with their ID and name
+    member_list = [{'id': member.id, 'name': member.name} for member in team_members]
+
+    # Return members in JSON format
+    return JsonResponse(member_list, safe=False)
 
 from django.utils.timezone import now
 
@@ -1376,7 +1616,7 @@ def update_task_status_page(request, task_id):
     user_id = request.session.get('user_id')
     emp = get_object_or_404(emp_registers, id=user_id)
     position = emp.position.role.lower()  # RoleMaster FK
-
+    project=Project.objects.get(id=task.project.id)
     # Step 1: Define allowed keys (status keywords like 'pending', 'complete')
     if position == "employee":
         if task.status.status.lower() == 'complete':
@@ -1416,9 +1656,11 @@ def update_task_status_page(request, task_id):
 
             return redirect("task_list_view", user_id=user_id)
 
+
     return render(request, "update_task_status.html", {
         "task": task,
         "status_options": status_options,  # passed as (value, label)
+        'project':project
     })
 
 
@@ -1426,7 +1668,7 @@ def update_task_status_page(request, task_id):
 
 def user_timesheet(request):
     user_id = request.session['user_id']  # your user logic
-    timesheets = Timesheet.objects.filter(emp_id=user_id).select_related('pname')
+    timesheets = Timesheet.objects.filter(emp_id=user_id).select_related('pname').order_by('-id')
     user = timesheets.first().emp_id if timesheets else None
     return render(request, 'user_timesheet.html', {'timesheets': timesheets, 'user': user})
 # Step 1: Enter Email
@@ -1510,7 +1752,7 @@ def update_profile(request ,user_id):
         profile.total_leave = request.POST.get('total_leave') or 0
         profile.balance_leave = request.POST.get('balance_leave') or 0
         profile.used_leave = request.POST.get('used_leave') or 0
-        profile.job_status = request.POST.get('job_status')
+        #profile.job_status = request.POST.get('job_status')
 
         # Passport Info
         profile.passport = request.POST.get('passport')
@@ -1630,38 +1872,43 @@ def get_existing_data(request, category):
     return JsonResponse({'data': data})
 
 
-from django.http import JsonResponse
-from django.shortcuts import render
-from .models import LeaveTypeMaster, LeaveRecord
-import json
-
 
 def leave_type_panel(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
-            # Load data from the POST request
             data = json.loads(request.body)
-            leave_id = data.get('id')  # Get the leave ID from the POST data
-            leave = LeaveTypeMaster.objects.get(id=leave_id)  # Fetch the leave type from DB
-            leave_status = data.get('status', True)  # Get the new status (Active or Inactive)
-            leave.leave_status = leave_status  # Update the leave status
-            leave.save()  # Save the updated leave type
+            leave_id = data.get('id')
+            leave_status = data.get('status', True)
 
-            return JsonResponse({'success': True})  # Return a success response
+            leave = LeaveTypeMaster.objects.get(id=leave_id)
+            leave.leave_status = leave_status
+            leave.save()
+
+            employees = EmployeeDetail.objects.all()
+            # for emp in employees:
+            #     initialize_leave_details(emp)
+
+            return JsonResponse({'success': True})
+
         except LeaveTypeMaster.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Leave type not found'})  # Handle leave type not found error
+            return JsonResponse({'success': False, 'error': 'Leave type not found'})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})  # Handle other exceptions
+            return JsonResponse({'success': False, 'error': str(e)})
 
-    # For GET request: Show the leave types and leave records
+    # GET request: paginate leave masters
+    page_size = request.GET.get('page_size', '10')
     leave_masters = LeaveTypeMaster.objects.all()
     leave_records = LeaveRecord.objects.all()
 
-    return render(request, 'leave_type_panel.html', {
-        'leave_masters': leave_masters,
-        'leave_records': leave_records
-    })
+    paginator = Paginator(leave_masters, page_size)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
+    return render(request, 'leave_type_panel.html', {
+        'leave_masters': page_obj,
+        'leave_records': leave_records,
+        'page_obj': page_obj,
+    })
 
 def project_detail_view(request, pk):
     # Step 1: Fetch project and user details
@@ -1720,6 +1967,148 @@ def project_detail_view(request, pk):
     return render(request, 'project_detail_view.html', context)
 
 
+def project_edit_view(request, project_id):
+    # Fetch the project using the provided project_id
+    project = get_object_or_404(Project, id=project_id)
+
+    # Fetch necessary data for the project edit form
+    rate_status_list = RateStatusMaster.objects.all()
+    managers = emp_registers.objects.filter(position__role__iexact='Manager')
+    priority_list = PriorityMaster.objects.all()
+    employee_members = emp_registers.objects.filter(position__role__iexact='Employee')
+
+    selected_team_members = project.team_members.values_list('id', flat=True)
+
+    if request.method == "POST":
+        try:
+            # Extract form data
+            pname = request.POST.get("pname")
+            client = request.POST.get("client")
+            start_date = request.POST.get("start_date")
+            end_date = request.POST.get("end_date")
+            rate_status_id = request.POST.get("rate_status")
+            rate = request.POST.get("rate")  # Already a float field, no need to cast
+            manager = request.POST.get("manager")
+            priority_id = request.POST.get("priority")
+            team_members = request.POST.getlist("team_members")
+            description = request.POST.get("description")
+
+            # Convert the start date to a date object for validation
+            start_date_obj = datetime.strptime(start_date, "%Y-%m-%d").date() if start_date else None
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d").date() if end_date else None
+
+            # Validation
+
+            m = emp_registers.objects.get(id=manager)  # Fetch manager by ID
+            # Update project fields
+            project.pname = pname
+            project.client = client
+            project.start_date = start_date_obj
+            project.end_date = end_date_obj
+            project.rate_status_id = rate_status_id
+            project.rate = float(rate)  # Ensure rate is saved as float
+            project.manager = m.name
+            project.priority_id = priority_id
+            project.description = description
+            project.last_update = now()
+
+
+            # Update team members - Ensure team_member_names are integers
+            # Convert list of team_member IDs (from POST data) to integers
+            team_member_ids = [int(member) for member in team_members]
+
+            # Convert emp_registers to Member instances
+            team_members_list = []
+            for emp_id in team_member_ids:
+                employee = emp_registers.objects.filter(id=emp_id).first()
+                if employee:
+                    member, _ = Member.objects.get_or_create(
+                        emp_id=employee,  # Assuming ForeignKey to emp_registers
+                        defaults={
+                            'name': employee.name,
+                            'email': employee.email
+                        }
+                    )
+                    team_members_list.append(member)
+
+            # Set the converted members to the project
+            project.team_members.set(team_members_list)
+            project.save()
+            user_id=request.session.user_id
+            messages.success(request, "Project details updated successfully.")
+
+            messages.success(request, "Project details updated successfully.")
+            return redirect('project_detail', pk=user_id)
+
+        except Exception as e:
+            messages.error(request, f"Error updating project: {e}")
+
+    # Render the project edit page with the relevant context
+    return render(request, 'project_edit.html', {
+        'project': project,
+        'rate_status_list': rate_status_list,
+        'managers': managers,
+        'priority_list': priority_list,
+        'employee_members': employee_members,
+        'selected_team_members': selected_team_members,
+    })
 
 
 
+
+def team_timesheet_record(request):
+    user_id = request.session.get('user_id')  # Assuming user_id is saved in session
+    today = date.today()
+
+    # Calculate current and previous week
+    start_of_week = today - timedelta(days=today.weekday())  # Monday of current week
+    end_of_week = start_of_week + timedelta(days=6)
+    start_of_last_week = start_of_week - timedelta(days=7)
+    end_of_last_week = start_of_week - timedelta(days=1)
+
+    # Filter timesheets where pname.manager or pname.admin == user_id
+    timesheets = Timesheet.objects.filter(
+        Q(pname__manager=user_id) | Q(pname__admin=user_id),
+        date__range=[start_of_last_week, end_of_week]  # Between last week's Monday to current week's Sunday
+    ).select_related('emp_id', 'pname')
+
+    context = {
+        'timesheets': timesheets,
+    }
+    return render(request, 'team_timesheet_record.html', context)
+
+
+
+def get_project_members(request, project_id):
+    try:
+        project = Project.objects.get(id=project_id)
+        members = project.team_members.all()
+        data = [{'id': m.id, 'name': m.name} for m in members]
+        return JsonResponse(data, safe=False)
+    except Project.DoesNotExist:
+        return JsonResponse([], safe=False)
+
+
+
+
+def leave_type_detail_view(request, leave_type_id):
+    leave_type = get_object_or_404(LeaveTypeMaster, id=leave_type_id)
+    leave_records = LeaveRecord.objects.filter(
+        leave_type=leave_type
+    ).select_related('emp_id').order_by('-id')
+
+    # Default limit is now 10
+    limit = request.GET.get('limit', '10')
+    paginator = Paginator(leave_records, int(limit))
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    if request.method == 'POST':
+        # If delete action is triggered for the leave type
+        if 'delete_leave_type' in request.POST:
+            leave_type.delete()
+            return redirect('leave_type_panel')  # Redirect to the leave type panel or a different page after deletion
+    return render(request, 'leave_type_detail.html', {
+        'leave_type': leave_type,
+        'page_obj': page_obj,
+        'limit': limit,
+    })
