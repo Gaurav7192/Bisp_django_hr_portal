@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .doc-frame {
+    width: 100%;
+    height: 500px;
+    border: 1px solid #ccc;
+  }
+  .ack-status {
+    margin-top: 10px;
+  }
+  .ack-status span {
+    margin-right: 10px;
+  }
+  .toggle-btn {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+  }
+  .ack-list {
+    display: none;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+  }
+  .ack-buttons {
+    margin-top: 20px;
+  }
+  .ack-buttons button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .ack-buttons button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+  .pagination {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+  }
+  .pagination a {
+    margin: 0 5px;
+    padding: 8px 15px;
+    text-decoration: none;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+  .pagination a.active {
+    background-color: #007bff;
+    color: white;
+  }
+  .pagination a:hover {
+    background-color: #ddd;
+  }
+</style>
+
+<div class="container">
+  {% if request.session.postion == 'HR' %}
+    <h2>Handbooks</h2>
+
+    <!-- Add Handbook Button -->
+    <button id="addHandbookBtn" style="background-color:#007bff; color:white; padding:10px 20px; border:none; cursor:pointer; font-size:16px; margin-bottom:10px;">
+      + Add Handbook
+    </button>
+
+    <!-- Hidden Upload Form -->
+    <form method="post" enctype="multipart/form-data" id="uploadForm" style="display:none; margin-top:10px;">
+      {% csrf_token %}
+      <input type="file" name="document" required style="margin-bottom:10px;">
+      <button type="submit" style="background-color:#28a745; color:white; padding:8px 15px; border:none;">Upload</button>
+    </form>
+
+    <script>
+      // Show upload form on button click
+      document.getElementById("addHandbookBtn").addEventListener("click", function() {
+        document.getElementById("uploadForm").style.display = "block";
+        this.style.display = "none";  // Hide the "+ Add Handbook" button
+      });
+    </script>
+
+    <h3>Handbooks Records</h3>
+    <table id="handbook-table" style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+      <thead>
+        <tr style="background:#f1f1f1;">
+          <th>#</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>View</th>
+          <th>Action</th>
+          <th>+</th>
+        </tr>
+      </thead>
+      <tbody id="handbook-list">
+        {% for handbook in handbooks %}
+          <tr class="handbook-item" data-id="{{ handbook.id }}">
+            <td>{{ forloop.counter }}</td>
+            <td>{{ handbook.start_date }}</td>
+            <td>{{ handbook.end_date }}</td>
+            <td>
+              <a href="{{ handbook.document.url }}" target="_blank">View</a>
+            </td>
+            <td>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="toggle_id" value="{{ handbook.id }}">
+                {% if handbook.is_active %}
+                  <button type="submit" style="background:red; color:white; border:none; padding:5px 10px;">Deactivate</button>
+                {% else %}
+                  <button type="submit" style="background:green; color:white; border:none; padding:5px 10px;">Activate</button>
+                {% endif %}
+              </form>
+            </td>
+            <td>
+              <div class="toggle-btn" onclick="toggleAck({{ handbook.id }})">+</div>
+            </td>
+          </tr>
+          <tr class="ack-list-row" id="ack-{{ handbook.id }}" style="display:none;">
+            <td colspan="6">
+              <div id="ack-{{ handbook.id }}" class="ack-list">
+                <table id="ack-table-{{ handbook.id }}">
+                  <tr><th>User</th><th>Status</th><th>Date</th></tr>
+                  {% for ack in handbook.handbookacknowledgment_set.all %}
+                    <tr>
+                      <td>{{ ack.user.username }}</td>
+                      <td>
+                        {% if ack.acknowledged == True %}
+                          ✅ Agreed
+                        {% elif ack.acknowledged == False %}
+                          ❌ Disagreed
+                        {% else %}
+                          ⏳ Pending
+                        {% endif %}
+                      </td>
+                      <td>{{ ack.acknowledged_at|default:"-" }}</td>
+                    </tr>
+                  {% endfor %}
+                </table>
+                <div class="ack-pagination" id="ack-pagination-{{ handbook.id }}"></div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Pagination for Handbook List -->
+    <div id="pagination-controls" class="pagination"></div>
+
+  {% else %}
+    <h2>Latest Handbook</h2>
+    {% if latest_handbook %}
+      <iframe src="{{ latest_handbook.document.url }}" class="doc-frame" id="docFrame"></iframe>
+
+      {% if ack.acknowledged is None %}
+        <div class="ack-status" id="ackButtons" style="display:none;">
+          <p>Please read the handbook and acknowledge below:</p>
+          <form method="post" id="ackForm">
+            {% csrf_token %}
+            <div class="ack-buttons">
+              <button type="button" onclick="sendAck('agree')">Agree</button>
+              <button type="button" onclick="sendAck('disagree')">Disagree</button>
+            </div>
+          </form>
+        </div>
+      {% endif %}
+
+      {% if ack.acknowledged %}
+        <div class="ack-status">
+          <strong>Status:</strong>
+          {% if ack.acknowledged %}
+            ✅ Agreed at {{ ack.acknowledged_at }}
+          {% else %}
+            ❌ Disagreed at {{ ack.acknowledged_at }}
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <p>No active handbook found.</p>
+    {% endif %}
+  {% endif %}
+</div>
+
+<script>
+  // Client-side Pagination for Handbooks
+  const itemsPerPage = 5;  // Number of handbooks per page
+  let currentPage = 1;
+
+  // Function to render the handbooks for the current page
+  function renderHandbooks() {
+    const allHandbooks = document.querySelectorAll('.handbook-item');
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    // Hide all handbooks
+    allHandbooks.forEach(item => item.style.display = 'none');
+
+    // Show the handbooks for the current page
+    for (let i = startIndex; i < endIndex && i < allHandbooks.length; i++) {
+      allHandbooks[i].style.display = 'table-row';
+    }
+
+    renderPagination(allHandbooks.length);
+  }
+
+  // Function to render pagination controls for handbooks list
+  function renderPagination(totalItems) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const paginationControls = document.getElementById('pagination-controls');
+    paginationControls.innerHTML = '' ;
+
+    // Previous page button
+    if (currentPage > 1) {
+      const prevBtn = document.createElement('a');
+      prevBtn.href = '#';
+      prevBtn.innerHTML = 'Previous';
+      prevBtn.onclick = () => changePage(currentPage - 1);
+      paginationControls.appendChild(prevBtn);
+    }
+
+    // Page number buttons
+    for (let i = 1; i <= totalPages; i++) {
+      const pageBtn = document.createElement('a');
+      pageBtn.href = '#';
+      pageBtn.innerHTML = i;
+      if (i === currentPage) {
+        pageBtn.classList.add('active');
+      }
+      pageBtn.onclick = () => changePage(i);
+      paginationControls.appendChild(pageBtn);
+    }
+
+    // Next page button
+    if (currentPage < totalPages) {
+      const nextBtn = document.createElement('a');
+      nextBtn.href = '#';
+      nextBtn.innerHTML = 'Next';
+      nextBtn.onclick = () => changePage(currentPage + 1);
+      paginationControls.appendChild(nextBtn);
+    }
+  }
+
+  // Function to change the page and re-render the handbooks
+  function changePage(page) {
+    currentPage = page;
+    renderHandbooks();
+  }
+
+  // Toggle Acknowledgment list visibility for HR and Employees
+  function toggleAck(id) {
+    const ackList = document.getElementById('ack-' + id);
+
+    // If the acknowledgment list is not visible, show it
+    if (ackList.style.display === 'none' || ackList.style.display === '') {
+      ackList.style.display = 'block';
+    } else {
+      ackList.style.display = 'none';
+    }
+
+    // Ensure that pagination works when showing the list
+    paginateAcks(id);
+  }
+
+  // Client-side pagination for Acknowledgment list
+  function paginateAcks(handbookId) {
+    const itemsPerPage = 5;  // Number of acknowledgment records per page
+    let currentPage = 1;
+
+    const allAcks = document.querySelectorAll(`#ack-table-${handbookId} tr`);
+    const ackPagination = document.getElementById(`ack-pagination-${handbookId}`);
+
+    // Function to render acknowledgment items
+    function renderAcks() {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+
+      // Hide all acknowledgments
+      allAcks.forEach(item => item.style.display = 'none');
+
+      // Show the acknowledgments for the current page
+      for (let i = startIndex; i < endIndex && i < allAcks.length; i++) {
+        allAcks[i].style.display = 'table-row';
+      }
+
+      renderAckPagination(allAcks.length);
+    }
+
+    // Function to render pagination for acknowledgment records
+    function renderAckPagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      ackPagination.innerHTML = '';
+
+      // Previous page button
+      if (currentPage > 1) {
+        const prevBtn = document.createElement('a');
+        prevBtn.href = '#';
+        prevBtn.innerHTML = 'Previous';
+        prevBtn.onclick = () => changeAckPage(handbookId, currentPage - 1);
+        ackPagination.appendChild(prevBtn);
+      }
+
+      // Page number buttons
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = document.createElement('a');
+        pageBtn.href = '#';
+        pageBtn.innerHTML = i;
+        if (i === currentPage) {
+          pageBtn.classList.add('active');
+        }
+        pageBtn.onclick = () => changeAckPage(handbookId, i);
+        ackPagination.appendChild(pageBtn);
+      }
+
+      // Next page button
+      if (currentPage < totalPages) {
+        const nextBtn = document.createElement('a');
+        nextBtn.href = '#';
+        nextBtn.innerHTML = 'Next';
+        nextBtn.onclick = () => changeAckPage(handbookId, currentPage + 1);
+        ackPagination.appendChild(nextBtn);
+      }
+    }
+
+    // Function to change the acknowledgment page
+    function changeAckPage(handbookId, page) {
+      currentPage = page;
+      renderAcks();
+    }
+
+    renderAcks();
+  }
+
+  // Initialize the handbooks pagination
+  renderHandbooks();
+
+  // Send acknowledgment status (agree/disagree) to the server
+  function sendAck(status) {
+    if (confirm('Are you sure you want to ' + status + '?')) {
+      const form = document.getElementById('ackForm');
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'ack_status';
+      input.value = status;
+      form.appendChild(input);
+      form.submit();
+    }
+  }
+</script>
+
+{% endblock %}

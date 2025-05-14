@@ -61,12 +61,32 @@
     th.sortable.sorted-desc:after {
         content: ' 🔽';
     }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+
+    .pagination button:disabled {
+        background-color: #ddd;
+        cursor: not-allowed;
+    }
 </style>
 
 <div class="main-content">
     <div class="header">
         <div><strong>Total Tasks:</strong> {{ total_tasks }}</div>
-
     </div>
 
     <div class="controls">
@@ -83,79 +103,113 @@
             Search: <input type="search" id="searchInput" placeholder="Search tasks...">
         </div>
     </div>
-<table id="taskTable">
-    <thead>
-    <tr>
-        <th>Serial No</th>
-        <th class="sortable" data-col="1">Task</th>
-        <th class="sortable" data-col="2">Project</th>
-        <th class="sortable" data-col="3">Start Date</th>
-        <th class="sortable" data-col="4">End Date</th>
 
-        <th class="sortable" data-col="6">Status</th>
-        <th class="sortable" data-col="7">Priority</th>
-    </tr>
-    </thead>
-    <tbody id="taskTableBody">
-    {% for task in tasks %}
+    <table id="taskTable">
+        <thead>
         <tr>
-            <td>{{ forloop.counter }}</td>
-        <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
-
-            <td>{{ task.project.pname }}</td>
-            <td>{{ task.start_date }}</td>
-            <td>{{ task.due_date }}</td>
-
-            <td>{{ task.status }}</td>
-            <td>
-                {% if task.priority == 1 %}
-                    Low
-                {% elif task.priority == 2 %}
-                    Medium
-                {% elif task.priority == 3 %}
-                    High
-                {% else %}
-                    Unknown
-                {% endif %}
-            </td>
+            <th>Serial No</th>
+            <th class="sortable" data-col="1">Task</th>
+            <th class="sortable" data-col="2">Project</th>
+            <th class="sortable" data-col="3">Start Date</th>
+            <th class="sortable" data-col="4">End Date</th>
+            <th class="sortable" data-col="6">Status</th>
+            <th class="sortable" data-col="7">Priority</th>
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody id="taskTableBody">
+        {% for task in tasks %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
+                <td>{{ task.project.pname }}</td>
+                <td>{{ task.start_date }}</td>
+                <td>{{ task.due_date }}</td>
+                <td>{{ task.status }}</td>
+                <td>
+                    {% if task.priority == 1 %}
+                        Low
+                    {% elif task.priority == 2 %}
+                        Medium
+                    {% elif task.priority == 3 %}
+                        High
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
+    <div class="pagination" id="paginationControls">
+        <button id="prevPage" disabled>Previous</button>
+        <button id="nextPage">Next</button>
+    </div>
 </div>
 
 <script>
     const entriesPerPageSelect = document.getElementById("entriesPerPage");
     const searchInput = document.getElementById("searchInput");
-    const table = document.getElementById("taskTable");
     const tbody = document.getElementById("taskTableBody");
     const sortableHeaders = document.querySelectorAll("th.sortable");
+    const prevButton = document.getElementById("prevPage");
+    const nextButton = document.getElementById("nextPage");
 
     let originalRows = Array.from(tbody.rows);
+    let currentPage = 1;
+    let rowsPerPage = parseInt(entriesPerPageSelect.value);
     let currentSort = { index: null, order: "asc" };
 
-    function renderTable(filteredRows, pageSize = 10) {
+    function renderTable(filteredRows, pageSize = 10, page = 1) {
         tbody.innerHTML = "";
-        filteredRows.slice(0, pageSize).forEach((row, i) => {
-            row.cells[0].innerText = i + 1;
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        filteredRows.slice(startIndex, endIndex).forEach((row, i) => {
+            row.cells[0].innerText = startIndex + i + 1;
             tbody.appendChild(row);
         });
+
+        // Update pagination buttons
+        prevButton.disabled = currentPage === 1;
+        nextButton.disabled = currentPage * pageSize >= filteredRows.length;
+    }
+
+    function updatePagination() {
+        const pageSize = parseInt(entriesPerPageSelect.value);
+        const filtered = originalRows.filter(row => {
+            return Array.from(row.cells).some(cell =>
+                cell.innerText.toLowerCase().includes(searchInput.value.toLowerCase())
+            );
+        });
+        renderTable(filtered, pageSize, currentPage);
     }
 
     entriesPerPageSelect.addEventListener("change", () => {
-        const pageSize = parseInt(entriesPerPageSelect.value);
-        renderTable(originalRows, pageSize);
+        rowsPerPage = parseInt(entriesPerPageSelect.value);
+        updatePagination();
     });
 
     searchInput.addEventListener("keyup", () => {
-        const value = searchInput.value.toLowerCase();
+        updatePagination();
+    });
+
+    prevButton.addEventListener("click", () => {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePagination();
+        }
+    });
+
+    nextButton.addEventListener("click", () => {
         const filtered = originalRows.filter(row => {
             return Array.from(row.cells).some(cell =>
-                cell.innerText.toLowerCase().includes(value)
+                cell.innerText.toLowerCase().includes(searchInput.value.toLowerCase())
             );
         });
-        renderTable(filtered, parseInt(entriesPerPageSelect.value));
+        if (currentPage * rowsPerPage < filtered.length) {
+            currentPage++;
+            updatePagination();
+        }
     });
 
     sortableHeaders.forEach(header => {
@@ -165,10 +219,7 @@
             const newOrder = isSameCol && currentSort.order === "asc" ? "desc" : "asc";
             currentSort = { index: colIndex, order: newOrder };
 
-            // Remove old sort indicators
             sortableHeaders.forEach(h => h.classList.remove("sorted-asc", "sorted-desc"));
-
-            // Add sort indicator to active header
             header.classList.add(newOrder === "asc" ? "sorted-asc" : "sorted-desc");
 
             const sorted = [...originalRows].sort((a, b) => {
@@ -180,11 +231,12 @@
             });
 
             originalRows = sorted;
-            renderTable(sorted, parseInt(entriesPerPageSelect.value));
+            updatePagination();
         });
     });
 
-    renderTable(originalRows, parseInt(entriesPerPageSelect.value));
+    // Initial render
+    updatePagination();
 </script>
 
 {% endblock %}

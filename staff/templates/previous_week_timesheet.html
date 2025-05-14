@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container">
+    <main class="content">
+        <h2>Update Timesheet</h2>
+        <form action="{% url 'update_timesheet' request.session.user_id %}" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <label class="checkbox-label">
+                <input type="checkbox" id="weekly" name="weekly" onclick="toggleWeeklyTimesheet()"> Fill Weekly Timesheet
+            </label>
+
+            <!-- Weekly Timesheet -->
+            <div id="weekly-timesheet" class="weekly-timesheet">
+                <h3>Weekly Entry (Optional for each day)</h3>
+                <div class="timesheet-entry weekly-grid-layout">
+                    {% for day in days %}
+                        <div class="weekly-column">
+                            <h4>{{ day }} </h4>
+                            <div>
+                                <label for="pname_{{ day }}">Project Name :</label>
+                                <select id="pname_{{ day }}" name="pname_{{ day }}" onchange="loadTasksForDay(this.value, '{{ day }}')">
+                                    <option value="">Select Project</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.pname }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="task_{{ day }}">Task :</label>
+                                <select id="task_{{ day }}" name="task_{{ day }}">
+                                    <option value="">Select Task</option>
+                                    {% for t in tasks %}
+                                        <option value="{{ t.id }}">{{ t.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label for="date_{{ day }}">Date :</label>
+                                <input type="date" name="date_{{ day }}" id="date_{{ day }}">
+                            </div>
+                            <div>
+                                <label for="start_time_{{ day }}">Start Time :</label>
+                                <input type="time" id="start_time_{{ day }}" name="start_time_{{ day }}">
+                            </div>
+                            <div>
+                                <label for="end_time_{{ day }}">End Time :</label>
+                                <input type="time" id="end_time_{{ day }}" name="end_time_{{ day }}">
+                            </div>
+                            <div class="full-width">
+                                <label for="description_{{ day }}">Description :</label>
+                                <textarea id="description_{{ day }}" name="description_{{ day }}" rows="2"></textarea>
+                            </div>
+                            <div class="full-width">
+                                <label for="attachment_{{ day }}">Attachment :</label>
+                                <input type="file" id="attachment_{{ day }}" name="attachment_{{ day }}" accept="image/*">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Update Timesheet</button>
+        </form>
+    </main>
+</div>
+
+<script>
+    function toggleWeeklyTimesheet() {
+        const weeklyChecked = document.getElementById('weekly').checked;
+        document.getElementById('weekly-timesheet').style.display = weeklyChecked ? 'block' : 'none';
+
+        if (weeklyChecked) {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 (Sun) to 6 (Sat)
+
+            // Calculate the previous week's Monday
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - currentDay - 6); // shift to the previous Monday
+
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            for (let i = 0; i < days.length; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const formatted = date.toISOString().split('T')[0];
+                const dateInput = document.getElementById('date_' + days[i]);
+                if (dateInput) {
+                    dateInput.value = formatted;
+                }
+            }
+        }
+    }
+
+    function loadTasksForDay(projectId, day) {
+        if (projectId) { // Ensure a project is selected before attempting to load tasks
+            fetch(`/get-tasks/?project_id=${projectId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const taskSelect = document.getElementById('task_' + day);
+                    taskSelect.innerHTML = '<option value="">Select Task</option>';
+                    data.tasks.forEach(task => {
+                        taskSelect.innerHTML += `<option value="${task.id}">${task.name}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading tasks:', error);
+                });
+        }
+    }
+
+    // Auto-fill today's date in the Daily Timesheet when the page loads
+    window.addEventListener('DOMContentLoaded', () => {
+        // Trigger on page load if weekly checkbox is already checked
+        if (document.getElementById('weekly').checked) {
+            toggleWeeklyTimesheet();
+        }
+    });
+</script>
+
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .content {
+        flex-grow: 1;
+        padding: 10px;
+        max-width: 1500px;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #f4f6f8;
+    }
+
+    form {
+        background: #fff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 25px;
+        color: #222;
+    }
+
+    h3 {
+        margin: 25px 0 10px;
+        color: #333;
+    }
+
+    h4 {
+        margin-top: 10px;
+        color: #444;
+        font-weight: 500;
+    }
+
+    .grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 25px;
+    }
+
+    .full-width {
+        grid-column: 1 / -1;
+    }
+
+    .weekly-grid-layout {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 15px;
+    }
+
+    .weekly-column {
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: border-color 0.3s ease;
+    }
+
+    input[type="file"] {
+        padding: 0;
+    }
+
+    input:focus, select:focus, textarea:focus {
+        border-color: #4D90FE;
+    }
+
+    .checkbox-label {
+        display: block;
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+
+    .btn-submit {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        background-color: #45a049;
+    }
+
+    .weekly-timesheet {
+        display: none;
+    }
+</style>
+
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Handbook List</h2>
+
+<!-- Add Handbook Form -->
+<h3>Add a New Handbook</h3>
+<form id="add-handbook-form" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div>
+        <label for="document">Upload Handbook (PDF, DOC, etc.):</label>
+        <input type="file" name="document" id="document" required>
+    </div>
+    <div>
+        <label for="document_name">Document Name:</label>
+        <input type="text" name="document_name" id="document_name" required>
+    </div>
+    <button type="submit" style="background-color: blue; color: white; padding: 10px 20px; border: none; cursor: pointer;">
+        Add Handbook
+    </button>
+</form>
+
+<table class="table" id="handbook-table">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>View</th>
+            <th>Status</th>
+            <th>+</th>
+        </tr>
+    </thead>
+    <tbody id="handbook-table-body">
+        {% for hb in handbooks %}
+        <tr>
+            <td>{{ hb.id }}</td>
+            <td>{{ hb.start_date }}</td>
+            <td>{{ hb.end_date }}</td>
+            <td><a href="{{ hb.document.url }}" target="_blank">View</a></td>
+            <td>{{ hb.active_status|yesno:"Active,Inactive" }}</td>
+            <td><button type="button" onclick="toggleRecords({{ forloop.counter0 }})">+</button></td>
+        </tr>
+        <tr id="records-{{ forloop.counter0 }}" style="display: none;">
+            <td colspan="6">
+                <div class="record-details">
+                    <strong>Leave Type Details:</strong>
+                    <table class="leave-details-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Acknowledgment</th>
+                                <th>Acknowledgment Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ak in hb.acknowledgments %}
+                            <tr>
+                                <td>{{ ak.employee }}</td>
+                                <td>{{ ak.acknowledgment|default:"N/A" }}</td>
+                                <td>{{ ak.acknowledgment_date }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div id="pagination-controls"></div>
+
+<script>
+// Client-Side Pagination for Handbooks
+const handbooks = {{ handbooks|safe }};
+let currentHandbookPage = 1;
+const itemsPerPage = 5;
+
+function displayHandbooks(page = 1) {
+    const start = (page - 1) * itemsPerPage;
+    const end = page * itemsPerPage;
+    const filteredHandbooks = handbooks.slice(start, end);
+    const handbookTableBody = document.getElementById('handbook-table-body');
+    handbookTableBody.innerHTML = '';
+
+    filteredHandbooks.forEach(hb => {
+        const row = `
+        <tr>
+            <td>${hb.id}</td>
+            <td>${hb.start_date}</td>
+            <td>${hb.end_date}</td>
+            <td><a href="${hb.document}" target="_blank">View</a></td>
+            <td>${hb.active_status ? 'Active' : 'Inactive'}</td>
+            <td><button type="button" onclick="toggleRecords(${hb.id})">+</button></td>
+        </tr>
+        <tr id="records-${hb.id}" style="display: none;">
+            <td colspan="6">
+                <div id="acknowledgment-content-${hb.id}">Loading...</div>
+            </td>
+        </tr>`;
+        handbookTableBody.innerHTML += row;
+    });
+
+    renderPagination();
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(handbooks.length / itemsPerPage);
+    const paginationControls = document.getElementById('pagination-controls');
+    paginationControls.innerHTML = '';
+
+    if (currentHandbookPage > 1) {
+        paginationControls.innerHTML += `<button onclick="changePage(${currentHandbookPage - 1})">Previous</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+        paginationControls.innerHTML += `<button onclick="changePage(${i})" ${i === currentHandbookPage ? 'disabled' : ''}>${i}</button>`;
+    }
+
+    if (currentHandbookPage < totalPages) {
+        paginationControls.innerHTML += `<button onclick="changePage(${currentHandbookPage + 1})">Next</button>`;
+    }
+}
+
+function changePage(page) {
+    currentHandbookPage = page;
+    displayHandbooks(page);
+}
+
+function toggleRecords(index) {
+  const el = document.getElementById('records-' + index);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+document.getElementById('add-handbook-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('/add-handbook/', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Handbook added successfully!');
+            window.location.reload();
+        } else {
+            alert('Failed to add handbook!');
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// Initial Render
+displayHandbooks();
+</script>
+
+{% endblock %}

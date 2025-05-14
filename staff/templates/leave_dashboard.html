@@ -1,294 +1,300 @@
 {% extends 'base.html' %}
+
 {% block content %}
-
-{% include 'side bar.html' %}
-
-<div class="container-fluid px-0 py-4" style="background-color: white;">
-  <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-    <h3 class="fw-bold">Leave Records</h3>
-    <a href="{% url 'apply_leave' request.session.user_id %}" class="btn btn-primary">Add Leave</a>
-  </div>
-
-  <div class="table-responsive px-3">
-    <div class="d-flex justify-content-end mb-2">
-      <input type="text" id="searchInput" class="form-control w-25 me-2" placeholder="Search...">
-      <select id="rowsPerPage" class="form-select w-auto">
+<div class="container-fluid mt-4">
+  <!-- Top Controls -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <label for="rowsPerPage" class="form-label me-2">Show</label>
+      <select id="rowsPerPage" class="form-select form-select-sm d-inline-block" style="width: auto;">
         <option value="5">5</option>
         <option value="10" selected>10</option>
         <option value="20">20</option>
       </select>
     </div>
+    <input type="text" id="searchInput" class="form-control form-control-sm" style="width: 250px;" placeholder="Search..." onkeyup="searchTable()">
+  </div>
 
-    <table class="table table-bordered table-hover" id="leaveTable">
-      <thead style="background-color: #ffffff; color: #000000;">
+  <!-- Table -->
+  <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+    <table class="table table-bordered table-striped table-hover" id="leaveTable">
+      <thead class="table-light">
         <tr>
-          <th data-sort="number">S.No.</th>
-          <th data-sort="string">Apply Date</th>
-          <th data-sort="string">Start Date</th>
-          <th data-sort="string">End Date</th>
-          <th data-sort="number">Leave Days</th>
-          <th>Reason </th>
-          <th data-sort="string">Status</th>
-          <th data-sort="string">Action By</th>
-          <th data-sort="string">Reject leave Reason</th>
+          <th onclick="sortTable(0)">Name</th>
+          <th onclick="sortTable(1)">Department</th>
+          <th onclick="sortTable(2)">Start Date</th>
+          <th onclick="sortTable(3)">End Date</th>
+          <th onclick="sortTable(4)">No. of Days</th>
+          <th onclick="sortTable(5)">Leave Type</th>
+          <th onclick="sortTable(6)">Reason</th>
+          <th onclick="sortTable(7)">Approval Status</th>
+          <th>Approved By</th>
+          <th class="d-none">Reject Reason</th>
         </tr>
       </thead>
-
-      <tbody>
-        {% if leave_data %}
+      <tbody id="leaveTableBody">
         {% for leave in leave_data %}
-        <tr id="row-{{ leave.leave_id }}">
-          <td>{{ forloop.counter }}</td>
-          <td>{{ leave.current_date }}</td>
+        <tr>
+          <td>{{ leave.emp_id}}</td>
+          <td>{{ leave.emp_id.department }}</td>
           <td>{{ leave.start_date }}</td>
           <td>{{ leave.end_date }}</td>
-          <td>{{ leave.no_of_leaves }}</td>
-          <td id="actions-{{ leave.leave_id }}">
-            {{ leave.reason }}
-          </td>
-          <td id="status-{{ leave.leave_id }}">
-            {% if leave.approval_status == 2 %}
+          <td>{{ leave.no_of_days }}</td>
+
+          <!-- Conditionally display Leave Type based on Compensation Leave -->
+         <td>
+  {% if leave.compensatory_leave %}
+    <span class="badge bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.compensation_leave_reason }}">
+      Compensation Leave
+    </span>
+  {% else %}
+    {{ leave.leave_type.name }}
+  {% endif %}
+</td>
+
+
+           <td>
+{% if leave.reason|length > 20 %}
+<span class="text-primary" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#reasonModal" onclick="showFullReason(`{{ leave.reason|escapejs }}`)">
+{{ leave.reason|slice:":20" }}...
+</span>
+{% else %}
+{{ leave.reason }}
+{% endif %}
+</td>
+
+          <td id="status-{{ leave.id }}">
+            {% if leave.approval_status.status == "Approved" %}
+
+             {% if today <= leave.start_date %}
+              <div class="dropdown">
+                <span class="badge bg-success dropdown-toggle" data-bs-toggle="dropdown" role="button">Approved</span>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item text-success" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">✅ Withdraw</a></li>
+
+                </ul>
+              </div>
+              {% else %}
+              <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+
+            {% elif leave.approval_status.status == "Rejected" %}
               <span class="badge bg-danger">Rejected</span>
-            {% elif leave.approval_status == 3 %}
+            {% elif leave.approval_status.status == "Withdrawn" %}
               <span class="badge bg-secondary">Withdrawn</span>
-            {% elif leave.approval_status == 4 %}
+            {% elif leave.approval_status.status == "Pending" %}
+             {% if today <= leave.start_date %}
               <div class="dropdown">
-                <span class="badge bg-warning text-dark dropdown-toggle" data-bs-toggle="dropdown" role="button">
-                  Pending
-                </span>
-                {% if today <= leave.start_date %}
+                <span class="badge bg-warning text-dark dropdown-toggle" data-bs-toggle="dropdown" role="button">Pending</span>
                 <ul class="dropdown-menu">
-                  <li>
-                    <a class="dropdown-item text-danger" href="#" onclick="updateStatus(event, '{{ leave.leave_id }}', 'Withdrawn')">
-                      ↩ Withdraw
-                    </a>
-                  </li>
+                  <li><a class="dropdown-item text-success" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">✅ Withdraw</a></li>
+
                 </ul>
-                {% endif %}
               </div>
-            {% elif leave.approval_status == 1 %}
-              <div class="dropdown">
-                <span class="badge bg-success dropdown-toggle" data-bs-toggle="dropdown" role="button">
-                  Approved
-                </span>
-                {% if today <= leave.start_date %}
-                <ul class="dropdown-menu">
-                  <li>
-                    <a class="dropdown-item text-danger" href="#" onclick="updateStatus(event, '{{ leave.leave_id }}', 'Withdrawn')">
-                      ↩ Withdraw
-                    </a>
-                  </li>
-                </ul>
-                {% endif %}
-              </div>
+              {% else %}
+              <span class="badge bg-warning text-dark">Pending</span>
+              {% endif %}
+
             {% else %}
               <span class="badge bg-warning text-dark">{{ leave.approval_status.status }}</span>
             {% endif %}
           </td>
-          <td id="actionby-{{ leave.leave_id }}">
-            {% if leave.approval_status != 4 %}
-              {{ leave.approved_by }}
-            {% else %}
-              Not Assigned
-            {% endif %}
+          <td>{{ leave.approved_by }}</td>
+
+          <!-- Hidden Reject Reason Input -->
+          <td id="reject-reason-cell-{{ leave.id }}" class="d-none">
+            <input type="text" class="form-control form-control-sm mt-1" id="reject-reason-input-{{ leave.id }}" placeholder="Enter reject reason">
+              <button class="btn btn-sm btn-danger mt-1" onclick="submitRejection(event, '{{ leave.id }}')">Submit</button>
           </td>
-          <td>{{ leave.approve_reason }}</td>
         </tr>
         {% endfor %}
-        {% else %}
-        <tr>
-          <td colspan="9" class="text-center">No leave records found.</td>
-        </tr>
-        {% endif %}
       </tbody>
     </table>
+  </div>
 
-    <div class="d-flex justify-content-center mt-3">
-      <div id="paginationNumbers" class="pagination-numbers"></div>
-    </div>
-    <div class="d-flex justify-content-between align-items-center mt-3 px-2">
-      <small id="showingInfo"></small>
-      <div>
-        <button id="prevPage" class="btn btn-sm btn-outline-dark me-2">Prev</button>
-        <button id="nextPage" class="btn btn-sm btn-outline-dark">Next</button>
+  <!-- Pagination -->
+  <div class="d-flex justify-content-center mt-3">
+    <nav><ul class="pagination" id="pagination"></ul></nav>
+  </div>
+</div>
+<!-- Reason Modal -->
+<div class="modal fade" id="reasonModal" tabindex="-1" aria-labelledby="reasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reasonModalLabel">Full Reason</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="fullReasonText">
+        <!-- Full reason will be inserted here -->
       </div>
     </div>
   </div>
 </div>
 
-<!-- Toast Notification -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
-  <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="d-flex">
-      <div class="toast-body">
-        Leave Withdrawn Successfully!
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  </div>
-</div>
-
+<!-- JavaScript -->
 <script>
-const table = document.getElementById("leaveTable");
-const searchInput = document.getElementById("searchInput");
-const rowsPerPageSelect = document.getElementById("rowsPerPage");
-const showingInfo = document.getElementById("showingInfo");
-const prevBtn = document.getElementById("prevPage");
-const nextBtn = document.getElementById("nextPage");
-const paginationNumbers = document.getElementById("paginationNumbers");
-
 let currentPage = 1;
-let rowsPerPage = parseInt(rowsPerPageSelect.value);
+let filteredRows = [];
 
-function getFilteredRows() {
-  const searchText = searchInput.value.toLowerCase();
-  return Array.from(table.querySelectorAll("tbody tr")).filter(row =>
-    row.innerText.toLowerCase().includes(searchText)
-  );
-}
-
-function paginateTable() {
-  const filteredRows = getFilteredRows();
-  const totalRows = filteredRows.length;
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-
-  if (currentPage > totalPages) currentPage = totalPages || 1;
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-
-  table.querySelectorAll("tbody tr").forEach(row => (row.style.display = "none"));
-  filteredRows.slice(start, end).forEach(row => (row.style.display = ""));
-
-  showingInfo.innerText = `Showing ${totalRows === 0 ? 0 : start + 1} to ${Math.min(end, totalRows)} of ${totalRows} entries`;
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage >= totalPages;
-
-  renderPageNumbers(totalPages);
-}
-
-function renderPageNumbers(totalPages) {
-  paginationNumbers.innerHTML = "";
-  for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement("button");
-    btn.innerText = i;
-    btn.className = `page-btn btn btn-sm mx-1 ${i === currentPage ? 'btn-primary' : 'btn-outline-primary'}`;
-    btn.addEventListener("click", () => {
-      currentPage = i;
-      paginateTable();
-    });
-    paginationNumbers.appendChild(btn);
+function showRejectInput(leaveId) {
+  const cell = document.getElementById(`reject-reason-cell-${leaveId}`);
+  if (cell) {
+    cell.classList.remove("d-none");
   }
 }
 
-function sortTableByColumn(th) {
-  const columnIndex = Array.from(th.parentNode.children).indexOf(th);
-  const type = th.getAttribute("data-sort");
-  const rows = Array.from(table.querySelectorAll("tbody tr"));
 
-  const sortedRows = rows.sort((a, b) => {
-    const aText = a.children[columnIndex].innerText.trim();
-    const bText = b.children[columnIndex].innerText.trim();
-    if (type === "number") return parseFloat(aText) - parseFloat(bText);
-    return aText.localeCompare(bText);
-  });
-
-  if (th.classList.contains("asc")) {
-    sortedRows.reverse();
-    th.classList.remove("asc");
-    th.classList.add("desc");
-  } else {
-    th.classList.remove("desc");
-    th.classList.add("asc");
-  }
-
-  const tbody = table.querySelector("tbody");
-  tbody.innerHTML = "";
-  sortedRows.forEach(row => tbody.appendChild(row));
-  currentPage = 1;
-  paginateTable();
+function showFullReason(reason) {
+  document.getElementById("fullReasonText").innerText = reason;
 }
+
 
 function updateStatus(event, leaveId, action) {
-  event.preventDefault();
-  const csrfToken = document.querySelector("meta[name='csrf-token']")?.getAttribute("content");
-  if (!csrfToken) {
-    console.error("CSRF token not found");
-    return;
-  }
+  if (event) event.preventDefault();
+
+  const statusElement = document.getElementById(`status-${leaveId}`);
+  const reasonCell = document.getElementById(`reject-reason-cell-${leaveId}`);
+
+  const formData = new URLSearchParams();
+  formData.append("leave_id", leaveId);
+  formData.append("action", action);
+
 
   fetch("{% url 'update_leave_status' request.session.user_id %}", {
     method: "POST",
     headers: {
-      "X-CSRFToken": csrfToken,
-      "Content-Type": "application/x-www-form-urlencoded"
+      "X-CSRFToken": "{{ csrf_token }}",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({
-      "leave_id": leaveId,
-      "action": action
-    })
+    body: formData,
   })
-  .then(response => {
-    if (!response.ok) throw new Error("Failed to update status");
-    return response.json();
-  })
+  .then(response => response.json())
   .then(data => {
     if (data.status === "Withdrawn") {
-      document.getElementById(`status-${leaveId}`).innerHTML = `<span class="badge bg-secondary">Withdrawn</span>`;
-      document.getElementById(`actionby-${leaveId}`).innerText = "Self";
-      document.getElementById(`actions-${leaveId}`).innerHTML = "-";
-      paginateTable();
+      statusElement.innerHTML = '<span class="badge bg-success">Withdrawn</span>';
+    }
+    if (reasonCell) {
+      reasonCell.classList.add("d-none");
     }
   })
-  .catch(error => {
-    console.error("AJAX Error:", error);
+  .catch(error => console.error("Error:", error));
+}
+
+function searchTable() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const rows = document.querySelectorAll("#leaveTable tbody tr");
+
+  filteredRows = [];
+  rows.forEach(row => {
+    const match = row.innerText.toLowerCase().includes(input);
+    row.style.display = match ? "" : "none";
+    if (match) filteredRows.push(row);
+  });
+
+  currentPage = 1;
+  paginateTable();
+}
+
+function sortTable(n) {
+  const table = document.getElementById("leaveTable");
+  const rows = Array.from(table.tBodies[0].rows);
+  let dir = table.getAttribute("data-sort-dir-" + n) || "asc";
+
+  rows.sort((a, b) => {
+    const cellA = a.cells[n].innerText.toLowerCase();
+    const cellB = b.cells[n].innerText.toLowerCase();
+    return dir === "asc" ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+  });
+
+  table.setAttribute("data-sort-dir-" + n, dir === "asc" ? "desc" : "asc");
+  rows.forEach(row => table.tBodies[0].appendChild(row));
+
+  filteredRows = rows.filter(row => row.style.display !== "none");
+  currentPage = 1;
+  paginateTable();
+}
+
+function paginateTable() {
+  const rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
+  const pagination = document.getElementById("pagination");
+
+  if (filteredRows.length === 0) {
+    filteredRows = Array.from(document.querySelectorAll("#leaveTable tbody tr")).filter(row => row.style.display !== "none");
+  }
+
+  const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement("li");
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+    li.onclick = () => {
+      currentPage = i;
+      paginateTable();
+    };
+    pagination.appendChild(li);
+  }
+
+  filteredRows.forEach((row, index) => {
+    row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) ? "" : "none";
   });
 }
 
-// Event Listeners
-searchInput.addEventListener("input", () => {
+document.getElementById("rowsPerPage").addEventListener("change", () => {
   currentPage = 1;
   paginateTable();
-});
-rowsPerPageSelect.addEventListener("change", () => {
-  rowsPerPage = parseInt(rowsPerPageSelect.value);
-  currentPage = 1;
-  paginateTable();
-});
-prevBtn.addEventListener("click", () => {
-  if (currentPage > 1) {
-    currentPage--;
-    paginateTable();
-  }
-});
-nextBtn.addEventListener("click", () => {
-  currentPage++;
-  paginateTable();
-});
-document.querySelectorAll("th[data-sort]").forEach(th => {
-  th.addEventListener("click", () => sortTableByColumn(th));
 });
 
-paginateTable();  // Initial load
+document.addEventListener("DOMContentLoaded", () => {
+  filteredRows = Array.from(document.querySelectorAll("#leaveTable tbody tr"));
+  paginateTable();
+});
+  document.addEventListener('DOMContentLoaded', function () {
+  filteredRows = Array.from(document.querySelectorAll("#leaveTable tbody tr"));
+  paginateTable();
+
+  // Initialize all tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
+document.addEventListener('DOMContentLoaded', function () {
+  // Initialize all tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
+
 </script>
 
+<!-- Extra CSS -->
 <style>
-#paginationNumbers {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-}
-.page-btn {
-  margin: 0 5px;
-}
-.btn-primary {
-  background-color: #007bff;
-  border-color: #007bff;
-}
-.btn-outline-primary {
-  border-color: #007bff;
-  color: #007bff;
+.table th {
+  cursor: pointer;
 }
 </style>
+<style>
+#daysDetailContent {
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.modal-body {
+  max-height: 300px;
+  overflow-y: auto;   /* Enable scrolling if content exceeds max height */
+  word-wrap: break-word; /* Ensure long words break to the next line */
+  white-space: normal;   /* Allow text to wrap and not stay on one line */
+}
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</style>
+
+<!-- Bootstrap Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 {% endblock %}

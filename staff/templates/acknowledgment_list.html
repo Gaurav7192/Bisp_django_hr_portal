@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Acknowledgments for Handbook: {{ handbook.id }}</h2>
+
+<!-- Search input for Acknowledgments -->
+<input type="text" id="ack-search" placeholder="Search Acknowledgments" oninput="filterAcknowledgments()">
+<table class="table" id="acknowledgment-table">
+    <thead>
+        <tr>
+            <th>Employee</th>
+            <th>Acknowledgment Date</th>
+            <th>Acknowledgment</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody id="acknowledgment-table-body">
+        {% for ack in acknowledgments %}
+        <tr>
+            <td>{{ ack.employee.name }}</td>
+            <td>{{ ack.acknowledgment_date }}</td>
+            <td>{{ ack.acknowledgment }}</td>
+            <td>{{ ack.status }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Pagination Controls -->
+<div id="ack-pagination-controls"></div>
+
+<script>
+// Client-Side Pagination & Search for Acknowledgments
+const acknowledgments = {{ acknowledgments|safe }};
+let currentAckPage = 1;
+const ackItemsPerPage = 5;
+
+// Function to display current page's acknowledgments
+function displayAcknowledgments(page = 1) {
+    const start = (page - 1) * ackItemsPerPage;
+    const end = page * ackItemsPerPage;
+
+    const filteredAcknowledgments = acknowledgments.slice(start, end);
+    const ackTableBody = document.getElementById('acknowledgment-table-body');
+    ackTableBody.innerHTML = '';
+
+    filteredAcknowledgments.forEach(ack => {
+        const row = `
+        <tr>
+            <td>${ack.employee.name}</td>
+            <td>${ack.acknowledgment_date}</td>
+            <td>${ack.acknowledgment}</td>
+            <td>${ack.status}</td>
+        </tr>`;
+        ackTableBody.innerHTML += row;
+    });
+
+    // Render Pagination Controls
+    renderAckPagination();
+}
+
+// Render acknowledgment pagination controls
+function renderAckPagination() {
+    const totalAckPages = Math.ceil(acknowledgments.length / ackItemsPerPage);
+    const ackPaginationControls = document.getElementById('ack-pagination-controls');
+    ackPaginationControls.innerHTML = '';
+
+    if (currentAckPage > 1) {
+        ackPaginationControls.innerHTML += `<button onclick="changeAckPage(${currentAckPage - 1})">Previous</button>`;
+    }
+
+    for (let i = 1; i <= totalAckPages; i++) {
+        ackPaginationControls.innerHTML += `
+        <button onclick="changeAckPage(${i})" ${i === currentAckPage ? 'disabled' : ''}>
+            ${i}
+        </button>`;
+    }
+
+    if (currentAckPage < totalAckPages) {
+        ackPaginationControls.innerHTML += `<button onclick="changeAckPage(${currentAckPage + 1})">Next</button>`;
+    }
+}
+
+// Change Acknowledgment Page Function
+function changeAckPage(page) {
+    currentAckPage = page;
+    displayAcknowledgments(page);
+}
+
+// Filter Function for Searching Acknowledgments
+function filterAcknowledgments() {
+    const searchQuery = document.getElementById('ack-search').value.toLowerCase();
+    const filteredAcknowledgments = acknowledgments.filter(ack => {
+        return ack.employee.name.toLowerCase().includes(searchQuery) ||
+               ack.acknowledgment.toLowerCase().includes(searchQuery) ||
+               ack.acknowledgment_date.toLowerCase().includes(searchQuery) ||
+               ack.status.toLowerCase().includes(searchQuery);
+    });
+
+    acknowledgments.length = 0;
+    acknowledgments.push(...filteredAcknowledgments);
+    displayAcknowledgments(1); // Display filtered data on page 1
+}
+
+// Initial Render for Acknowledgments
+displayAcknowledgments();
+</script>
+{% endblock %}

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Profile - {{ employee.name }} (ID: {{ employee.emp_id.id }})</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h2 {
+            margin: 0;
+        }
+        .btn {
+            padding: 8px 16px;
+            background-color: #2e86de;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .section {
+            margin-top: 30px;
+        }
+        .section h3 {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            color: #333;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .form-group {
+            flex: 1 1 45%;
+            margin: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[readonly] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        .no-record {
+            color: #999;
+            font-style: italic;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Update Profile - {{ employee.name }} (ID: {{ employee.emp_id }})</h2>
+        <a href="{% url 'view_profile_history' employee.emp_id.id %}" class="btn">View History</a>
+    </div>
+
+    <div class="section">
+        <h3>Upload Profile Image</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Profile Image</label>
+                <input type="text" readonly value="{{ employee.profile_image.url|default:'Not Uploaded' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Change Password</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" readonly value="{{ employee.phone_number }}">
+            </div>
+            <div class="form-group">
+                <label>Guidance Phone Number</label>
+                <input type="text" readonly value="{{ employee.guidance_phone|default:'None' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Address</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" readonly value="{{ employee.address }}">
+            </div>
+            <div class="form-group">
+                <label>Father/Guidance Name</label>
+                <input type="text" readonly value="{{ employee.father_name|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Blood Group</label>
+                <input type="text" readonly value="{{ employee.blood_group }}">
+            </div>
+            <div class="form-group">
+                <label>Permanent Address</label>
+                <input type="text" readonly value="{{ employee.permanent_address }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Job Status</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Job Status</label>
+                <input type="text" readonly value="{{ employee.job_status }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Passport Information</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Passport</label>
+                <input type="text" readonly value="{{ employee.passport|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Passport No.</label>
+                <input type="text" readonly value="{{ employee.passport_no|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Tel</label>
+                <input type="text" readonly value="{{ employee.tel|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Nationality</label>
+                <input type="text" readonly value="{{ employee.nationality|default:'None' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Religion</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Religion</label>
+                <input type="text" readonly value="{{ employee.religion }}">
+            </div>
+            <div class="form-group">
+                <label>Marital Status</label>
+                <input type="text" readonly value="{{ employee.marital_status }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Emergency Contact</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Primary Name</label>
+                <input type="text" readonly value="{{ employee.emergency_primary_name }}">
+            </div>
+            <div class="form-group">
+                <label>Primary Relationship</label>
+                <input type="text" readonly value="{{ employee.emergency_primary_relation }}">
+            </div>
+            <div class="form-group">
+                <label>Primary Phone</label>
+                <input type="text" readonly value="{{ employee.emergency_primary_phone|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Secondary Name</label>
+                <input type="text" readonly value="{{ employee.emergency_secondary_name|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Secondary Relationship</label>
+                <input type="text" readonly value="{{ employee.emergency_secondary_relation|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>Secondary Phone</label>
+                <input type="text" readonly value="{{ employee.emergency_secondary_phone|default:'None' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Bank Information</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Bank Name</label>
+                <input type="text" readonly value="{{ employee.bank_name }}">
+            </div>
+            <div class="form-group">
+                <label>Bank Account No.</label>
+                <input type="text" readonly value="{{ employee.bank_account|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>IFSC Code</label>
+                <input type="text" readonly value="{{ employee.ifsc_code|default:'None' }}">
+            </div>
+            <div class="form-group">
+                <label>PAN No.</label>
+                <input type="text" readonly value="{{ employee.pan_no|default:'None' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Education Information</h3>
+        {% if education_list %}
+            {% for edu in education_list %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>{{ edu.degree }}</label>
+                        <input type="text" readonly value="{{ edu.institute }} - {{ edu.year }}">
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-record">No education records found.</p>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <h3>Experience</h3>
+        {% if experience_list %}
+            {% for exp in experience_list %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>{{ exp.company }}</label>
+                        <input type="text" readonly value="{{ exp.designation }} ({{ exp.start_date }} - {{ exp.end_date|default:'Present' }})">
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-record">No experience records found.</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

@@ -21,6 +21,7 @@ GENDER_CHOICES = [
 
 
 
+from django.contrib.auth.hashers import check_password
 
 class EmployeeForm(forms.ModelForm):
     # Dropdown for Position (Foreign Key)
@@ -40,7 +41,7 @@ class EmployeeForm(forms.ModelForm):
     # Dropdown for Reporting Manager (only non-Staff)
     # Generate dropdown with employee names
     reportto = forms.ModelChoiceField(
-        queryset=emp_registers.objects.exclude(position__role__iexact='Staff'),
+        queryset=emp_registers.objects.exclude(position__role__iexact='Employee'),
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=False
     )
@@ -76,6 +77,7 @@ class EmployeeForm(forms.ModelForm):
         name = cleaned_data.get('name')
         password = cleaned_data.get('password')
         joindate = cleaned_data.get('joindate')
+        salary= cleaned_data.get('salary')
 
         # Validate name format
         if name and not re.match(r'^[a-zA-Z ]+$', name):
@@ -95,7 +97,11 @@ class EmployeeForm(forms.ModelForm):
         if joindate and joindate < datetime(2025, 1, 1).date():
             self.add_error('joindate', 'Joining date cannot be before January 1, 2025.')
 
-        return cleaned_data
+
+        if salary and float(salary) < 0 :
+            print("xaskdhscvsdv cbsdb ",salary)
+            self.add_error('salary', 'Salary cannot be negative')
+            return cleaned_data
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -109,5 +115,33 @@ class LoginForm(forms.Form):
     email = forms.CharField(label="email", max_length=150, widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label="Password", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
     remember_me = forms.BooleanField(initial=False)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if  emp_registers.objects.exclude(id=self.instance.id).filter(email=email).exists():
+            pass
+        else:
+
+            raise forms.ValidationError("This email is not exit in record.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email =cleaned_data.get('email')
+        password = cleaned_data.get('password')
+        user=emp_registers.objects.get(email=email)
+        if emp_registers.objects.exclude(id=self.instance.id).filter(email=email).exists():
+            pass
+        else:
+
+            self.add_error('email', 'Invalid email')
+
+
+        if check_password(password, user.password):
+            pass
+        else :
+            self.add_error('password', 'Invalid password')
+            return cleaned_data
+
 
 

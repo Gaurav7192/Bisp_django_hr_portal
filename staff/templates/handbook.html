@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Employee Handbook</h2>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Acknowledgment Status -->
+    <div>
+        <strong>Acknowledgment Status:</strong>
+        {% if  acknowledgment.acknowledgment == "agree" %}
+            <span class="badge bg-success">Acknowledged</span>
+        {% elif  acknowledgment.acknowledgment == "disagree" %}
+            <span class="badge bg-danger">Disagreed</span>
+        {% else %}
+            <span class="badge bg-warning text-dark">{{ acknowledgment.acknowledgment }}</span>
+        {% endif %}
+    </div>
+
+    <!-- View Handbook Button -->
+    <button id="viewBtn" class="btn btn-primary">View Handbook</button>
+</div>
+
+<!-- Handbook Viewer and Acknowledge Section -->
+<div id="handbookContainer" style="display:none; margin-top: 20px; position:relative;">
+    <button id="minimizeBtn" class="btn btn-sm btn-danger" style="position:absolute; top:0; right:0; z-index:10;">Minimize</button>
+
+    <!-- PDF Viewer -->
+    <div id="pdfViewer" style="border:1px solid #ccc; height:500px; overflow-y:auto;"></div>
+
+    <!-- Acknowledgment Form (hidden initially) -->
+    {% if not handbook_ack %}
+    <form method="POST" id="ackForm" style="display:none; margin-top:20px;">
+        {% csrf_token %}
+        <label><input type="radio" name="acknowledgment" value="agree" required> I Agree</label><br>
+        <label><input type="radio" name="acknowledgment" value="disagree" required> I Disagree</label><br><br>
+        <button type="submit" class="btn btn-success">Submit Acknowledgment</button>
+    </form>
+    {% endif %}
+</div>
+
+<!-- Load PDF.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+<script>
+    // Show handbook viewer on click
+    document.getElementById('viewBtn').addEventListener('click', function () {
+        document.getElementById('handbookContainer').style.display = 'block';
+        this.style.display = 'none';
+        loadPDF('{{ handbook.document.url }}');
+    });
+
+    // Minimize/Maximize functionality
+    document.getElementById('minimizeBtn').addEventListener('click', function () {
+        const viewer = document.getElementById('pdfViewer');
+        if (viewer.style.display === 'none') {
+            viewer.style.display = 'block';
+            this.textContent = 'Minimize';
+        } else {
+            viewer.style.display = 'none';
+            this.textContent = 'Maximize';
+        }
+    });
+
+    // Function to load and render PDF using PDF.js
+    function loadPDF(url) {
+        const container = document.getElementById('pdfViewer');
+        container.innerHTML = ''; // Clear previous content
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        pdfjsLib.getDocument(url).promise.then(pdf => {
+            for (let i = 1; i <= pdf.numPages; i++) {
+                pdf.getPage(i).then(page => {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    const viewport = page.getViewport({ scale: 1.2 });
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    page.render({ canvasContext: context, viewport: viewport });
+                    container.appendChild(canvas);
+                });
+            }
+        });
+
+        // Attach scroll listener to the container
+        container.addEventListener('scroll', function () {
+            if (Math.ceil(container.scrollTop + container.clientHeight) >= container.scrollHeight - 5) {
+                document.getElementById('ackForm').style.display = 'block';
+            }
+        });
+    }
+</script>
+{% endblock %}

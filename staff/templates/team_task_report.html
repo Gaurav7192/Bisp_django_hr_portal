@@ -5,181 +5,293 @@
 {% include 'side bar.html' %}
 
 <style>
-    .main-content {
-        padding: 20px;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: auto;
-        box-sizing: border-box;
-    }
+  .main-content {
+    padding: 20px;
+    width: 100%;
+    overflow-x: auto;
+    box-sizing: border-box;
+  }
 
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
 
-    .add-btn {
-        background-color: #4CAF50;
-        color: white;
-        padding: 8px 12px;
-        border: none;
-        border-radius: 4px;
-        text-decoration: none;
-    }
+  .header div,
+  .header a {
+    margin-bottom: 10px;
+  }
 
-    .controls {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-    }
+  .add-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s;
+  }
 
-    .controls > div {
-        margin-bottom: 10px;
-    }
+  .add-btn:hover {
+    background-color: #0056b3;
+  }
 
-    table {
-        width: auto;
-        min-width: 100%;
-        border-collapse: collapse;
-    }
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    gap: 10px;
+  }
 
-    th, td {
-        padding: 10px;
-        border: 1px solid #ccc;
-        text-align: left;
-        white-space: nowrap;
-    }
+  .controls select,
+  .controls input[type="search"] {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
 
-    th.sortable {
-        cursor: pointer;
-        user-select: none;
-    }
+  table {
+    width: 100%;
+    min-width: 900px;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
 
-    th.sortable:after {
-        content: ' 🔽';
-        font-size: 0.8em;
-        opacity: 0.6;
-    }
+  th,
+  td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    white-space: nowrap;
+  }
 
-    th.sortable.sorted-asc:after {
-        content: ' 🔼';
-    }
+  th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+  }
 
-    th.sortable.sorted-desc:after {
-        content: ' 🔽';
-    }
+  th.sortable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  th.sortable:after {
+    content: ' 🔽';
+    font-size: 0.8em;
+    opacity: 0.6;
+  }
+
+  th.sortable.sorted-asc:after {
+    content: ' 🔼';
+  }
+
+  th.sortable.sorted-desc:after {
+    content: ' 🔽';
+  }
+
+  a.task-link {
+    color: #007bff;
+    text-decoration: none;
+  }
+
+  a.task-link:hover {
+    text-decoration: underline;
+  }
+
+  /* Style for pagination number buttons */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    gap: 5px;
+  }
+
+  .pagination button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .pagination button.active {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .pagination button:hover:not(.active) {
+    background-color: #e9ecef;
+  }
+
+  .pagination button:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+  }
 </style>
 
 <div class="main-content">
-    <div class="header">
-        <div><strong>Total Tasks:</strong> {{ total_tasks }}</div>
-        <a href="{% url 'add_task' user_id %}" class="add-btn">+ Add Task</a>
-    </div>
+  <div class="header">
+    <div><strong>Total Tasks:</strong> {{ total_tasks }}</div>
+    <a href="{% url 'add_task' user_id %}" class="add-btn">+ Add Task</a>
+  </div>
 
-    <div class="controls">
-        <div>
-            Show
-            <select id="entriesPerPage">
-                <option value="5">5</option>
-                <option value="10" selected>10</option>
-                <option value="20">20</option>
-            </select>
-            entries
-        </div>
-        <div>
-            Search: <input type="search" id="searchInput" placeholder="Search tasks...">
-        </div>
+  <div class="controls">
+    <div>
+      Show
+      <select id="entriesPerPage">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+      </select>
+      entries
     </div>
+    <div>
+      Search: <input type="search" id="searchInput" placeholder="Search tasks...">
+    </div>
+    <div>
+      <button id="exportBtn" class="add-btn">Export to CSV</button>
+    </div>
+  </div>
 
-    <div style="overflow-x: auto;">
-        <table id="taskTable">
-            <thead>
-                <tr>
-                    <th>Serial No</th>
-                    <th class="sortable" data-col="1">Task</th>
-                    <th class="sortable" data-col="2">Project</th>
-                    <th class="sortable" data-col="3">Start Date</th>
-                    <th class="sortable" data-col="4">End Date</th>
-                    <th class="sortable" data-col="6">Status</th>
-                    <th class="sortable" data-col="7">Priority</th>
-                </tr>
-            </thead>
-            <tbody id="taskTableBody">
-                {% for task in tasks %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td><a href="{% url 'update_task_status_page' task.id %}">{{ task.title }}</a></td>
-                    <td>{{ task.project.pname }}</td>
-                    <td>{{ task.start_date }}</td>
-                    <td>{{ task.due_date }}</td>
-                    <td>{{ task.status }}</td>
-                    <td>{{ task.priority.label }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <div style="overflow-x: auto;">
+    <table id="taskTable">
+      <thead>
+        <tr>
+          <th>Serial No</th>
+          <th class="sortable" data-col="1">Task</th>
+          <th class="sortable" data-col="2">Project</th>
+          <th class="sortable" data-col="3">Start Date</th>
+          <th class="sortable" data-col="4">End Date</th>
+          <th class="sortable" data-col="6">Status</th>
+          <th class="sortable" data-col="7">Priority</th>
+        </tr>
+      </thead>
+      <tbody id="taskTableBody">
+        {% for task in tasks %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td><a href="{% url 'update_task_status_page' task.id %}" class="task-link">{{ task.title }}</a></td>
+          <td>{{ task.project.pname }}</td>
+          <td>{{ task.start_date }}</td>
+          <td>{{ task.due_date }}</td>
+          <td>{{ task.status }}</td>
+          <td>{{ task.priority.label }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination controls -->
+  <div id="pagination" class="pagination">
+    <button id="prevPage" disabled>Previous</button>
+    <div id="pageNumbers"></div>
+    <button id="nextPage" disabled>Next</button>
+  </div>
 </div>
 
 <script>
-    const entriesPerPageSelect = document.getElementById("entriesPerPage");
-    const searchInput = document.getElementById("searchInput");
-    const tbody = document.getElementById("taskTableBody");
-    const sortableHeaders = document.querySelectorAll("th.sortable");
+  const entriesPerPageSelect = document.getElementById("entriesPerPage");
+  const searchInput = document.getElementById("searchInput");
+  const tbody = document.getElementById("taskTableBody");
+  const sortableHeaders = document.querySelectorAll("th.sortable");
+  const exportBtn = document.getElementById("exportBtn");
+  const prevPageBtn = document.getElementById("prevPage");
+  const nextPageBtn = document.getElementById("nextPage");
+  const pageNumbersContainer = document.getElementById("pageNumbers");
 
-    let originalRows = Array.from(tbody.rows);
-    let currentSort = { index: null, order: "asc" };
+  let originalRows = Array.from(tbody.rows);
+  let currentSort = { index: null, order: "asc" };
+  let currentPage = 1;
+  let rowsPerPage = parseInt(entriesPerPageSelect.value);
 
-    function renderTable(filteredRows, pageSize = 10) {
-        tbody.innerHTML = "";
-        filteredRows.slice(0, pageSize).forEach((row, i) => {
-            row.cells[0].innerText = i + 1;
-            tbody.appendChild(row);
-        });
+  function renderTable(filteredRows, pageSize = 10) {
+    tbody.innerHTML = "";
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = startIdx + pageSize;
+    filteredRows.slice(startIdx, endIdx).forEach((row, i) => {
+      row.cells[0].innerText = startIdx + i + 1;
+      tbody.appendChild(row);
+    });
+
+    updatePaginationControls(filteredRows, pageSize);
+  }
+
+  function updatePaginationControls(filteredRows, pageSize) {
+    const totalPages = Math.ceil(filteredRows.length / pageSize);
+    pageNumbersContainer.innerHTML = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+      const pageButton = document.createElement("button");
+      pageButton.textContent = i;
+      pageButton.addEventListener("click", () => {
+        currentPage = i;
+        renderTable(filteredRows, pageSize);
+      });
+      if (i === currentPage) {
+        pageButton.classList.add("active");
+      }
+      pageNumbersContainer.appendChild(pageButton);
     }
 
-    entriesPerPageSelect.addEventListener("change", () => {
-        const pageSize = parseInt(entriesPerPageSelect.value);
-        renderTable(originalRows, pageSize);
-    });
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages;
+  }
 
-    searchInput.addEventListener("keyup", () => {
-        const value = searchInput.value.toLowerCase();
-        const filtered = originalRows.filter(row => {
-            return Array.from(row.cells).some(cell =>
-                cell.innerText.toLowerCase().includes(value)
-            );
-        });
-        renderTable(filtered, parseInt(entriesPerPageSelect.value));
-    });
+  function filteredRows() {
+    const value = searchInput.value.toLowerCase();
+    return originalRows.filter(row =>
+      Array.from(row.cells).some(cell =>
+        cell.innerText.toLowerCase().includes(value)
+      )
+    );
+  }
 
-    sortableHeaders.forEach(header => {
-        header.addEventListener("click", () => {
-            const colIndex = parseInt(header.dataset.col);
-            const isSameCol = currentSort.index === colIndex;
-            const newOrder = isSameCol && currentSort.order === "asc" ? "desc" : "asc";
-            currentSort = { index: colIndex, order: newOrder };
+  entriesPerPageSelect.addEventListener("change", () => {
+    rowsPerPage = parseInt(entriesPerPageSelect.value);
+    renderTable(filteredRows(), rowsPerPage);
+  });
 
-            sortableHeaders.forEach(h => h.classList.remove("sorted-asc", "sorted-desc"));
-            header.classList.add(newOrder === "asc" ? "sorted-asc" : "sorted-desc");
+  searchInput.addEventListener("keyup", () => {
+    currentPage = 1; // Reset to the first page
+    renderTable(filteredRows(), rowsPerPage);
+  });
 
-            const sorted = [...originalRows].sort((a, b) => {
-                const aText = a.cells[colIndex].innerText.toLowerCase();
-                const bText = b.cells[colIndex].innerText.toLowerCase();
-                if (aText < bText) return newOrder === "asc" ? -1 : 1;
-                if (aText > bText) return newOrder === "asc" ? 1 : -1;
-                return 0;
-            });
+  prevPageBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable(filteredRows(), rowsPerPage);
+    }
+  });
 
-            originalRows = sorted;
-            renderTable(sorted, parseInt(entriesPerPageSelect.value));
-        });
-    });
+  nextPageBtn.addEventListener("click", () => {
+    currentPage++;
+    renderTable(filteredRows(), rowsPerPage);
+  });
 
-    renderTable(originalRows, parseInt(entriesPerPageSelect.value));
+  exportBtn.addEventListener("click", () => {
+    const rows = filteredRows();
+    const csvContent = "data:text/csv;charset=utf-8," +
+      "Serial No,Task,Project,Start Date,End Date,Status,Priority\n" +
+      rows.map((row, index) => {
+        return `${index + 1},${row.cells[1].innerText},${row.cells[2].innerText},${row.cells[3].innerText},${row.cells[4].innerText},${row.cells[5].innerText},${row.cells[6].innerText}`;
+      }).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "tasks.csv");
+    link.click();
+  });
+
+  renderTable(filteredRows(), rowsPerPage);
 </script>
 
 {% endblock %}

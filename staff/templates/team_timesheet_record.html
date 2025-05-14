@@ -1,132 +1,217 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block content %}
-<h2>Team Timesheet Records</h2>
+<style>
+  .main-content {
+    padding: 20px;
+  }
 
-<input type="text" id="searchInput" placeholder="Search tasks..." style="margin-bottom: 10px; padding: 6px; width: 300px;">
+  th {
+    cursor: pointer;
+  }
 
-<table id="taskTable" border="1" cellspacing="0" cellpadding="5">
-  <thead>
-    <tr>
-      <th onclick="sortTable(0)">Project</th>
-      <th onclick="sortTable(1)">Task</th>
-      <th onclick="sortTable(2)">Date</th>
-      <th onclick="sortTable(3)">Start</th>
-      <th onclick="sortTable(4)">End</th>
-      <th onclick="sortTable(5)">Hours</th>
-      <th>Description</th>
-      <th>Attachment</th>
-    </tr>
-  </thead>
-  <tbody id="taskTableBody">
-    <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
-  </tbody>
-</table>
+  th.sort-asc::after {
+    content: " ▲";
+  }
 
-<div id="pagination" style="margin-top: 15px;"></div>
-{% endblock %}
+  th.sort-desc::after {
+    content: " ▼";
+  }
 
-{% block extra_scripts %}
+  .table-controls {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .export-buttons button {
+    margin-right: 5px;
+  }
+
+  .pagination {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .pagination button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    cursor: pointer;
+  }
+
+  .pagination button.active {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+  }
+</style>
+
+<div class="main-content">
+  <h2 class="text-center mb-4">Team Timesheet</h2>
+
+  <div class="table-controls">
+    <input type="text" id="searchInput" onkeyup="searchAndPaginate()" class="form-control" placeholder="Search..." style="width: 200px;">
+    <select id="rowsLimit" class="form-select" onchange="changePage(1)" style="width: 120px;">
+      <option value="5">Show 5</option>
+      <option value="10" selected>Show 10</option>
+      <option value="20">Show 20</option>
+    </select>
+    <div class="export-buttons">
+      <button onclick="exportTable('csv')" class="btn btn-outline-primary btn-sm">Export CSV</button>
+      <button onclick="exportTable('excel')" class="btn btn-outline-success btn-sm">Export Excel</button>
+      <button onclick="exportTable('json')" class="btn btn-outline-dark btn-sm">Export JSON</button>
+    </div>
+  </div>
+
+  <table id="timesheetTable" class="table table-bordered">
+    <thead>
+      <tr>
+        <th>#</th><th>name </th>
+        <th onclick="sortTable(1)">Project</th>
+
+        <th onclick="sortTable(2)">Task</th>
+        <th onclick="sortTable(3)">Date</th>
+        <th onclick="sortTable(4)">Start Time</th>
+        <th onclick="sortTable(5)">End Time</th>
+        <th onclick="sortTable(6)">Description</th>
+
+        <th>Attachment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in timesheets %}
+      <tr>
+        <td></td>
+        <td>{{ item.emp_id.name }}</td>
+        <td>{{ item.pname.pname }}</td>
+        <td>{{ item.task }}</td>
+        <td>{{ item.date }}</td>
+        <td>{{ item.start_time }}</td>
+        <td>{{ item.end_time }}</td>
+        <td>{{ item.description }}</td>
+        <td>
+          {% if item.attachment %}
+            <img src="{{ item.attachment.url }}" width="50">
+          {% else %}
+            No Image
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="pagination" id="paginationControls"></div>
+</div>
+
 <script>
-  let tasks = [
-    {% for t in tasks %}
-    {
-      project: "{{ t.pname.name|escapejs }}",
-      task: "{{ t.task|escapejs }}",
-      date: "{{ t.date }}",
-      start: "{{ t.start_time }}",
-      end: "{{ t.end_time }}",
-      hours: getTimeDiff("{{ t.start_time }}", "{{ t.end_time }}"),
-      description: `{{ t.description|default_if_none:""|escapejs }}`,
-      attachment: `{% if t.attachment %}<a href="{{ t.attachment.url }}">Download</a>{% else %}No attachment{% endif %}`
-    },
-    {% endfor %}
-  ];
+let sortDirection = {};
+let allRows = Array.from(document.querySelectorAll("#timesheetTable tbody tr"));
+let currentPage = 1;
 
-  const rowsPerPage = 5;
-  let currentPage = 1;
-  let sortDir = true;
-  let filteredTasks = tasks;
+function sortTable(colIndex) {
+  const table = document.getElementById("timesheetTable");
+  const ths = table.tHead.rows[0].cells;
 
-  function getTimeDiff(start, end) {
-    if (!start || !end) return '';
-    const [sh, sm] = start.split(':').map(Number);
-    const [eh, em] = end.split(':').map(Number);
-    let diff = (eh * 60 + em) - (sh * 60 + sm);
-    return (diff / 60).toFixed(2);
-  }
+  Array.from(ths).forEach(th => th.classList.remove("sort-asc", "sort-desc"));
 
-  function renderTable(data) {
-    const tbody = document.getElementById('taskTableBody');
-    tbody.innerHTML = '';
+  sortDirection[colIndex] = !sortDirection[colIndex];
+  const direction = sortDirection[colIndex] ? 1 : -1;
+  ths[colIndex].classList.add(sortDirection[colIndex] ? "sort-asc" : "sort-desc");
 
-    if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-      return;
-    }
-
-    const start = (currentPage - 1) * rowsPerPage;
-    const paginated = data.slice(start, start + rowsPerPage);
-
-    paginated.forEach(task => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${task.project}</td>
-          <td>${task.task}</td>
-          <td>${task.date}</td>
-          <td>${task.start}</td>
-          <td>${task.end}</td>
-          <td>${task.hours}</td>
-          <td>${task.description.length > 50 ? task.description.slice(0, 50) + "..." : task.description}</td>
-          <td>${task.attachment}</td>
-        </tr>`;
-    });
-
-    renderPagination(data.length);
-  }
-
-  function renderPagination(total) {
-    const container = document.getElementById('pagination');
-    container.innerHTML = '';
-    const totalPages = Math.ceil(total / rowsPerPage);
-
-    for (let i = 1; i <= totalPages; i++) {
-      const btn = document.createElement('button');
-      btn.textContent = i;
-      btn.style.margin = '2px';
-      btn.onclick = () => {
-        currentPage = i;
-        renderTable(filteredTasks);
-      };
-      if (i === currentPage) btn.style.fontWeight = 'bold';
-      container.appendChild(btn);
-    }
-  }
-
-  function sortTable(index) {
-    const keys = ['project', 'task', 'date', 'start', 'end', 'hours'];
-    const key = keys[index];
-    filteredTasks.sort((a, b) => {
-      let A = a[key].toString().toLowerCase();
-      let B = b[key].toString().toLowerCase();
-      return sortDir ? A.localeCompare(B) : B.localeCompare(A);
-    });
-    sortDir = !sortDir;
-    renderTable(filteredTasks);
-  }
-
-  document.getElementById('searchInput').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    filteredTasks = tasks.filter(task =>
-      task.project.toLowerCase().includes(q) ||
-      task.task.toLowerCase().includes(q) ||
-      task.date.toLowerCase().includes(q) ||
-      task.description.toLowerCase().includes(q)
-    );
-    currentPage = 1;
-    renderTable(filteredTasks);
+  allRows.sort((a, b) => {
+    const aText = a.cells[colIndex].innerText.toLowerCase();
+    const bText = b.cells[colIndex].innerText.toLowerCase();
+    return aText.localeCompare(bText) * direction;
   });
 
-  renderTable(filteredTasks);
+  changePage(1);
+}
+
+function searchAndPaginate() {
+  const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+  allRows.forEach(row => {
+    const match = Array.from(row.cells).some(cell => cell.innerText.toLowerCase().includes(searchValue));
+    row.style.display = match ? "" : "none";
+  });
+
+  changePage(1);
+}
+
+function changePage(page) {
+  const rowsLimit = parseInt(document.getElementById("rowsLimit").value);
+  const tbody = document.querySelector("#timesheetTable tbody");
+  const filteredRows = allRows.filter(row => row.style.display !== "none");
+
+  const totalPages = Math.ceil(filteredRows.length / rowsLimit);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  currentPage = page;
+
+  tbody.innerHTML = "";
+
+  const start = (page - 1) * rowsLimit;
+  const end = Math.min(start + rowsLimit, filteredRows.length);
+
+  for (let i = start; i < end; i++) {
+    const newRow = filteredRows[i].cloneNode(true);
+    newRow.cells[0].innerText = i + 1; // Serial Number
+    tbody.appendChild(newRow);
+  }
+
+  updatePaginationControls(totalPages);
+}
+
+function updatePaginationControls(totalPages) {
+  const pagination = document.getElementById("paginationControls");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = i;
+    btn.className = i === currentPage ? "active" : "";
+    btn.onclick = () => changePage(i);
+    pagination.appendChild(btn);
+  }
+}
+
+function exportTable(format) {
+  const headers = Array.from(document.querySelectorAll("#timesheetTable thead th")).map(th => th.innerText);
+  const rows = Array.from(document.querySelectorAll("#timesheetTable tbody tr")).map(row => {
+    return Array.from(row.cells).map(cell => cell.innerText.trim());
+  });
+
+  if (format === 'csv' || format === 'excel') {
+    const content = [headers].concat(rows).map(e => e.join(",")).join("\n");
+    const blob = new Blob([content], { type: 'text/csv' });
+    download(blob, `timesheet.${format === 'csv' ? 'csv' : 'xls'}`);
+  } else if (format === 'json') {
+    const json = rows.map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    download(blob, 'timesheet.json');
+  }
+}
+
+function download(blob, filename) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+window.onload = () => {
+  allRows = Array.from(document.querySelectorAll("#timesheetTable tbody tr"));
+  searchAndPaginate();
+};
+  document.getElementById("entryCount").innerText = `Total Entries: ${filteredRows.length}`;
+
 </script>
 {% endblock %}

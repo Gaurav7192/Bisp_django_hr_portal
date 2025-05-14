@@ -146,6 +146,25 @@
         <!-- Main row -->
         <div class="row">
           <!-- Left col -->
+          <section class="leave-card-section">
+  <div class="card">
+    <h2>Pending Leaves (Last 7 Days)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Employee</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Reason</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="leave-table-body">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
           <section class="col-lg-7 connectedSortable">
             <!-- Custom tabs (Charts with tabs)-->
             <div class="card">
@@ -679,6 +698,116 @@
 
 
 
+<style>
+  .leave-card-section {
+    margin-bottom: 30px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+  }
+
+  .card h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+    margin: 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .approve-btn {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  .reject-btn {
+    background-color: #f44336;
+    color: white;
+  }
+
+  .reason-input {
+    display: none;
+    margin-top: 6px;
+  }
+
+  .reason-input input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+</style>
+
+<script>
+  const pendingLeaves = [
+    { id: 1, employee: "John Doe", from: "2025-05-08", to: "2025-05-10", reason: "Medical Leave" },
+    { id: 2, employee: "Jane Smith", from: "2025-05-07", to: "2025-05-09", reason: "Family Emergency" }
+  ];
+
+  const tableBody = document.getElementById("leave-table-body");
+
+  pendingLeaves.forEach(leave => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${leave.employee}</td>
+      <td>${leave.from}</td>
+      <td>${leave.to}</td>
+      <td>${leave.reason}</td>
+      <td>
+        <button class="action-btn approve-btn" onclick="approveLeave(${leave.id})">Approve</button>
+        <button class="action-btn reject-btn" onclick="toggleReject(${leave.id})">Reject</button>
+        <div class="reason-input" id="reason-${leave.id}">
+          <input type="text" placeholder="Enter reject reason..." onkeypress="handleRejectEnter(event, ${leave.id})">
+        </div>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  function approveLeave(id) {
+    alert("Leave ID " + id + " approved.");
+    // Replace with AJAX POST to Django
+  }
+
+  function toggleReject(id) {
+    const reasonDiv = document.getElementById(`reason-${id}`);
+    reasonDiv.style.display = reasonDiv.style.display === "block" ? "none" : "block";
+  }
+
+  function handleRejectEnter(e, id) {
+    if (e.key === "Enter") {
+      const reason = e.target.value.trim();
+      if (!reason) {
+        alert("Please provide a reason to reject.");
+        return;
+      }
+      alert("Leave ID " + id + " rejected with reason: " + reason);
+      // Replace with AJAX POST to Django
+    }
+  }
+</script>
 <script src="{% static 'plugins/jquery/jquery.min.js' %}"></script>
 <!-- jQuery UI 1.11.4 -->
 <script src="{% static 'plugins/jquery-ui/jquery-ui.min.js' %}"></script>

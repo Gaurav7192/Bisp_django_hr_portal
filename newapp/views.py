@@ -149,7 +149,7 @@ def read_mail(request):
 def invoice(request):
     return render(request,"invoice.html")
 def profile_view(request):
-    return render(request, 'profile.html')
+    return render(request, 'update_profile.html')
 def e_commerce(request):
     return render(request,"e-commerce.html")
 # def login(request):

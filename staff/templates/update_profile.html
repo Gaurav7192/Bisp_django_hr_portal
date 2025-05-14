@@ -1,0 +1,788 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f1f1;
+            margin: 0;
+        }
+        .navbar {
+            background-color: white;
+            overflow: hidden;
+            padding: 10px 0;
+        }
+        .navbar a {
+            float: left;
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 12px 16px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .navbar a:hover {
+            background-color: #575757;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            text-align: center;
+            color: #333;
+        }
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .col {
+            flex: 1;
+            min-width: 300px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        textarea {
+            resize: vertical;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .section-title {
+            width: 100%;
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        /* Tab styling */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .tabs button.active {
+            background-color: #45a049;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+
+    <!-- Navigation Bar -->
+<!--    <div class="navbar">-->
+<!--        <a href="#" onclick="showTab('profile')">Profile</a>-->
+<!--        <a href="#" onclick="showTab('document')">Document</a>-->
+<!--        <a href="#" onclick="showTab('assets')">Assets</a>-->
+<!--        <a href="#" onclick="showTab('timesheet')">Timesheet</a>-->
+<!--        <a href="#" onclick="showTab('leave')">Leave</a>-->
+<!--        <a href="#" onclick="showTab('projects')">Projects</a>-->
+<!--    </div>-->
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <button onclick="showTab('profile')" class="active">Profile</button>
+        <button onclick="showTab('document')">Document</button>
+        <button onclick="showTab('assets')">Assets</button>
+        <button onclick="showTab('timesheet')">Timesheet</button>
+        <button onclick="showTab('leave')">Leave</button>
+        <button onclick="showTab('projects')">Projects</button>
+    </div>
+
+    <!-- Profile Tab Content -->
+    <div id="profile" class="tab-content active">
+        <!-- Profile Form -->
+        <div class="container">
+            <h2>Update Profile</h2>
+  <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Show Logged-in Employee Info -->
+        <label>Employee</label>
+        <p><strong>{{ profile.emp_id.name }}</strong> (ID: {{ profile.emp_id.id }})</p>
+        <input type="hidden" name="emp_id" value="{{ profile.emp_id.id }}">
+
+
+
+<div class="col">
+    <label>Upload Profile Image</label>
+    <input type="file" name="profile_image" accept="image/*" id="profileImageInput" class="hidden-file-input">
+
+    {% if profile.profile_pic %}
+        <!-- Small circular view -->
+        <div id="imageView">
+            <div class="image-container" onclick="expandImage()">
+                <img src="{{ profile.profile_pic.url }}" alt="Profile Image">
+                <div class="edit-icon" onclick="event.stopPropagation(); document.getElementById('profileImageInput').click();">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-size preview with close and edit -->
+        <div id="fullView" style="display:none;">
+            <div class="full-screen-preview">
+                <div class="top-right-buttons">
+                    <button onclick="document.getElementById('profileImageInput').click();" title="Edit">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button onclick="closeImage()" title="Close">×</button>
+                </div>
+                <img src="{{ profile.profile_pic.url }}" alt="Profile Full Image">
+            </div>
+        </div>
+    {% else %}
+        <!-- Placeholder when no image -->
+        <div class="placeholder-oval" onclick="document.getElementById('profileImageInput').click();">
+            Click to Upload
+        </div>
+    {% endif %}
+</div>
+
+<!-- Include Font Awesome for the edit icon (optional if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+</div>
+
+           <div class="col" style="text-align: right; align-self: flex-start;">
+    <label>&nbsp;</label>
+    <button type="button" onclick="openPasswordModal()" style="background-color: #2196F3; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold;">Change Password</button>
+</div>
+
+        </div>
+
+        <!-- Row 1: Basic Info -->
+        <div class="row">
+            <div class="col">
+                <label>Phone Number</label>
+                <input type="text" name="phone_number" value="{{ profile.phone_number }}">
+
+                <label>Guidance Phone Number</label>
+                <input type="text" name="guidance_phone_number" value="{{ profile.guidance_phone_number }}">
+
+                <label>Address</label>
+                <textarea name="address">{{ profile.address }}</textarea>
+
+                <label>Father/Guidance Name</label>
+                <input type="text" name="father_guidance_name" value="{{ profile.father_guidance_name }}">
+            </div>
+            <div class="col">
+                <label>Blood Group</label>
+                <input type="text" name="blood_group" value="{{ profile.blood_group }}">
+
+                <label>Permanent Address</label>
+                <textarea name="permanent_address">{{ profile.permanent_address }}</textarea>
+
+<!--                <label>Total Leave</label>-->
+<!--                <input type="number" step="0.1" name="total_leave" value="{{ profile.total_leave }}">-->
+
+<!--                <label>Balance Leave</label>-->
+<!--                <input type="number" step="0.1" name="balance_leave" value="{{ profile.balance_leave }}">-->
+
+<!--                <label>Used Leave</label>-->
+<!--                <input type="number" step="0.1" name="used_leave" value="{{ profile.used_leave }}">-->
+
+                <label>Job Status</label>
+<input type="text" name="job_status" value="{{ profile.job_status }}" readonly>
+
+            </div>
+        </div>
+
+<!-- Row 2: Three separate cards for Passport, Emergency Contact, Bank Info -->
+<div class="row">
+    <!-- Passport Information Card -->
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">Passport Information</div>
+            <div class="card-body">
+                <label>Passport</label>
+                <input type="text" name="passport" class="form-control mb-2" value="{{ profile.passport }}">
+
+                <label>Passport No.</label>
+                <input type="text" name="passport_no" class="form-control mb-2" value="{{ profile.passport_no }}">
+
+                <label>Tel</label>
+                <input type="text" name="tel" class="form-control mb-2" value="{{ profile.tel }}">
+
+                <label>Nationality</label>
+                <input type="text" name="nationality" class="form-control mb-2" value="{{ profile.nationality }}">
+
+                <label>Religion</label>
+                <input type="text" name="religion" class="form-control mb-2" value="{{ profile.religion }}">
+
+                <label>Marital Status</label>
+                <input type="text" name="marital_status" class="form-control" value="{{ profile.marital_status }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Emergency Contact Card -->
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">Emergency Contact</div>
+            <div class="card-body">
+                <label>Primary Name</label>
+                <input type="text" name="primary_contact_name" class="form-control mb-2" value="{{ profile.primary_contact_name }}">
+
+                <label>Primary Relationship</label>
+                <input type="text" name="primary_relationship" class="form-control mb-2" value="{{ profile.primary_relationship }}">
+
+                <label>Primary Phone</label>
+                <input type="text" name="primary_phone" class="form-control mb-2" value="{{ profile.primary_phone }}">
+
+                <label>Secondary Name</label>
+                <input type="text" name="secondary_contact_name" class="form-control mb-2" value="{{ profile.secondary_contact_name }}">
+
+                <label>Secondary Relationship</label>
+                <input type="text" name="secondary_relationship" class="form-control mb-2" value="{{ profile.secondary_relationship }}">
+
+                <label>Secondary Phone</label>
+                <input type="text" name="secondary_phone" class="form-control" value="{{ profile.secondary_phone }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Information Card -->
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">Bank Information</div>
+            <div class="card-body">
+                <label>Bank Name</label>
+                <input type="text" name="bank_name" class="form-control mb-2" value="{{ profile.bank_name }}">
+
+                <label>Bank Account No.</label>
+                <input type="text" name="bank_account_no" class="form-control mb-2" value="{{ profile.bank_account_no }}">
+
+                <label>IFSC Code</label>
+                <input type="text" name="ifsc_code" class="form-control mb-2" value="{{ profile.ifsc_code }}">
+
+                <label>PAN No.</label>
+                <input type="text" name="pan_no" class="form-control" value="{{ profile.pan_no }}">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <!-- Education -->
+        <div class="col-md-6 col-sm-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <span>Education Information</span>
+                    <button type="button" class="btn btn-light btn-sm" onclick="addEducation()">+</button>
+                </div>
+                <div class="card-body" id="education-container">
+                    {% for education in educations %}
+                        <div class="border p-2 mb-2">
+                            <input type="text" name="degree_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.degree }}" placeholder="Degree">
+                            <input type="text" name="institution_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.institution }}" placeholder="Institution">
+                        <input type="number"
+name="year_{{ forloop.counter }}"
+class="form-control mb-1"
+value="{{ education.year_of_passing|date:'Y' }}"
+placeholder="Year of Passing"
+min="1900"
+max="{{ now|date:'Y' }}"
+step="1"
+oninput="this.value = Math.abs(this.value)">
+
+                            <input type="text" name="grade_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.grade }}" placeholder="Grade">
+                        </div>
+                    {% empty %}
+                        <p>No education records found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="col-md-6 col-sm-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <span>Experience</span>
+                    <button type="button" class="btn btn-light btn-sm" onclick="addExperience()">+</button>
+                </div>
+                <div class="card-body" id="experience-container">
+                    {% for experience in experiences %}
+                        <div class="border p-2 mb-2">
+                            <input type="text" name="organization_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.organization }}" placeholder="Organization">
+                            <input type="text" name="position_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.position }}" placeholder="Position">
+                            <input type="date" name="from_date_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.from_date }}">
+                            <input type="date" name="to_date_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.to_date }}">
+                            <textarea name="description_{{ forloop.counter }}" class="form-control mb-1" placeholder="Description">{{ experience.description }}</textarea>
+                        </div>
+                    {% empty %}
+                        <p>No experience records found.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="text-end mt-3">
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+    </div>
+</form>
+
+        </div>
+    </div>
+
+    <!-- Document Tab Content -->
+    <div id="document" class="tab-content">
+        <h3 style="margin-top: 40px;">Upload New Document</h3>
+        <form method="post" enctype="multipart/form-data" action="{% url 'update_profile' request.session.user_id %}">
+            {% csrf_token %}
+
+            <label>Document Name</label>
+            <input type="text" name="document_name" required>
+            <label>Upload File</label>
+            <input type="file" name="document_file" accept=".pdf,.jpg,.png,.doc,.docx,.xlsx,.pptx" required>
+            <input type="hidden" name="emp_id" value="{{ profile.emp_id.id }}">
+            <button type="submit" style="margin-top: 15px;">Upload Document</button>
+        </form>
+
+        <!-- Document List -->
+        <h3 style="margin-top: 40px;">Uploaded Documents</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Uploaded At</th>
+                    <th>File</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>{{ doc.document_type }}</td>
+                    <td>{{ doc.document_name }}</td>
+                    <td>{{ doc.uploaded_at|date:"Y-m-d H:i" }}</td>
+                    <td><a href="{{ doc.document_file.url }}" target="_blank">View</a></td>
+                    <td><a href="{% url 'delete_document' doc.id %}" class="action-btn">Delete</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">No documents uploaded.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Assets Tab Content -->
+    <div id="assets" class="tab-content">
+        <h3 style="margin-top: 40px;">Assigned Company Assets</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Asset Name</th>
+                    <th>Serial No</th>
+                    <th>Category</th>
+                    <th>Assigned Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for asset in assets %}
+                <tr>
+                    <td>{{ asset.name }}</td>
+                    <td>{{ asset.serial_number }}</td>
+                    <td>{{ asset.category }}</td>
+                    <td>{{ asset.assigned_date|date:"Y-m-d" }}</td>
+                    <td>{{ asset.status }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">No assets assigned.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Timesheet Tab Content -->
+    <div id="timesheet" class="tab-content">
+        <!-- (Timesheet data table or form goes here) -->
+    </div>
+
+    <!-- Leave Tab Content -->
+    <div id="leave" class="tab-content">
+        <!-- (Leave data table or form goes here) -->
+    </div>
+
+    <!-- Projects Tab Content -->
+    <div id="projects" class="tab-content">
+        <!-- (Project assignment data goes here) -->
+    </div>
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePasswordModal()">&times;</span>
+        <h3>Change Password</h3>
+        <label>New Password</label>
+        <input type="password" name="new_password">
+
+        <label>Confirm Password</label>
+        <input type="password" name="confirm_password">
+    </div>
+</div>
+<script>
+    function expandImage() {
+        document.getElementById('imageView').style.display = 'none';
+        document.getElementById('fullView').style.display = 'block';
+    }
+
+    function closeImage() {
+        document.getElementById('fullView').style.display = 'none';
+        document.getElementById('imageView').style.display = 'block';
+    }
+</script>
+
+    <script>
+        // JavaScript function to toggle between tabs
+        function showTab(tabName) {
+            // Hide all tab content
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove 'active' class from all tab buttons
+            const buttons = document.querySelectorAll('.tabs button');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            // Show the clicked tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add 'active' class to the clicked button
+            const clickedButton = Array.from(buttons).find(button => button.innerText.toLowerCase() === tabName);
+            clickedButton.classList.add('active');
+        }
+
+        <script>
+function openPasswordModal() {
+    document.getElementById("passwordModal").style.display = "block";
+}
+
+function closePasswordModal() {
+    document.getElementById("passwordModal").style.display = "none";
+}
+
+// Close the modal if clicked outside the modal box
+window.onclick = function(event) {
+    const modal = document.getElementById("passwordModal");
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
+
+    <script>
+let eduIndex = {{ educations|length|default:0 }};
+let expIndex = {{ experiences|length|default:0 }};
+
+function addEducation() {
+    eduIndex += 1;
+    const container = document.getElementById('education-container');
+    const div = document.createElement('div');
+    div.className = 'border p-2 mb-2';
+    div.innerHTML = `
+        <input type="text" name="degree_${eduIndex}" class="form-control mb-1" placeholder="Degree">
+        <input type="text" name="institution_${eduIndex}" class="form-control mb-1" placeholder="Institution">
+        <input type="number" name="year_${eduIndex}" class="form-control mb-1" placeholder="Year of Passing">
+        <input type="text" name="grade_${eduIndex}" class="form-control mb-1" placeholder="Grade">
+    `;
+    container.appendChild(div);
+}
+
+function addExperience() {
+    expIndex += 1;
+    const container = document.getElementById('experience-container');
+    const div = document.createElement('div');
+    div.className = 'border p-2 mb-2';
+    div.innerHTML = `
+        <input type="text" name="organization_${expIndex}" class="form-control mb-1" placeholder="Organization">
+        <input type="text" name="position_${expIndex}" class="form-control mb-1" placeholder="Position">
+        <input type="date" name="from_date_${expIndex}" class="form-control mb-1">
+        <input type="date" name="to_date_${expIndex}" class="form-control mb-1">
+        <textarea name="description_${expIndex}" class="form-control mb-1" placeholder="Description"></textarea>
+    `;
+    container.appendChild(div);
+}
+</script>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    position: absolute;
+    right: 16px;
+    top: 8px;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+</style>
+<style>
+    .image-container {
+        position: relative;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    .image-container img {
+        max-width: 150px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .edit-icon {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        padding: 5px;
+        cursor: pointer;
+    }
+
+    .edit-icon i {
+        color: white;
+        font-size: 14px;
+    }
+
+    .hidden-file-input {
+        display: none;
+    }
+</style><style>
+    .image-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #ccc;
+        cursor: pointer;
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .edit-icon {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        color:black
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        padding: 5px;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .full-screen-preview {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .full-screen-preview img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 50%;
+        padding: 5px 10px;
+        z-index: 3;
+    }
+
+    .hidden-file-input {
+        display: none;
+    }
+
+    .placeholder-oval {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        border: 2px dashed #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        cursor: pointer;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+    .image-container {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #ccc;
+        cursor: pointer;
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .edit-icon {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background-color: black;
+        color:black
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        padding: 5px;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .full-screen-preview {
+        position: relative;
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .full-screen-preview img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+    }
+
+    .top-right-buttons {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 10px;
+        z-index: 3;
+    }
+
+    .top-right-buttons button {
+        background-color: rgba(0,0, 0,0.9);
+        color:black
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 50%;
+        padding: 6px 10px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .hidden-file-input {
+        display: none;
+    }
+
+    .placeholder-oval {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        border: 2px dashed #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

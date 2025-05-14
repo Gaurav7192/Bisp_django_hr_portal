@@ -7,6 +7,7 @@
          alt="BISP Solution Logo"
          class="brand-image img-circle elevation-3"
          style="opacity: .8">
+    <br>
     <span class="brand-text font-weight-light">BISP Solution</span>
   </a>
 
@@ -19,7 +20,7 @@
         <!-- <img src="#" class="img-circle elevation-2" alt="User Image"> -->
       </div>
       <div class="info">
-        <a href="#" class="d-block">{{ request.session.name }}</a>
+        <a href="{% url 'update_profile' request.session.user_id %}" class="d-block">{{ request.session.name }}</a>
         <a href="#" class="d-block">{{ request.session.postion }}</a>
       </div>
     </div>
@@ -130,9 +131,9 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="pages/examples/e-commerce.html" class="nav-link">
+              <a href="{% url 'image_timesheet_record' request.session.user_id %}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Previous Week </p>
+                <p>Image Timesheet </p>
               </a>
             </li>
             {% if request.session.postion != 'Employee' %}
@@ -145,6 +146,18 @@
             {% endif %}
           </ul>
         </li>
+
+           <li class="nav-item">
+    {% if request.session.postion == 'HR' %}
+        <a href="{% url 'handbook_list' %}" class="nav-link">
+    {% else %}
+        <a href="{% url 'handbook' request.session.user_id %}" class="nav-link">
+    {% endif %}
+            <i class="fas fa-book-open nav-icon"></i>
+            <p>Hand Book</p>
+        </a>
+</li>
+
 
         {% if request.session.postion != 'Employee' %}
         <!-- Configure -->

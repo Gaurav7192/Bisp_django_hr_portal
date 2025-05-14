@@ -6,7 +6,7 @@ from django.db import models
 from datetime import date,datetime,time,timedelta
 from django.db.models import JSONField
 
-
+from simple_history.models import HistoricalRecords
 
 class RoleMaster(models.Model):
     role = models.CharField(max_length=50, unique=True)  # No need for choices anymore
@@ -104,9 +104,6 @@ class HalfDayTypeMaster(models.Model):
 
 
 
-    def __str__(self):
-        return self.role
-
 
 
 class JobStatusMaster(models.Model):
@@ -136,6 +133,7 @@ class emp_registers(models.Model):
         blank=True  # Can be left blank in forms
     )
     job_status = models.ForeignKey(JobStatusMaster, on_delete=models.SET_NULL, null=True, default=None)
+    history = HistoricalRecords()
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
         super().save(*args, **kwargs)
@@ -144,6 +142,56 @@ class emp_registers(models.Model):
         return f"{self.name} ({self.email})"
 
 
+class Handbook(models.Model):
+    document_name=models.CharField(max_length=100,null =False )
+    document = models.FileField(upload_to='handbooks/')  # Path to store the document
+    active_status = models.BooleanField(default=True)  # Active status of the handbook
+    start_date = models.DateField()  # Start date of validity
+    end_date = models.DateField(null=True)  # End date of validity
+
+    # Acknowledgment many-to-many relationship using Employee (emp_registers)
+    employees = models.ManyToManyField(
+        emp_registers,
+        through='Acknowledgment',  # Through the Acknowledgment model
+        related_name='handbooks'
+    )
+
+    def __str__(self):
+        return f"Handbook {self.id} - {self.document.name}"
+
+
+# Acknowledgment model to track employee responses (preserving history)
+
+class Acknowledgment(models.Model):
+    employee = models.ForeignKey(emp_registers, on_delete=models.CASCADE)  # Employee who acknowledged
+    handbook = models.ForeignKey(Handbook, on_delete=models.CASCADE)  # Handbook being acknowledged
+    acknowledgment_date = models.DateField(null=True )  # Date of acknowledgment
+    AGREEMENT_CHOICES = [
+        ('agree', 'Agree'),
+        ('disagree', 'Disagree'),
+    ]
+    '''class MyModel(models.Model):
+    agreement = models.CharField(
+        max_length=15,
+        choices=AGREEMENT_CHOICES,
+        default='not_acknowledged',  # Default to 'Not Acknowledged'
+        blank=False,   # Make it required
+    )
+    
+    def clean(self):
+        # Enforce that the value must be 'agree' or 'disagree'
+        if self.agreement == 'not_acknowledged':
+            raise ValidationError("You must select Agree or Disagree.")'''
+    acknowledgment = models.CharField(
+        max_length=20,
+        choices=AGREEMENT_CHOICES,
+        default='Not Acknowladge'  # Default to 'agree'
+    )
+    status = models.CharField(max_length=20,
+                              default='active')  # Status to track the acknowledgment (e.g., 'active', 'revoked')
+
+    def __str__(self):
+        return f"{self.employee.name} - {self.handbook.id} - {self.acknowledgment} - {self.status}"
 # class LeaveRecord(models.Model):
 #     EMPLOYEE_TYPES = [('Staff', 'Staff'), ('Manager', 'Manager'), ('HR', 'HR')]
 #     DEPARTMENTS = [('IT', 'IT'), ('Accounts', 'Accounts'), ('HR', 'HR'), ('Sales', 'Sales'),('Marketing', 'Marketing')]
@@ -245,6 +293,7 @@ class Project(models.Model):
 
     last_update =models.DateTimeField(auto_now=True,null=True)
     team_members = models.ManyToManyField(Member, related_name='projects')
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.pname
@@ -288,7 +337,7 @@ class EmployeeDetail(models.Model):
     gender_choices = [('male', 'Male'), ('female', 'Female'), ('other', 'Other')]
 
     gender = models.CharField(max_length=10, choices=gender_choices, null=True)
-    marriage_status = models.CharField(max_length=20, null=True)
+
     aadhar_no = models.CharField(max_length=12, unique=True, null=True)
     dob = models.DateField(null=True)
 
@@ -317,6 +366,7 @@ class EmployeeDetail(models.Model):
     pan_no = models.CharField(max_length=20, blank=True, null=True)
 
     leave_details = JSONField(default=dict, blank=True)
+    history = HistoricalRecords()
 
     # leave_details can store a dictionary like:
     # {
@@ -374,7 +424,17 @@ class EmployeeDetail(models.Model):
 
 
 
+class EmployeeDetailHistory(models.Model):
+    employee = models.ForeignKey(EmployeeDetail, on_delete=models.DO_NOTHING)
+    start_date = models.DateTimeField(null=True, blank=True)
+    change_date = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING, null=True, blank=True)
+    changed_fields = models.TextField()
+    previous_data = models.JSONField(null=True, blank=True)
+    new_data = models.JSONField(null=True, blank=True)
 
+    def __str__(self):
+        return f"History for {self.employee.emp_id.name} on {self.change_date}"
 
 class Experience(models.Model):
     emp_id = models.ForeignKey(emp_registers, on_delete=models.CASCADE)
@@ -384,7 +444,8 @@ class Experience(models.Model):
     to_date = models.DateField(null=True, blank=True)
 
     description = models.TextField(blank=True)
-
+    added_date=models.DateField(auto_now=True)
+    history = HistoricalRecords()
     def __str__(self):
         return f"{self.emp_id} - {self.organization}"
 
@@ -395,7 +456,8 @@ class Education(models.Model):
     institution = models.CharField(max_length=255)
     year_of_passing = models.IntegerField()
     grade = models.CharField(max_length=50, blank=True)
-
+    added_date = models.DateField(auto_now=True)
+    history = HistoricalRecords()
     def __str__(self):
         return f"{self.emp_id} - {self.degree}"
 
@@ -406,6 +468,7 @@ class Document(models.Model):
     document_name = models.CharField(max_length=255)
     document_file = models.FileField(upload_to='employee_documents/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.emp_id} - {self.document_type}"
@@ -417,6 +480,7 @@ class LeaveHalfDay(models.Model):
     """
     half_day_type = models.ForeignKey(HalfDayTypeMaster, on_delete=models.CASCADE)  # Link to half-day type
     half_day_date = models.DateField()  # The date of the half-day
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"Half Day Type: {self.half_day_type.type_name} on {self.half_day_date}"
@@ -427,6 +491,7 @@ class LeaveRecord(models.Model):
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=False, default=date(2025, 3, 27))
     no_of_days = models.FloatField(default=0.0)
+    history = HistoricalRecords()
 
     # ForeignKeys instead of choices
     leave_type = models.ForeignKey(LeaveTypeMaster, on_delete=models.SET_NULL, null=True)
@@ -506,6 +571,7 @@ class Timesheet(models.Model):
 class Holiday(models.Model):
     name = models.CharField(max_length=100)
     date = models.DateField()
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.name} ({self.date})"

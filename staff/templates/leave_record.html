@@ -42,17 +42,27 @@
           <td>{{ leave.no_of_days }}</td>
 
           <!-- Conditionally display Leave Type based on Compensation Leave -->
-          <td>
-            {% if leave.compensatory_leave %}
-              <span class="badge bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.compensation_leave_reason }}">
-                Compensation Leave
-              </span>
-            {% else %}
-              {{ leave.leave_type.name }}
-            {% endif %}
-          </td>
+         <td>
+  {% if leave.compensatory_leave %}
+    <span class="badge bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.compensation_leave_reason }}">
+      Compensation Leave
+    </span>
+  {% else %}
+    {{ leave.leave_type.name }}
+  {% endif %}
+</td>
 
-          <td>{{ leave.reason }}</td>
+
+           <td>
+{% if leave.reason|length > 20 %}
+<span class="text-primary" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#reasonModal" onclick="showFullReason(`{{ leave.reason|escapejs }}`)">
+{{ leave.reason|slice:":20" }}...
+</span>
+{% else %}
+{{ leave.reason }}
+{% endif %}
+</td>
+
           <td id="status-{{ leave.id }}">
             {% if leave.approval_status.status == "Approved" %}
               <span class="badge bg-success">Approved</span>
@@ -62,6 +72,7 @@
               <span class="badge bg-secondary">Withdrawn</span>
             {% elif leave.approval_status.status == "Pending" %}
               {% if request.session.postion == "HR" or request.session.postion == "Manager" and leave.emp_id.position.role != "Manager" and leave.emp_id.position.role != "HR" %}
+                 {% if today <= leave.start_date %}
               <div class="dropdown">
                 <span class="badge bg-warning text-dark dropdown-toggle" data-bs-toggle="dropdown" role="button">Pending</span>
                 <ul class="dropdown-menu">
@@ -72,6 +83,7 @@
               {% else %}
               <span class="badge bg-warning text-dark">Pending</span>
               {% endif %}
+                {% endif %}
             {% else %}
               <span class="badge bg-warning text-dark">{{ leave.approval_status.status }}</span>
             {% endif %}
@@ -92,6 +104,20 @@
   <!-- Pagination -->
   <div class="d-flex justify-content-center mt-3">
     <nav><ul class="pagination" id="pagination"></ul></nav>
+  </div>
+</div>
+<!-- Reason Modal -->
+<div class="modal fade" id="reasonModal" tabindex="-1" aria-labelledby="reasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reasonModalLabel">Full Reason</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="fullReasonText">
+        <!-- Full reason will be inserted here -->
+      </div>
+    </div>
   </div>
 </div>
 
@@ -122,6 +148,10 @@ function submitRejection(event, leaveId) {
   }
   updateStatus(event, leaveId, "Rejected", reason);
 }
+function showFullReason(reason) {
+  document.getElementById("fullReasonText").innerText = reason;
+}
+
 
 function updateStatus(event, leaveId, action, reason = "") {
   if (event) event.preventDefault();
@@ -238,6 +268,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
 });
+document.addEventListener('DOMContentLoaded', function () {
+  // Initialize all tooltips
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl);
+  });
+});
 
 </script>
 
@@ -246,6 +283,22 @@ document.addEventListener("DOMContentLoaded", () => {
 .table th {
   cursor: pointer;
 }
+</style>
+<style>
+#daysDetailContent {
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.modal-body {
+  max-height: 300px;
+  overflow-y: auto;   /* Enable scrolling if content exceeds max height */
+  word-wrap: break-word; /* Ensure long words break to the next line */
+  white-space: normal;   /* Allow text to wrap and not stay on one line */
+}
+
 </style>
 
 <!-- Bootstrap Bundle -->

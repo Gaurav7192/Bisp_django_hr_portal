@@ -54,7 +54,19 @@ path('project_edit/<int:project_id>/', project_edit_view, name='project_edit'),
     path('team_timesheet_record',team_timesheet_record,name='team_timesheet_record'),
     path('get-members/<int:project_id>/', get_project_members, name='get_project_members'),
 #path('change-password/', change_password, name='change_password'),
-# path('profile/update/<int:user_id>',update_profile, name='update_profile'),
+path('update_profile/<int:user_id>',update_profile, name='update_profile'),
+    path('image_timesheet/<int:user_id>',image_timesheet,name='image_timesheet'),
+    path('image_timesheet_record/<int:user_id>',image_timesheet_record, name='image_timesheet_record'),
+path('get-tasks/', get_tasks, name='get_tasks'),
+    path('employee/profile/<int:emp_id>/', employee_profile, name='employee_profile'),
+    path('view_profile_history/<int:emp_id>/', view_profile_history, name='view_profile_history'),
+    path('handbooks/<int:user_id>', handbook_view, name='handbook'),
+    path('handbook_list/',handbook_list,name='handbook_list'),
+    #path('handbooks/', handbook_panel, name='handbook_panel'),
+    # path('handbooks/acknowledge/<int:handbook_id>/', acknowledge_handbook, name='acknowledge_handbook'),
+
+    # Add history view URL here
+   # path('employee/profile/history/<int:emp_id>/',employee_history, name='history_page_url'),
 
 ]
 

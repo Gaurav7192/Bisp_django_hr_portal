@@ -1,131 +1,214 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-  }
-
-  h2 {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-
-  form {
-    margin-bottom: 10px;
-    text-align: right;
-  }
-
-  select {
-    padding: 5px;
-    font-size: 14px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-
-  th, td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: center;
-    vertical-align: middle;
+  .main-content {
+    padding: 20px;
   }
 
   th {
-    background-color: #f2f2f2;
+    cursor: pointer;
   }
 
-  tr:nth-child(even) {
-    background-color: #f9f9f9;
+  th.sort-asc::after {
+    content: " ▲";
   }
 
-  img {
-    max-width: 50px;
-    height: auto;
-    border-radius: 5px;
+  th.sort-desc::after {
+    content: " ▼";
+  }
+
+  .table-controls {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .export-buttons button {
+    margin-right: 5px;
   }
 
   .pagination {
     text-align: center;
-    margin-top: 10px;
+    margin-top: 15px;
   }
 
-  .pagination a {
-    margin: 0 5px;
-    text-decoration: none;
-    color: #007bff;
+  .pagination button {
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    cursor: pointer;
   }
 
-  .pagination a:hover {
-    text-decoration: underline;
-  }
-
-  .pagination span {
+  .pagination button.active {
+    background-color: #007bff;
+    color: #fff;
     font-weight: bold;
   }
 </style>
 
-<h2>My Timesheet</h2>
+<div class="main-content">
+  <h2 class="text-center mb-4">My Timesheet</h2>
 
-<form method="get">
-  <label for="per_page">Items per page:</label>
-  <select name="per_page" id="per_page" onchange="this.form.submit()">
-    <option value="5" {% if request.GET.per_page == '5' %}selected{% endif %}>5</option>
-    <option value="10" {% if request.GET.per_page == '10' %}selected{% endif %}>10</option>
-    <option value="20" {% if request.GET.per_page == '20' %}selected{% endif %}>20</option>
-  </select>
-</form>
+  <div class="table-controls">
+    <input type="text" id="searchInput" onkeyup="searchAndPaginate()" class="form-control" placeholder="Search..." style="width: 200px;">
+    <select id="rowsLimit" class="form-select" onchange="changePage(1)" style="width: 120px;">
+      <option value="5">Show 5</option>
+      <option value="10" selected>Show 10</option>
+      <option value="20">Show 20</option>
+    </select>
+    <div class="export-buttons">
+      <button onclick="exportTable('csv')" class="btn btn-outline-primary btn-sm">Export CSV</button>
+      <button onclick="exportTable('excel')" class="btn btn-outline-success btn-sm">Export Excel</button>
+      <button onclick="exportTable('json')" class="btn btn-outline-dark btn-sm">Export JSON</button>
+    </div>
+  </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Project</th>
-      <th>Task</th>
-      <th>Date</th>
-      <th>Start Time</th>
-      <th>End Time</th>
-      <th>Description</th>
-      <th>Attachment</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in timesheets %}
+  <table id="timesheetTable" class="table table-bordered">
+    <thead>
       <tr>
+        <th>#</th>
+        <th onclick="sortTable(1)">Project</th>
+        <th onclick="sortTable(2)">Task</th>
+        <th onclick="sortTable(3)">Date</th>
+        <th onclick="sortTable(4)">Start Time</th>
+        <th onclick="sortTable(5)">End Time</th>
+        <th onclick="sortTable(6)">Description</th>
+        <th>Attachment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in timesheets %}
+      <tr>
+        <td></td>
         <td>{{ item.pname.pname }}</td>
-        <td>{{ item.task}}</td>
+        <td>{{ item.task }}</td>
         <td>{{ item.date }}</td>
         <td>{{ item.start_time }}</td>
         <td>{{ item.end_time }}</td>
         <td>{{ item.description }}</td>
         <td>
           {% if item.attachment %}
-            <img src="{{ item.attachment.url }}" alt="Attachment">
+            <img src="{{ item.attachment.url }}" width="50">
           {% else %}
             No Image
           {% endif %}
         </td>
       </tr>
-    {% empty %}
-      <tr>
-        <td colspan="7">No timesheet records found.</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+      {% endfor %}
+    </tbody>
+  </table>
 
-<div class="pagination">
-  {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}&per_page={{ request.GET.per_page }}">Previous</a>
-  {% endif %}
-
-  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-
-  {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}&per_page={{ request.GET.per_page }}">Next</a>
-  {% endif %}
+  <div class="pagination" id="paginationControls"></div>
 </div>
+
+<script>
+let sortDirection = {};
+let allRows = Array.from(document.querySelectorAll("#timesheetTable tbody tr"));
+let currentPage = 1;
+
+function sortTable(colIndex) {
+  const table = document.getElementById("timesheetTable");
+  const ths = table.tHead.rows[0].cells;
+
+  Array.from(ths).forEach(th => th.classList.remove("sort-asc", "sort-desc"));
+
+  sortDirection[colIndex] = !sortDirection[colIndex];
+  const direction = sortDirection[colIndex] ? 1 : -1;
+  ths[colIndex].classList.add(sortDirection[colIndex] ? "sort-asc" : "sort-desc");
+
+  allRows.sort((a, b) => {
+    const aText = a.cells[colIndex].innerText.toLowerCase();
+    const bText = b.cells[colIndex].innerText.toLowerCase();
+    return aText.localeCompare(bText) * direction;
+  });
+
+  changePage(1);
+}
+
+function searchAndPaginate() {
+  const searchValue = document.getElementById("searchInput").value.toLowerCase();
+
+  allRows.forEach(row => {
+    const match = Array.from(row.cells).some(cell => cell.innerText.toLowerCase().includes(searchValue));
+    row.style.display = match ? "" : "none";
+  });
+
+  changePage(1);
+}
+
+function changePage(page) {
+  const rowsLimit = parseInt(document.getElementById("rowsLimit").value);
+  const tbody = document.querySelector("#timesheetTable tbody");
+  const filteredRows = allRows.filter(row => row.style.display !== "none");
+
+  const totalPages = Math.ceil(filteredRows.length / rowsLimit);
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  currentPage = page;
+
+  tbody.innerHTML = "";
+
+  const start = (page - 1) * rowsLimit;
+  const end = Math.min(start + rowsLimit, filteredRows.length);
+
+  for (let i = start; i < end; i++) {
+    const newRow = filteredRows[i].cloneNode(true);
+    newRow.cells[0].innerText = i + 1; // Serial Number
+    tbody.appendChild(newRow);
+  }
+
+  updatePaginationControls(totalPages);
+}
+
+function updatePaginationControls(totalPages) {
+  const pagination = document.getElementById("paginationControls");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = i;
+    btn.className = i === currentPage ? "active" : "";
+    btn.onclick = () => changePage(i);
+    pagination.appendChild(btn);
+  }
+}
+
+function exportTable(format) {
+  const headers = Array.from(document.querySelectorAll("#timesheetTable thead th")).map(th => th.innerText);
+  const rows = Array.from(document.querySelectorAll("#timesheetTable tbody tr")).map(row => {
+    return Array.from(row.cells).map(cell => cell.innerText.trim());
+  });
+
+  if (format === 'csv' || format === 'excel') {
+    const content = [headers].concat(rows).map(e => e.join(",")).join("\n");
+    const blob = new Blob([content], { type: 'text/csv' });
+    download(blob, `timesheet.${format === 'csv' ? 'csv' : 'xls'}`);
+  } else if (format === 'json') {
+    const json = rows.map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    });
+    const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+    download(blob, 'timesheet.json');
+  }
+}
+
+function download(blob, filename) {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+window.onload = () => {
+  allRows = Array.from(document.querySelectorAll("#timesheetTable tbody tr"));
+  searchAndPaginate();
+};
+  document.getElementById("entryCount").innerText = `Total Entries: ${filteredRows.length}`;
+
+</script>
 {% endblock %}

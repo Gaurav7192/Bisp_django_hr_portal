@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+    <h2>Timesheet Records</h2>
+    <a href="{% url 'image_timesheet' request.session.user_id %}" style="padding: 10px 20px; background-color: #3498db; color: white; text-decoration: none; border: none; display: inline-block; cursor: pointer;">
+      Add Timesheet
+    </a>
+  </div>
+
+  {% if request.session.postion != 'Employee' %}
+    <label style="margin-top: 10px; display: inline-block;">
+      <input type="checkbox" id="toggleTeam" onchange="toggleTimesheet()"> Show Team Timesheet
+    </label>
+  {% endif %}
+
+  <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+    <thead>
+      <tr style="background-color: #f2f2f2;">
+        <th>S.No</th>
+        <th>Name</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>View</th>
+      </tr>
+    </thead>
+    <tbody id="personalTable">
+      {% for t in timesheet %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ t.emp_id.name }}</td>
+          <td>{{ t.date }}</td>
+          <td>{{ t.end }}</td>
+          <td>
+       {% if t.attachment %}
+  <button onclick="openModal('{{ t.attachment.url }}', '{{ t.date }}', '{{ t.end }}')">View</button>
+{% else %}
+  No Image
+{% endif %}
+
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tbody id="teamTable" style="display: none;">
+      {% for t in team_timesheet %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ t.emp_id.name }}</td>
+          <td>{{ t.date }}</td>
+          <td>{{ t.end }}</td>
+          <td>
+            {% if t.img %}
+              <button onclick="openModal('{{ t.img.url }}', '{{ t.date }}', '{{ t.end }}')">View</button>
+            {% else %}
+              No Image
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Modal -->
+  <div id="imageModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Timesheet Preview</h3>
+      <img id="modalImage" src="" alt="Timesheet Image" style="width:100%; border:1px solid #ccc;">
+      <p><strong>Start Date:</strong> <span id="modalStartDate"></span></p>
+      <p><strong>End Date:</strong> <span id="modalEndDate"></span></p>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function toggleTimesheet() {
+      const isChecked = document.getElementById("toggleTeam").checked;
+      document.getElementById("personalTable").style.display = isChecked ? "none" : "";
+      document.getElementById("teamTable").style.display = isChecked ? "" : "none";
+    }
+
+    function openModal(src, start, end) {
+      document.getElementById("modalImage").src = src;
+      document.getElementById("modalStartDate").textContent = start;
+      document.getElementById("modalEndDate").textContent = end;
+      document.getElementById("imageModal").style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("imageModal").style.display = "none";
+    }
+  </script>
+{% endblock %}

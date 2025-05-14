@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'newapp','staff',
+    'simple_history',
 
 # 'django.contrib.messages',
 ]
@@ -50,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'simple_history.middleware.HistoryRequestMiddleware',
 
     # custom middleware
 
@@ -67,6 +69,7 @@ MIDDLEWARE = [
 #     messages.ERROR: 'alert alert-danger',
 # }
 
+X_FRAME_OPTIONS = 'ALLOWALL'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

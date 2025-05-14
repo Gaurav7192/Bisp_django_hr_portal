@@ -32,13 +32,7 @@ from django.db import transaction
 
 def d1(request,id):
     user = get_object_or_404(emp_registers, id=id)
-    #manual_leave_details_update()
-    # if request.session.get('position') == 'HR':
-        # Example: initialize for all employees
 
-
-        # for emp in EmployeeDetail.objects.filter(job_status=True):
-        #     initialize_leave_details(emp)
     return render(request, '1.html', {'user': user})
 
 def d2(request,id):
@@ -63,6 +57,8 @@ import re
 from .models import emp_registers
 
 def update_employee(request, id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     employee = get_object_or_404(emp_registers, id=id)
 
     if request.method == 'POST':
@@ -141,10 +137,8 @@ def login_view(request):
                 else:
                     request.session.set_expiry(0)
 
-                if user.position.role == 'HR':
-                    return redirect('d1', id=user.id)
-                else:
-                    return redirect('d2', id=user.id)
+
+                return redirect('d2', id=user.id)
             else:
                 messages.error(request, 'Invalid email or password.', extra_tags='login')
         except emp_registers.DoesNotExist:
@@ -161,6 +155,8 @@ def login_view(request):
 
 
 def employee_registration(request, id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     # Get the current employee by ID
     user = emp_registers.objects.filter(id=id).first()
 
@@ -172,7 +168,7 @@ def employee_registration(request, id):
     # Fetch all positions (from RoleMaster) and departments (from DepartmentMaster)
     positions = RoleMaster.objects.all()
     departments = DepartmentMaster.objects.all()
-
+    managers = emp_registers.objects.filter(position__role__iexact='Manager')
     # Handle POST request when form is submitted
     if request.method == 'POST':
         form = EmployeeForm(request.POST, request.FILES)
@@ -203,9 +199,10 @@ def employee_registration(request, id):
                     eligible = True
                     break  # Found a matching leave, no need to continue
 
-            # Call initializer only if eligible
+            latest_employee_detail = emp_registers.objects.all().order_by('-id').first()
+            emp, created = EmployeeDetail.objects.get_or_create(emp_id=latest_employee_detail)
             if eligible:
-                initialize_leave_details(employee_detail)
+                initialize_leave_details(emp)
 
             # Success message
             messages.success(request, 'Employee registration successful!', extra_tags="register")
@@ -225,7 +222,8 @@ def employee_registration(request, id):
         'user': user,
         'id': id,
         'positions': positions,  # Pass positions to the template
-        'departments': departments  # Pass departments to the template
+        'departments': departments,  # Pass departments to the template,
+        'managers':managers,
     })
 
 
@@ -233,6 +231,8 @@ def employee_registration(request, id):
 
 
 def change_password(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     user_id=request.session.user_id
     if request.method == 'POST':
         new_password = request.POST.get('new_password')
@@ -250,6 +250,8 @@ def change_password(request):
 
 
 def update_profile(request,user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     emp = emp_registers.objects.get(id=request.session['user_id'])  # Get logged-in user
     profile, created = EmployeeDetail.objects.get_or_create(emp_id=emp)  # Get or create profile
 
@@ -296,6 +298,19 @@ def update_profile(request,user_id):
             profile.profile_image = request.FILES['profile_image']
 
         profile.save()
+        if 'document_file' in request.FILES:
+            doc_file = request.FILES['document_file']
+            doc_name = request.POST.get('document_name')
+            doc_type = request.POST.get('document_type')
+            if doc_name and doc_type:
+                Document.objects.create(
+                    emp_id=profile.emp_id,
+                    document_name=doc_name,
+                    document_type=doc_type,
+                    document_file=doc_file
+                )
+                messages.success(request, "Document uploaded.")
+                return redirect('update_profile')
         messages.success(request, "Profile updated successfully.")
         return redirect('update_profile')
 
@@ -303,13 +318,23 @@ def update_profile(request,user_id):
 
 
 
+def delete_document(request, doc_id):
+    doc = Document.objects.get(id=doc_id)
+    if doc.emp_id.id == request.user.emp_id.id:
+        doc.delete()
+        messages.success(request, "Document deleted.")
+    return redirect('update_profile')
 
 
 
 def project(request, user_id):
-    projects = Project.objects.prefetch_related('team_members__emp_id').filter(
-        Q(admin=request.session['name']) | Q(manager=request.session['user_id'])
-    ).order_by('-id')
+    if 'user_id' not in request.session:
+        return redirect('login')
+    projects = Project.objects.prefetch_related('team_members').filter(
+        Q(admin=request.session['name']) |
+        Q(manager=request.session['user_id']) |
+        Q(team_members__emp_id=user_id)
+    ).order_by('-id').distinct()
     total_projects = projects.count()
 
     context = {
@@ -462,6 +487,8 @@ from django.utils.dateparse import parse_date
 
 
 def add_project_view(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     user_id = request.session.get('user_id')
     try:
         emp = emp_registers.objects.get(id=user_id)
@@ -470,11 +497,12 @@ def add_project_view(request, user_id):
         messages.error(request, "Employee not found.")
         return redirect('login')
 
-    managers = emp_registers.objects.filter(position__role__iexact='Manager')
+
     employee_members = emp_registers.objects.filter(position__role__iexact='Employee')
     rate_status_list = RateStatusMaster.objects.all()
     priority_list = PriorityMaster.objects.all()
     status_list = StatusMaster.objects.all()
+    managers = emp_registers.objects.filter(position__role__iexact='Manager')
 
     if request.method == "POST":
         pname = request.POST.get('pname')
@@ -485,7 +513,7 @@ def add_project_view(request, user_id):
         priority = request.POST.get('priority')
         description = request.POST.get('description')
         client = request.POST.get('client')
-        manager_emp_id = request.POST.get('manager')
+        manager = request.POST.get('manager')
         team_member_ids = request.POST.getlist('team_members')
 
         form_data = request.POST.copy()
@@ -577,10 +605,10 @@ def add_project_view(request, user_id):
                 })
 
         # Validate manager
-        manager = None
-        if manager_emp_id:
+
+        if manager:
             try:
-                manager = emp_registers.objects.get(id=manager_emp_id)
+                manager = emp_registers.objects.get(id=manager)
             except emp_registers.DoesNotExist:
                 messages.error(request, "Invalid Manager selected.")
                 return render(request, 'add_project.html', {
@@ -679,6 +707,8 @@ def add_employee(request):
 
 
 def employee_list(request):
+    if 'user_id' not in request.session:
+        return redirect('login')  # 'log
     # Get filters from request
     position_filter = request.GET.get('position', '')
     department_filter = request.GET.get('department', '')
@@ -713,8 +743,14 @@ def employee_list(request):
     })
 
 
+import json
+from django.core.serializers.json import DjangoJSONEncoder
 
-def leave_record_view(request,user_id):
+
+def leave_record_view(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')  # 'log
+
     # Extract filter values from request
     name = request.GET.get('name', '')
     user_id = request.GET.get('id', '')
@@ -747,8 +783,27 @@ def leave_record_view(request,user_id):
     # Retrieve filtered records
     leave_records = LeaveRecord.objects.filter(query).order_by('-id')
 
-    return render(request, 'leave_record.html', {'leave_record': leave_records})
+    # Serialize half-day info for each leave record
+    leave_data = []
+    for leave in leave_records:
+        half_day_entries = leave.half_day.all()
+        half_day_info = [{
+            'date': hd.half_day_date.strftime('%Y-%m-%d'),
+            'type': str(hd.half_day_type.part)  # Assuming `part` contains "First Half" or "Second Half"
+        } for hd in half_day_entries]
 
+        leave_data.append({
+            'id': leave.id,
+            'no_of_days': str(leave.no_of_days),
+            'half_day_info': half_day_info
+        })
+
+    # Pass serialized data to template
+    return render(request, 'leave_record.html', {
+        'leave_record': leave_records,
+        'leave_data_json': json.dumps(leave_data, cls=DjangoJSONEncoder),
+        'today': now().date()
+    })
 
 
 import random
@@ -764,6 +819,8 @@ def set_page_size_preference(request):
 
 
 def delete_employee(request, id):
+    if 'user_id' not in request.session:
+        return redirect('login')  # 'log
     employee = get_object_or_404(emp_registers, id=id)
     employee.delete()
     messages.success(request, "emp_registers deleted successfully!")
@@ -777,6 +834,8 @@ from django.contrib import messages
 from .models import LeaveRecord, LeaveHalfDay, HalfDayTypeMaster, LeaveTypeMaster, LeaveStatusMaster, Holiday, emp_registers, EmployeeDetail
 
 def apply_leave(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     try:
         employee = EmployeeDetail.objects.get(emp_id=user_id)
         emp = emp_registers.objects.get(id=user_id)
@@ -813,6 +872,7 @@ def apply_leave(request, user_id):
         holidays = set(Holiday.objects.filter(date__range=[start_date, end_date]).values_list('date', flat=True))
 
         def is_weekend_off(date):
+
             if date.weekday() == 6:  # Sunday
                 return True
             if date.weekday() == 5:  # Saturday
@@ -884,7 +944,7 @@ def apply_leave(request, user_id):
                     continue
 
         messages.success(request, "Leave application submitted successfully!")
-        return redirect('apply_leave', user_id=user_id)
+        return redirect('leave_dashboard', user_id=user_id)
 
     leave_details = employee.leave_details
     leave_types = LeaveTypeMaster.objects.filter(leave_status=True)
@@ -1029,6 +1089,8 @@ def update_leaves_view(request):
 
 
 def leave_dashboard(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     # Ensure the user is logged in
     # if 'user_id' not in request.session:
     #     return redirect('/login/')
@@ -1092,6 +1154,18 @@ def leave_dashboard(request, user_id):
         'today': today,'emp':emp
     })
 
+from django.http import JsonResponse
+from .models import Task  # Replace with your actual Task model
+
+def get_tasks(request):
+    project_id = request.GET.get('project_id')
+
+    if project_id:
+        tasks = Task.objects.filter(project_id=project_id).values('id', 'title')
+        task_list = [{'id': task['id'], 'name': task['title']} for task in tasks]
+
+        return JsonResponse({'tasks': task_list})
+    return JsonResponse({'tasks': []})
 
 
 
@@ -1099,6 +1173,8 @@ def leave_dashboard(request, user_id):
 
 
 def update_leave_status(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     approver = emp_registers.objects.get(id=user_id)
 
     if request.method == "POST":
@@ -1178,13 +1254,22 @@ def update_leave_status(request, user_id):
 
 
 
+from django.http import JsonResponse
+from .models import Task
+
+# def get_tasks(request):
+#     project_id = request.GET.get('project_id')
+#     if project_id:
+#         tasks = Task.objects.filter(project_id=project_id)  # Assuming Task model has a project_id field
+#         task_data = [{'id': task.id, 'title': task.title} for task in tasks]
+#         return JsonResponse({'tasks': task_data})
+#     return JsonResponse({'tasks': []})  # Return empty tasks if no project_id
 
 
 
 from django.utils import timezone
 
 def initialize_leave_details(emp_detail):
-    print(f"--- Initializing leave details for employee {emp_detail.id} ---")
 
     current_date = timezone.now().date()
     leave_data = emp_detail.leave_details or {}
@@ -1235,11 +1320,13 @@ def initialize_leave_details(emp_detail):
             # Else: don't touch anything if not Jan 1st and carry forward
         else:
             # First time adding this leave
+
             leave_data[code] = {
                 "used": 0,
                 "balance": total,
                 "total": total
             }
+
 
     # Set renewal marker only on Jan 1st
     if is_jan_first:
@@ -1257,6 +1344,7 @@ def initialize_leave_details(emp_detail):
 
 
 def is_leave_type_valid_today(leave_type, today):
+
     # Check start and end date validity only if given
     if leave_type.start_from and today < leave_type.start_from.date():
         return False
@@ -1266,6 +1354,8 @@ def is_leave_type_valid_today(leave_type, today):
 
 
 def add_leave_type(request):
+    if 'user_id' not in request.session:
+        return redirect('login')
     if request.method == 'POST':
         # Collecting form data
         leave_name = request.POST.get('name')
@@ -1370,16 +1460,21 @@ def add_leave_type(request):
 #     return render(request, 'update_timesheet.html', {'projects': projects})
 
 
-
+# def previous_week_timesheet:
+  #
+#   return render(request, 'previous_week_timesheet.html')
 
 def update_timesheet(request, user_id):
-    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    if 'user_id' not in request.session:
+        return redirect('login')
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday','Saturday']
     emp_id = request.session.get('user_id')
 
     if request.method == 'POST':
         is_weekly = 'weekly' in request.POST
 
         if is_weekly:
+
             # Loop over each day in the week to handle weekly timesheet data
             for day in days:
                 date = request.POST.get(f'date_{day}')
@@ -1391,7 +1486,7 @@ def update_timesheet(request, user_id):
                 attachment = request.FILES.get(f'attachment_{day}')
 
                 # Only store the timesheet entry if the project and task are selected
-                if date and pname and task_id and  start_time:
+                if date  and  description:
                     try:
                         task_obj = Task.objects.get(id=task_id)
                         Timesheet.objects.create(
@@ -1404,6 +1499,7 @@ def update_timesheet(request, user_id):
                             description=description or '',
                             attachment=attachment if attachment else None
                         )
+
                     except Task.DoesNotExist:
                         continue  # Skip if task is not found
         else:
@@ -1433,10 +1529,12 @@ def update_timesheet(request, user_id):
                 except Task.DoesNotExist:
                     pass  # silently skip if task not found
 
-        return redirect('update_timesheet', user_id=user_id)
+        return redirect('user_timesheet')
 
     # Retrieve projects and tasks related to the logged-in employee
-    projects = Project.objects.filter(team_members__emp_id=emp_id)
+    projects = Project.objects.filter(
+        Q(team_members__emp_id=emp_id) & ~Q(status__status='complete')
+    )
     tasks = Task.objects.filter(assigned_to__emp_id=emp_id)
 
     return render(request, 'update_timesheet.html', {
@@ -1445,36 +1543,86 @@ def update_timesheet(request, user_id):
         'tasks': tasks
     })
 
+def image_timesheet_record(request,user_id):
+    user_name = request.session.get('name')  # Assuming user_id is saved in session
+    today = date.today()
+    user_id = request.session.get('user_id')
+    # Calculate current and previous week
+    start_of_week = today - timedelta(days=today.weekday())  # Monday of current week
+    end_of_week = start_of_week + timedelta(days=6)
+    start_of_last_week = start_of_week - timedelta(days=7)
+    end_of_last_week = start_of_week - timedelta(days=1)
 
-def upload_attachment(request):
+    # Filter timesheets where pname.manager or pname.admin == user_id
+    user_name = request.session['name']  # e.g., 'Kapil'
+
+    timesheet = []
+
+    timesheets = Timesheet.objects.filter(
+            emp_id=user_id,
+            description__isnull=True
+        ).values('id', 'emp_id', 'date', 'attachment')
+    emp=emp_registers.objects.get(id=user_id)
+    for t in timesheets:
+
+        t['end'] = t['date'] + timedelta(days=5)  # Add 5 days to the start date
+        timesheet.append(t)  # Add modified record to the list
+    team_timesheet = []
+    if emp.position.role != 'Employee':
+
+        team_timesheets = Timesheet.objects.filter(
+            Q(pname__manager__startswith=user_name) | Q(pname__admin__startswith=user_name),
+            date__range=[start_of_last_week, end_of_week]
+        ).values('id', 'emp_id', 'date', 'attachment')
+
+        for a in team_timesheets:
+            a['end'] = a['date'] + timedelta(days=5)
+            team_timesheet.append(a)
+    return render(request, 'image_timesheet_record.html', context={'timesheet': timesheet,'team_timesheet':team_timesheet})
+
+
+def image_timesheet(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
     if request.method == 'POST':
         attachment = request.FILES.get('attachment')
         start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-        emp=request.session.user_id
+
+        # Get the project for the user
+        projects = Project.objects.filter(
+            Q(team_members__emp_id=user_id) & ~Q(status__status='complete')
+        ).order_by('-id').first()
+
+        # Check if file is uploaded
         if not attachment:
             messages.error(request, "Please upload a file.")
-            return redirect('upload_attachment')
+            return redirect('image_timesheet', user_id=user_id)
 
         try:
-            # Save to database
+            emp=emp_registers.objects.get(id=user_id)
+            # Save the new Timesheet record
             new_attachment = Timesheet.objects.create(
                 attachment=attachment,
-                start_date=start_date,
-                end_date=end_date,
+                date=start_date,
+                pname=projects,
                 emp_id=emp
-
             )
             messages.success(request, "Attachment uploaded successfully!")
-            return redirect('upload_attachment')
+            return redirect('image_timesheet_record', user_id=user_id)
         except Exception as e:
+            # Log the error and show a message to the user
+            print(f"Error: {e}")
             messages.error(request, f"Error: {e}")
-            return redirect('upload_attachment')
-    else:
-        return render(request, 'image_timesheet.html')
+            return redirect('image_timesheet', user_id=user_id)
+
+    # Ensure you return a response for the GET request
+    return render(request, 'image_timesheet.html')
 
 
 def team_task_report(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     user_id = request.session.get('user_id')  # get from session
     if not user_id:
         messages.error(request, "User not logged in.")
@@ -1499,6 +1647,8 @@ def team_task_report(request, user_id):
 
 
 def task_list_view(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     user_id = request.session.get('user_id')  # get from session
     if not user_id:
         messages.error(request, "User not logged in.")
@@ -1526,6 +1676,8 @@ def task_list_view(request, user_id):
 
 
 def add_task_view(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     user_id = request.session.get('user_id')
     if not user_id:
         messages.error(request, "User not logged in.", extra_tags='task')
@@ -1536,7 +1688,7 @@ def add_task_view(request, user_id):
         messages.error(request, "Employee not found.", extra_tags="task")
         return redirect('login')
 
-    projects = Project.objects.filter(Q(manager=emp) | Q(admin=emp.name))
+    projects = Project.objects.filter(Q(manager=emp) | Q(admin=emp.name) & ~Q(status__status='complete'))
     members = Member.objects.filter(projects__in=projects).distinct()
 
     if request.method == "POST":
@@ -1612,6 +1764,8 @@ def get_members(request, project_id):
 from django.utils.timezone import now
 
 def update_task_status_page(request, task_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
     task = get_object_or_404(Task, id=task_id)
     user_id = request.session.get('user_id')
     emp = get_object_or_404(emp_registers, id=user_id)
@@ -1664,16 +1818,31 @@ def update_task_status_page(request, task_id):
     })
 
 
-
-
 def user_timesheet(request):
-    user_id = request.session['user_id']  # your user logic
+    # Check if the user is logged in
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    user_id = request.session['user_id']  # Get user ID from session
+
+    # Filter timesheets for the logged-in user, with related project name (pname) and order by most recent
     timesheets = Timesheet.objects.filter(emp_id=user_id).select_related('pname').order_by('-id')
+
+    # Implement pagination
+    per_page = request.GET.get('per_page', 10)  # Get number of items per page (default to 10)
+    paginator = Paginator(timesheets, per_page)
+    page_number = request.GET.get('page')  # Get current page number from the request
+    page_obj = paginator.get_page(page_number)  # Get the paginated timesheets for the current page
+
+    # Fetch the first user (employee) from the timesheet list (for display)
     user = timesheets.first().emp_id if timesheets else None
-    return render(request, 'user_timesheet.html', {'timesheets': timesheets, 'user': user})
-# Step 1: Enter Email
 
-
+    # Pass paginated timesheets and user data to the template
+    return render(request, 'user_timesheet.html', {
+        'page_obj': page_obj,  # Pass the paginated page object
+        'user': user,
+        'timesheets': page_obj.object_list  # Only display the timesheets for the current page
+    })
 
 
 def reset_password(request):
@@ -1734,15 +1903,80 @@ def reset_password(request):
     return render(request, 'reset_password.html', {'step': step})
 
 
+# from django.utils.timezone import now
+# from django.forms.models import model_to_dict
+# from django.contrib.auth.decorators import login_required
+# from django.shortcuts import get_object_or_404, redirect, render
+# from django.contrib.auth.hashers import make_password, check_password
+# from .models import EmployeeDetail, EmployeeDetailHistory
+#
+# @login_required
+# def update_employee_detail(request, emp_id):
+#     employee = get_object_or_404(EmployeeDetail, id=emp_id)
+#     emp_register = employee.emp_id  # Related emp_registers object
+#
+#     if request.method == 'POST':
+#         old_data = model_to_dict(employee)
+#         updated_fields = []
+#
+#         # Update EmployeeDetail fields
+#         for field in [
+#             'phone_number', 'guidance_phone_number', 'address', 'father_guidance_name',
+#             'blood_group', 'permanent_address', 'gender', 'marriage_status', 'aadhar_no', 'dob',
+#             'passport', 'passport_no', 'tel', 'nationality', 'religion', 'marital_status',
+#             'primary_contact_name', 'primary_relationship', 'primary_phone',
+#             'secondary_contact_name', 'secondary_relationship', 'secondary_phone',
+#             'bank_name', 'bank_account_no', 'ifsc_code', 'pan_no'
+#         ]:
+#             new_value = request.POST.get(field)
+#             old_value = str(getattr(employee, field))
+#             if new_value is not None and new_value != old_value:
+#                 updated_fields.append(field)
+#                 setattr(employee, field, new_value)
+#
+#         # Handle encrypted password (on emp_registers model)
+#         new_password = request.POST.get("password")
+#         if new_password and not check_password(new_password, emp_register.password):
+#             updated_fields.append("password")
+#             old_data["password"] = "Encrypted"
+#             emp_register.password = make_password(new_password)
+#             emp_register.save()
+#
+#         if updated_fields:
+#             employee.save()
+#             new_data = model_to_dict(employee)
+#
+#             if "password" in updated_fields:
+#                 new_data["password"] = "Encrypted"
+#
+#             EmployeeDetailHistory.objects.create(
+#                 employee=employee,
+#                 start_date=employee.emp_id.joindate if employee.emp_id.joindate else None,
+#                 updated_by=request.user,
+#                 changed_fields=", ".join(updated_fields),
+#                 previous_data={f: old_data.get(f) for f in updated_fields},
+#                 new_data={f: new_data.get(f) for f in updated_fields}
+#             )
+#
+#         return redirect('employee_detail', emp_id=employee.id)
+#
+#     return render(request, 'employee/edit.html', {'employee': employee})
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import emp_registers, EmployeeDetail, Education, Experience, Document
+from django.utils.timezone import now
 
-def update_profile(request ,user_id):
-    emp = emp_registers.objects.get(id=request.session['user_id'])  # Logged-in user
+def update_profile(request, user_id):
+    if 'user_id' not in request.session:
+        return redirect('login')
+
+    emp = emp_registers.objects.get(id=request.session['user_id'])
     profile, created = EmployeeDetail.objects.get_or_create(emp_id=emp)
 
     if request.method == 'POST':
-        # Basic fields
+        # Basic Fields
         profile.phone_number = request.POST.get('phone_number')
         profile.guidance_phone_number = request.POST.get('guidance_phone_number')
         profile.address = request.POST.get('address')
@@ -1752,7 +1986,6 @@ def update_profile(request ,user_id):
         profile.total_leave = request.POST.get('total_leave') or 0
         profile.balance_leave = request.POST.get('balance_leave') or 0
         profile.used_leave = request.POST.get('used_leave') or 0
-        #profile.job_status = request.POST.get('job_status')
 
         # Passport Info
         profile.passport = request.POST.get('passport')
@@ -1776,22 +2009,64 @@ def update_profile(request ,user_id):
         profile.ifsc_code = request.POST.get('ifsc_code')
         profile.pan_no = request.POST.get('pan_no')
 
-        # Education & Experience (summary text if any)
-        profile.education_info = request.POST.get('education_info')
-        profile.experience = request.POST.get('experience')
-
-        # Profile Image Upload
         if 'profile_image' in request.FILES:
-            profile.profile_image = request.FILES['profile_image']
+            profile.profile_pic = request.FILES['profile_image']
 
         profile.save()
-        messages.success(request, "Profile updated successfully.")
-        return redirect('update_profile',user_id=user_id)
 
-    # Fetch related models
+        # Education (create new entries)
+        Education.objects.filter(emp_id=emp).delete()
+        i = 0
+        while True:
+            if not request.POST.get(f'degree_{i + 1}'):
+                break
+            Education.objects.create(
+                emp_id=emp,
+                degree=request.POST.get(f'degree_{i + 1}'),
+                institution=request.POST.get(f'institution_{i + 1}'),
+                year_of_passing=request.POST.get(f'year_{i + 1}'),
+                grade=request.POST.get(f'grade_{i + 1}')
+            )
+            i += 1
+
+        # Experience (update if exist)
+        Experience.objects.filter(emp_id=emp).delete()
+        i = 0
+        while True:
+            if not request.POST.get(f'organization_{i + 1}'):
+                break
+            Experience.objects.create(
+                emp_id=emp,
+                organization=request.POST.get(f'organization_{i + 1}'),
+                position=request.POST.get(f'position_{i + 1}'),
+                from_date=request.POST.get(f'from_date_{i + 1}'),
+                to_date=request.POST.get(f'to_date_{i + 1}') or None,
+                description=request.POST.get(f'description_{i + 1}', '')
+            )
+            i += 1
+
+        # Document (update if exist)
+        Document.objects.filter(emp_id=emp).delete()
+        i = 0
+        while True:
+            if not request.POST.get(f'document_type_{i + 1}'):
+                break
+            doc_file = request.FILES.get(f'document_file_{i + 1}')
+            Document.objects.create(
+                emp_id=emp,
+                document_type=request.POST.get(f'document_type_{i + 1}'),
+                document_name=request.POST.get(f'document_name_{i + 1}'),
+                document_file=doc_file
+            )
+            i += 1
+
+        messages.success(request, "Profile and related information updated with history.")
+        return redirect('update_profile', user_id=user_id)
+
     educations = Education.objects.filter(emp_id=emp)
     experiences = Experience.objects.filter(emp_id=emp)
     documents = Document.objects.filter(emp_id=emp)
+    #history = EmployeeDetail.history.filter(emp_id=emp).order_by('-history_date')     use to see history
 
     return render(request, 'update_profile.html', {
         'profile': profile,
@@ -1799,7 +2074,266 @@ def update_profile(request ,user_id):
         'experiences': experiences,
         'documents': documents,
         'employee_name': emp.name,
+        'now': now()
     })
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import EmployeeDetail, Education, Experience
+
+
+def employee_profile(request, emp_id):
+    # Get employee detail
+
+    employee = get_object_or_404(EmployeeDetail, emp_id=emp_id)
+
+    # Get related education records
+    education_list = Education.objects.filter(emp_id=emp_id)
+
+    # Get related experience records
+    experience_list = Experience.objects.filter(emp_id=emp_id)
+    #
+    # Render template with context
+    return render(request, 'employee_profile.html', {
+        'employee': employee,
+        'education_list': education_list,
+        'experience_list': experience_list,
+        'emp_id':emp_id
+    })
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import localtime
+from .models import EmployeeDetail
+
+def view_profile_history(request, emp_id):
+    # Get the current employee object
+    employee = get_object_or_404(EmployeeDetail, emp_id=emp_id)
+
+    # Get historical records in ascending order of history date
+    history_records = EmployeeDetail.history.filter(emp_id=emp_id).order_by('history_date')
+
+    field_history_map = {}  # Track change history for each field
+
+    # Go through each historical record
+    for i, record in enumerate(history_records):
+        current_data = record.__dict__
+
+        for field, new_value in current_data.items():
+            if field.startswith('_') or field in ['id', 'history_id', 'history_user_id',
+                                                  'history_type', 'history_change_reason',
+                                                  'history_date', 'emp_id_id']:
+                continue
+
+            # Get previous value for the field
+            last_record = field_history_map.get(field, [])
+
+            if last_record:
+                prev_value = last_record[-1]['new']
+                if prev_value != new_value:
+                    # Value changed, so append new history entry
+                    last_record.append({
+                        'field': field,
+                        'old': prev_value,
+                        'new': new_value,
+                        'created_date': last_record[-1]['created_date'],  # same as last change date
+                        'change_date': localtime(record.history_date).strftime('%Y-%m-%d %H:%M:%S')
+                    })
+                    field_history_map[field] = last_record
+            else:
+                # First time value seen → create initial record
+                field_history_map[field] = [{
+                    'field': field,
+                    'old': '',
+                    'new': new_value,
+                    'created_date': localtime(record.history_date).strftime('%Y-%m-%d %H:%M:%S'),
+                    'change_date': 'Not changed'
+                }]
+
+    # Flatten the dict into a list
+    changes = []
+    for field, field_changes in field_history_map.items():
+        for i in range(len(field_changes)):
+            if i < len(field_changes) - 1:
+                # Set created_date as the current, and change_date as the next's created_date
+                field_changes[i]['change_date'] = field_changes[i + 1]['created_date']
+            changes.append(field_changes[i])
+
+    return render(request, 'view_profile_history.html', {
+        'employee': employee,
+        'changes': sorted(changes, key=lambda x: x['created_date']),  # sort by created date
+    })
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import Handbook, Acknowledgment
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from django.shortcuts import render
+from .models import Handbook, Acknowledgment
+
+
+def handbook_list(request):
+    if request.method == 'POST':
+        # Handle file upload for a new handbook
+        document = request.FILES.get('document')
+        document_name=request.POST.get('document_name')
+
+        if document:
+            # Calculate logical start date based on the current date or any other logic
+            start_date = now().date()
+
+            # Deactivate all old handbooks
+            Handbook.objects.all().update(active_status=False)
+            current_handbook= Handbook.objects.get().order_by('-id').first()
+            current_handbook.end_date=start_date
+
+            # Get the last active handbook and set its end_date to the start_date of the new one
+            last_handbook = Handbook.objects.filter(active_status=True).order_by('-start_date').first()
+
+            if last_handbook:
+                # Set the end date of the last active handbook to the start date of the new one
+                last_handbook.end_date = start_date
+                last_handbook.save()
+
+            # Create a new handbook entry
+            # Example logic for the end date (30 days later)
+
+            # Create the new handbook and set it as active
+            new_handbook = Handbook.objects.create(
+                document=document,
+                start_date=start_date,
+
+                active_status=True  # New handbook is active
+            )
+
+            return JsonResponse({'success': True, 'message': 'Handbook added successfully'})
+
+        return JsonResponse({'success': False, 'message': 'Failed to add handbook'}, status=400)
+
+    # GET request to display handbooks
+    handbooks = Handbook.objects.all().order_by('-id')
+
+
+    data = []
+    for h in handbooks:
+        handbook = get_object_or_404(Handbook, id=h.id)
+
+        # Get all employees
+        employees = emp_registers.objects.all()
+
+        # Ensure acknowledgment exists for all employees
+
+        for emp in employees:
+            ack, created = Acknowledgment.objects.get_or_create(
+                handbook=handbook,
+                employee=emp,
+                defaults={
+                    'acknowledgment_date': None,
+                    'acknowledgment': 'Not Acknowledge',
+                    'status': 'active'
+                }
+            )
+
+            data.append({
+                'employee': str(emp),
+                'acknowledgment_date': ack.acknowledgment_date.strftime(
+                    '%Y-%m-%d') if ack.acknowledgment_date else 'Not yet',
+                'agreement': ack.acknowledgment
+            })
+            context = {
+                'handbooks': handbooks,'acknowledgments':data
+            }
+
+    return render(request, 'handbook_list.html', context)
+from django.http import JsonResponse
+
+def acknowledgments_for_handbook(request, handbook_id):
+    handbook = get_object_or_404(Handbook, id=handbook_id)
+    data=[]
+    # Get all employees
+    employees = emp_registers.objects.all()
+
+    # Ensure acknowledgment exists for all employees
+
+    for emp in employees:
+        ack, created = Acknowledgment.objects.get_or_create(
+            handbook=handbook,
+            employee=emp,
+            defaults={
+                'acknowledgment_date': None,
+                'acknowledgment': 'Not Acknowledge',
+                'status': 'active'
+            }
+        )
+
+        data.append({
+            'employee': str(emp),
+            'acknowledgment_date': ack.acknowledgment_date.strftime(
+                '%Y-%m-%d') if ack.acknowledgment_date else 'Not yet',
+            'agreement': ack.acknowledgment
+        })
+
+    return JsonResponse({'acknowledgments': data})
+
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from .models import Handbook, Acknowledgment, emp_registers
+
+def handbook_view(request, user_id):
+    employee = get_object_or_404(emp_registers, pk=user_id)
+
+    # Fetch the latest active handbook
+    handbook = Handbook.objects.filter(active_status='True').order_by('-start_date').first()
+
+    if not handbook:
+        return render(request, "employee/handbook_view.html", {
+            "error": "No active handbook available."
+        })
+
+    acknowledgment, created = Acknowledgment.objects.get_or_create(
+        employee=employee,
+        handbook=handbook,
+    )
+
+    if request.method == "POST":
+        action = request.POST.get("acknowledgment")
+
+        if action in ['agree', 'disagree']:
+            acknowledgment.acknowledgment = action
+            acknowledgment.acknowledgment_date = timezone.now().date()
+
+            acknowledgment.save()
+
+            return redirect('handbook',user_id=user_id)  # Replace with your success view
+
+    return render(request, "handbook.html", {
+        "handbook": handbook,
+        "acknowledgment": acknowledgment
+    })
+
+
+
+def acknowledge_handbook(request, handbook_id):
+    if request.method == 'POST':
+        # Get the user's acknowledgment choice
+        ack_choice = request.POST.get('ack')
+
+        # Get the relevant handbook
+        handbook = Handbook.objects.get(id=handbook_id)
+
+        # Update or create the acknowledgment record
+        ack, created = Acknowledgment.objects.get_or_create(
+            handbook=handbook,
+            user=request.user,
+        )
+        ack.acknowledged = True if ack_choice == 'agree' else False
+        ack.acknowledged_at = timezone.now()
+        ack.save()
+
+        return JsonResponse({'status': 'saved'})
+
+    return JsonResponse({'status': 'error'}, status=400)
 
 
 def manage_leave_department_role(request):
@@ -1911,6 +2445,8 @@ def leave_type_panel(request):
     })
 
 def project_detail_view(request, pk):
+    if 'user_id' not in request.session:
+        return redirect('login')
     # Step 1: Fetch project and user details
     project = get_object_or_404(Project, id=pk)
     user_id = request.session.get('user_id')
@@ -2057,25 +2593,37 @@ def project_edit_view(request, project_id):
 
 
 def team_timesheet_record(request):
-    user_id = request.session.get('user_id')  # Assuming user_id is saved in session
+    user_name = request.session.get('name')  # Assuming user_id is saved in session
     today = date.today()
-
+    user_id=request.session.get('user_id')
     # Calculate current and previous week
     start_of_week = today - timedelta(days=today.weekday())  # Monday of current week
     end_of_week = start_of_week + timedelta(days=6)
     start_of_last_week = start_of_week - timedelta(days=7)
     end_of_last_week = start_of_week - timedelta(days=1)
 
-    # Filter timesheets where pname.manager or pname.admin == user_id
-    timesheets = Timesheet.objects.filter(
-        Q(pname__manager=user_id) | Q(pname__admin=user_id),
-        date__range=[start_of_last_week, end_of_week]  # Between last week's Monday to current week's Sunday
-    ).select_related('emp_id', 'pname')
 
+
+    # Filter timesheets where pname.manager or pname.admin == user_id
+    user_name = request.session['name']  # e.g., 'Kapil'
+
+    timesheets = Timesheet.objects.filter(
+        Q(pname__manager__startswith=user_name) | Q(pname__admin__startswith=user_name),
+        date__range=[start_of_last_week, end_of_week]
+    ).select_related('emp_id', 'pname')
+    for timesheet in timesheets:
+        if timesheet.start_time and timesheet.end_time:
+            # Combine date and time to calculate the difference
+            start = datetime.combine(today, timesheet.start_time)
+            end = datetime.combine(today, timesheet.end_time)
+            duration = end - start
+            timesheet.duration = duration
+        else:
+            timesheet.duration = None
     context = {
         'timesheets': timesheets,
     }
-    return render(request, 'team_timesheet_record.html', context)
+    return render(request, 'team_timesheet_record.html',   {'timesheets': timesheets})
 
 
 
@@ -2112,3 +2660,11 @@ def leave_type_detail_view(request, leave_type_id):
         'page_obj': page_obj,
         'limit': limit,
     })
+
+
+#
+# def get_tasks(request):
+#     project_id = request.GET.get('project_id')
+#     tasks = Task.objects.filter(project_id=project_id)
+#     task_data = [{'id': task.id, 'title': task.title} for task in tasks]
+#     return JsonResponse({'tasks': task_data})
