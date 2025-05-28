@@ -17,9 +17,9 @@
     </label>
 
     <!-- Button -->
-    <button style="box-shadow: 0 4px 6px rgba(0, 0, 255, 0.3); border: none; background-color: #007BFF; color: white; padding: 8px 12px; border-radius: 4px;">
-        <a href="previous_week_timesheet.html" style="text-decoration: none; color: white;">Previous Week Timesheet</a>
-    </button>
+<!--    <button style="box-shadow: 0 4px 6px rgba(0, 0, 255, 0.3); border: none; background-color: #007BFF; color: white; padding: 8px 12px; border-radius: 4px;">-->
+<!--        <a href="previous_week_timesheet.html" style="text-decoration: none; color: white;">Previous Week Timesheet</a>-->
+<!--    </button>-->
 
 </div>
 
@@ -70,7 +70,7 @@
 
         <!-- Weekly Timesheet -->
         <div id="weekly-timesheet" class="weekly-timesheet">
-            <h3>Weekly Entry (Optional for each day)</h3>
+            <h3>Weekly Entry (Optional for each day  <b>Project and Task for desire date neccesary</b> )</h3>
             <div class="timesheet-entry weekly-grid-layout">
                 {% for day in days %}
                     <div class="weekly-column">
@@ -309,7 +309,8 @@
             return;
         }
 
-        fetch(`/get-tasks/?project_id=${projectId}`)
+       fetch(`/get-tasks/?project_id=${projectId}&user_id={{ request.session.user_id }}`)
+
             .then(response => response.json())
             .then(data => {
                 taskSelect.innerHTML = '<option value="">Select Task</option>';

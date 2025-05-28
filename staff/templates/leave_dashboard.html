@@ -35,22 +35,25 @@
       <tbody id="leaveTableBody">
         {% for leave in leave_data %}
         <tr>
-          <td>{{ leave.emp_id}}</td>
-          <td>{{ leave.emp_id.department }}</td>
+          <td>{{ leave.name}}</td>
+          <td>{{ leave.department }}</td>
           <td>{{ leave.start_date }}</td>
           <td>{{ leave.end_date }}</td>
-          <td>{{ leave.no_of_days }}</td>
+          <td>{{ leave.no_of_leaves }}</td>
 
-          <!-- Conditionally display Leave Type based on Compensation Leave -->
-         <td>
+<td>
   {% if leave.compensatory_leave %}
-    <span class="badge bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.compensation_leave_reason }}">
+    <span class="badge bg-info" style="cursor:pointer;"
+          data-bs-toggle="modal" data-bs-target="#compReasonModal"
+          onclick="showFullCompReason('{{ leave.compensatory_leave_reason|default_if_none:''|escapejs }}')">
       Compensation Leave
     </span>
   {% else %}
     {{ leave.leave_type.name }}
   {% endif %}
 </td>
+
+
 
 
            <td>
@@ -64,35 +67,36 @@
 </td>
 
           <td id="status-{{ leave.id }}">
-            {% if leave.approval_status.status == "Approved" %}
 
-             {% if today <= leave.start_date %}
+            {% if leave.approval_status.status == "Rejected" %}
+              <span class="badge bg-danger">Rejected</span>
+            {% elif leave.approval_status.status == "Withdrawn" %}
+              <span class="badge bg-secondary">Withdrawn</span>
+            {% elif leave.approval_status.status == "Pending" %}
+                {% if today <= leave.start_date %}
               <div class="dropdown">
-                <span class="badge bg-success dropdown-toggle" data-bs-toggle="dropdown" role="button">Approved</span>
+                <span class="badge bg-warning text-dark dropdown-toggle" data-bs-toggle="dropdown" role="button">Pending</span>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item text-success" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">✅ Withdraw</a></li>
+
+                <li><a class="dropdown-item text-secondary" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">📝 Withdraw</a></li>
 
                 </ul>
               </div>
               {% else %}
               <span class="badge bg-warning text-dark">Pending</span>
               {% endif %}
-
-            {% elif leave.approval_status.status == "Rejected" %}
-              <span class="badge bg-danger">Rejected</span>
-            {% elif leave.approval_status.status == "Withdrawn" %}
-              <span class="badge bg-secondary">Withdrawn</span>
-            {% elif leave.approval_status.status == "Pending" %}
-             {% if today <= leave.start_date %}
+               {% elif leave.approval_status.status == "Approved" %}
+                {% if today <= leave.start_date %}
               <div class="dropdown">
-                <span class="badge bg-warning text-dark dropdown-toggle" data-bs-toggle="dropdown" role="button">Pending</span>
+                <span class="badge bg-success dropdown-toggle" data-bs-toggle="dropdown" role="button">Approved</span>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item text-success" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">✅ Withdraw</a></li>
+
+                <li><a class="dropdown-item text-secondary" href="#" onclick="updateStatus(event, '{{ leave.id }}', 'Withdrawn')">📝 Withdraw</a></li>
 
                 </ul>
               </div>
               {% else %}
-              <span class="badge bg-warning text-dark">Pending</span>
+              <span class="badge bg-success">Approved</span>
               {% endif %}
 
             {% else %}
@@ -131,9 +135,41 @@
     </div>
   </div>
 </div>
+<!-- Compensation Leave Reason Modal -->
+<div class="modal fade" id="compReasonModal" tabindex="-1" aria-labelledby="compReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="compReasonModalLabel">Compensation Leave Reason</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="fullCompReasonText">
+        <!-- Compensation leave reason will appear here -->
+      </div>
+    </div>
+  </div>
+</div>
 
+<!--half day leaves record-->
+<div class="modal fade" id="halfDayModal" tabindex="-1" aria-labelledby="halfDayModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="halfDayModalLabel">Half Day Info</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="halfDayModalBody">
+        <!-- Info will be loaded by JS -->
+      </div>
+    </div>
+  </div>
+</div>
 <!-- JavaScript -->
 <script>
+  function showFullCompReason(reason) {
+  document.getElementById("fullCompReasonText").innerText = reason;
+}
+
 let currentPage = 1;
 let filteredRows = [];
 
@@ -144,13 +180,26 @@ function showRejectInput(leaveId) {
   }
 }
 
+function submitRejection(event, leaveId) {
+  event.preventDefault(); // stop form submission
 
+  const reasonInput = document.getElementById(`reject-reason-input-${leaveId}`);
+  if (!reasonInput) {
+    alert("Reason input not found!");
+    return;
+  }
+  const reason = reasonInput.value.trim();
+  if (!reason) {
+    alert("Please enter rejection reason!");
+    return;
+  }
+  updateStatus(event, leaveId, "Rejected", reason);
+}
 function showFullReason(reason) {
   document.getElementById("fullReasonText").innerText = reason;
 }
 
-
-function updateStatus(event, leaveId, action) {
+function updateStatus(event, leaveId, action, reason = "") {
   if (event) event.preventDefault();
 
   const statusElement = document.getElementById(`status-${leaveId}`);
@@ -159,7 +208,9 @@ function updateStatus(event, leaveId, action) {
   const formData = new URLSearchParams();
   formData.append("leave_id", leaveId);
   formData.append("action", action);
-
+  if (action === "Rejected") {
+    formData.append("approve_reason", reason);
+  }
 
   fetch("{% url 'update_leave_status' request.session.user_id %}", {
     method: "POST",
@@ -171,8 +222,12 @@ function updateStatus(event, leaveId, action) {
   })
   .then(response => response.json())
   .then(data => {
-    if (data.status === "Withdrawn") {
-      statusElement.innerHTML = '<span class="badge bg-success">Withdrawn</span>';
+    if (data.status === "Approved") {
+      statusElement.innerHTML = '<span class="badge bg-success">Approved</span>';
+    } else if (data.status === "Rejected") {
+      statusElement.innerHTML = '<span class="badge bg-danger">Rejected</span>';
+    } else if (data.status === "Withdrawn") {
+      statusElement.innerHTML = '<span class="badge bg-secondary">Withdrawn</span>';
     }
     if (reasonCell) {
       reasonCell.classList.add("d-none");
@@ -268,6 +323,13 @@ document.addEventListener('DOMContentLoaded', function () {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
 });
+function showFullCompReason(reason) {
+  if (!reason || reason.trim() === "") {
+    document.getElementById("fullCompReasonText").innerText = "No reason provided.";
+  } else {
+    document.getElementById("fullCompReasonText").innerText = reason;
+  }
+}
 
 </script>
 

@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import *
 from django.contrib.auth import views as auth_views
+from django.conf.urls.static import static
+
 urlpatterns = [
     # path('', home_view, name='home'),
     # path('about/', about_view, name='about'),
@@ -25,7 +27,7 @@ path('logout/',auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('',login_view, name='login'),
 # urls.py
 
-
+path('videos/delete/<int:video_id>/',delete_video, name='delete_video'),
     path('leave-type/<int:leave_type_id>/details/', leave_type_detail_view, name='leave_type_detail'),
 
     path('employee_registration/<int:id>',employee_registration, name='employee_registration'),
@@ -44,7 +46,7 @@ path('leave_record/<int:user_id>', leave_record_view, name='leave_record'),
     path("update_timesheet/<int:user_id>/", update_timesheet, name="update_timesheet"),
 path('task/update/<int:task_id>/',update_task_status_page, name='update_task_status_page'),
 path('user_timesheet',user_timesheet,name='user_timesheet'),
-    path('reset-password/',reset_password, name='reset_password'),
+    path('reset_password/',reset_password, name='reset_password'),
     path('manage_leave_department_role/', manage_leave_department_role, name='manage_leave_department_role'),
    # path('get_existing_data/<str:category>/',get_existing_data, name='get_existing_data'),
     path('leave-type-panel/', leave_type_panel, name='leave_type_panel'),
@@ -62,13 +64,30 @@ path('get-tasks/', get_tasks, name='get_tasks'),
     path('view_profile_history/<int:emp_id>/', view_profile_history, name='view_profile_history'),
     path('handbooks/<int:user_id>', handbook_view, name='handbook'),
     path('handbook_list/',handbook_list,name='handbook_list'),
+    path('handbook_record/<int:handbook_id>',handbook_record,name='handbook_record'),
+    path('holiday_list_view',holiday_list_view,name='holiday_list_view'),
+    path('learning_videos/', learning_videos_dashboard, name='learning_videos_dashboard'),
+path('delete_education/<int:pk>/',delete_education, name='delete_education'),
+    path('delete_experience/<int:pk>/',delete_experience, name='delete_experience'),
+     path('resignation_form/<int:user_id>',resignation_form,name='resignation_form'),
+    path('send_exit_email/<int:user_id>',send_exit_email, name='send_exit_email'),
+    path('forget-password/',Forget_passord, name='Forget_password'),
+
+    path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
+    path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+]
+    #path('team_image_timesheet_record/<int:user_id',team_image_timesheet_record,name='team_image_timesheet_record')
     #path('handbooks/', handbook_panel, name='handbook_panel'),
     # path('handbooks/acknowledge/<int:handbook_id>/', acknowledge_handbook, name='acknowledge_handbook'),
 
     # Add history view URL here
    # path('employee/profile/history/<int:emp_id>/',employee_history, name='history_page_url'),
 
-]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 #     path('forgot-password/', forgot_password, name='forgot_password'),

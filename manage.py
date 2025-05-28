@@ -3,6 +3,11 @@
 import os
 import sys
 
+import os
+import certifi
+import os
+os.environ['SSL_CERT_FILE'] = r'C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\certifi\cacert.pem'
+
 
 def main():
     """Run administrative tasks."""

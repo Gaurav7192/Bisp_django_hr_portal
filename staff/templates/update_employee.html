@@ -48,6 +48,12 @@
 
       <label for="id_position" style="display: block; margin-bottom: 8px; font-weight: bold;">Position</label>
       {{ form.position }}
+
+    <!-- other fields -->
+    <label for="id_designation" class="form-label">Designation</label>
+    {{ form.designation }}
+    <div class="text-danger">{{ form.designation.errors }}</div>
+
     </div>
 
     <!-- Right Section -->

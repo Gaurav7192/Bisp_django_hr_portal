@@ -3,6 +3,9 @@
 {% load static %}
 
 {% block content %}
+<!-- Include Font Awesome for the edit icon (optional if not already included) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -102,13 +105,19 @@
         .tabs button.active {
             background-color: #45a049;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
+               .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
+
     </style>
+<style>
+    .custom-left-margin {
+        margin-left: 1.3cm;
+    }
+</style>
 
     <!-- Navigation Bar -->
 <!--    <div class="navbar">-->
@@ -176,13 +185,11 @@
         <!-- Placeholder when no image -->
         <div class="placeholder-oval" onclick="document.getElementById('profileImageInput').click();">
             Click to Upload
+
         </div>
     {% endif %}
+
 </div>
-
-<!-- Include Font Awesome for the edit icon (optional if not already included) -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 
 </div>
 
@@ -190,12 +197,9 @@
     <label>&nbsp;</label>
     <button type="button" onclick="openPasswordModal()" style="background-color: #2196F3; color: white; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold;">Change Password</button>
 </div>
-
-        </div>
-
-        <!-- Row 1: Basic Info -->
+ <!-- Row 1: Basic Info -->
         <div class="row">
-            <div class="col">
+            <div class="col" style="margin-left: 50px; margin-right: 10px;">
                 <label>Phone Number</label>
                 <input type="text" name="phone_number" value="{{ profile.phone_number }}">
 
@@ -208,7 +212,7 @@
                 <label>Father/Guidance Name</label>
                 <input type="text" name="father_guidance_name" value="{{ profile.father_guidance_name }}">
             </div>
-            <div class="col">
+           <div class="col" style="margin-left: 10px; margin-right: 50px;">
                 <label>Blood Group</label>
                 <input type="text" name="blood_group" value="{{ profile.blood_group }}">
 
@@ -229,12 +233,11 @@
 
             </div>
         </div>
-
-<!-- Row 2: Three separate cards for Passport, Emergency Contact, Bank Info -->
+        <!-- Row 2: Three separate cards for Passport, Emergency Contact, Bank Info -->
 <div class="row">
     <!-- Passport Information Card -->
-    <div class="col-md-4 col-sm-6 mb-4">
-        <div class="card">
+    <div class="col-md-4 col-sm-6 mb-4 ms-50 me-20">
+        <div class="card border border-primary">
             <div class="card-header bg-primary text-white">Passport Information</div>
             <div class="card-body">
                 <label>Passport</label>
@@ -259,8 +262,8 @@
     </div>
 
     <!-- Emergency Contact Card -->
-    <div class="col-md-4 col-sm-6 mb-4">
-        <div class="card">
+    <div class="col-md-4 col-sm-6 mb-4 ms-2 me-2">
+        <div class="card border border-danger">
             <div class="card-header bg-danger text-white">Emergency Contact</div>
             <div class="card-body">
                 <label>Primary Name</label>
@@ -285,8 +288,8 @@
     </div>
 
     <!-- Bank Information Card -->
-    <div class="col-md-4 col-sm-6 mb-4">
-        <div class="card">
+    <div class="col-md-4 col-sm-6 mb-4 ms-2 me-2">
+        <div class="card border border-success">
             <div class="card-header bg-success text-white">Bank Information</div>
             <div class="card-body">
                 <label>Bank Name</label>
@@ -305,10 +308,7 @@
     </div>
 </div>
 
-
-
-
-<form method="POST" enctype="multipart/form-data">
+      <form method="POST" enctype="multipart/form-data">
     {% csrf_token %}
     <div class="row">
         <!-- Education -->
@@ -319,25 +319,26 @@
                     <button type="button" class="btn btn-light btn-sm" onclick="addEducation()">+</button>
                 </div>
                 <div class="card-body" id="education-container">
-                    {% for education in educations %}
-                        <div class="border p-2 mb-2">
-                            <input type="text" name="degree_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.degree }}" placeholder="Degree">
-                            <input type="text" name="institution_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.institution }}" placeholder="Institution">
-                        <input type="number"
-name="year_{{ forloop.counter }}"
-class="form-control mb-1"
-value="{{ education.year_of_passing|date:'Y' }}"
-placeholder="Year of Passing"
-min="1900"
-max="{{ now|date:'Y' }}"
-step="1"
-oninput="this.value = Math.abs(this.value)">
-
-                            <input type="text" name="grade_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.grade }}" placeholder="Grade">
+                    {% if educations %}
+                        {% for education in educations %}
+                            <div class="border p-2 mb-2 position-relative education-entry">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>
+                                <input type="text" name="degree_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.degree }}" placeholder="Degree">
+                                <input type="text" name="institution_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.institution }}" placeholder="Institution">
+                                <input type="number" name="year_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.year_of_passing }}" placeholder="Year of Passing" min="1900" max="{{ now|date:'Y' }}" step="1">
+                                <input type="text" name="grade_{{ forloop.counter }}" class="form-control mb-1" value="{{ education.grade }}" placeholder="Grade">
+                            </div>
+                        {% endfor %}
+                        <input type="hidden" id="education_count" name="education_count" value="{{ educations|length }}">
+                    {% else %}
+                        <div class="border p-2 mb-2 education-entry">
+                            <input type="text" name="degree_1" class="form-control mb-1" placeholder="Degree">
+                            <input type="text" name="institution_1" class="form-control mb-1" placeholder="Institution">
+                            <input type="number" name="year_1" class="form-control mb-1" placeholder="Year of Passing" min="1900" max="{{ now|date:'Y' }}" step="1">
+                            <input type="text" name="grade_1" class="form-control mb-1" placeholder="Grade">
                         </div>
-                    {% empty %}
-                        <p>No education records found.</p>
-                    {% endfor %}
+                        <input type="hidden" id="education_count" name="education_count" value="1">
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -345,22 +346,33 @@ oninput="this.value = Math.abs(this.value)">
         <!-- Experience -->
         <div class="col-md-6 col-sm-12 mb-4">
             <div class="card">
-                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                    <span>Experience</span>
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <span>Experience Information</span>
                     <button type="button" class="btn btn-light btn-sm" onclick="addExperience()">+</button>
                 </div>
                 <div class="card-body" id="experience-container">
-                    {% for experience in experiences %}
-                        <div class="border p-2 mb-2">
-                            <input type="text" name="organization_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.organization }}" placeholder="Organization">
-                            <input type="text" name="position_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.position }}" placeholder="Position">
-                            <input type="date" name="from_date_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.from_date }}">
-                            <input type="date" name="to_date_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.to_date }}">
-                            <textarea name="description_{{ forloop.counter }}" class="form-control mb-1" placeholder="Description">{{ experience.description }}</textarea>
+                    {% if experiences %}
+                        {% for experience in experiences %}
+                            <div class="border p-2 mb-2 position-relative experience-entry">
+                                <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>
+                                <input type="text" name="title_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.title }}" placeholder="Job Title">
+                                <input type="text" name="company_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.company }}" placeholder="Company">
+                                <input type="number" name="start_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.start_year }}" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">
+                                <input type="number" name="end_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.end_year }}" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">
+                                <textarea name="description_{{ forloop.counter }}" class="form-control mb-1" placeholder="Description">{{ experience.description }}</textarea>
+                            </div>
+                        {% endfor %}
+                        <input type="hidden" id="experience_count" name="experience_count" value="{{ experiences|length }}">
+                    {% else %}
+                        <div class="border p-2 mb-2 experience-entry">
+                            <input type="text" name="title_1" class="form-control mb-1" placeholder="Job Title">
+                            <input type="text" name="company_1" class="form-control mb-1" placeholder="Company">
+                            <input type="number" name="start_year_1" class="form-control mb-1" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">
+                            <input type="number" name="end_year_1" class="form-control mb-1" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">
+                            <textarea name="description_1" class="form-control mb-1" placeholder="Description"></textarea>
                         </div>
-                    {% empty %}
-                        <p>No experience records found.</p>
-                    {% endfor %}
+                        <input type="hidden" id="experience_count" name="experience_count" value="1">
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -371,51 +383,73 @@ oninput="this.value = Math.abs(this.value)">
         <button type="submit" class="btn btn-primary">Update Profile</button>
     </div>
 </form>
+</div>
 
+ <!-- Document Tab Content -->
+<!-- Document Tab Content -->
+<div id="document" class="tab-content">
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 0;">
+
+        <!-- Upload Document Card -->
+        <div class="card" style="width: 50%; margin-top: 0; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 20px;">Upload New Document</h3>
+            <form method="post" enctype="multipart/form-data" action="{% url 'update_profile' request.session.user_id %}">
+                {% csrf_token %}
+                <div style="margin-bottom: 15px;">
+                    <label>Document Name</label>
+                    <input type="text" name="document_name" required style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Upload File</label>
+                    <input type="file" name="document_file" accept=".pdf,.jpg,.png,.doc,.docx,.xlsx,.pptx" required style="width: 100%; padding: 8px;">
+                </div>
+                <input type="hidden" name="emp_id" value="{{ profile.emp_id.id }}">
+                <button type="submit" style="margin-top: 10px; padding: 10px 20px; border: none; border-radius: 6px; background-color: #007bff; color: white; cursor: pointer;">
+                    Upload Document
+                </button>
+            </form>
         </div>
+
+        <!-- Uploaded Documents Card -->
+        <div class="card" style="width: 50%; margin-top: 20px; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="margin-bottom: 20px;">Uploaded Documents</h3>
+            <div style="overflow-x:auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Type</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Name</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Uploaded At</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #ddd;">File</th>
+                            <th style="padding: 10px; border-bottom: 1px solid #ddd;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                            <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ doc.document_type }}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ doc.document_name }}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #eee;">{{ doc.uploaded_at|date:"Y-m-d H:i" }}</td>
+                            <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <a href="{{ doc.document_file.url }}" target="_blank" style="color: #007bff;">View</a>
+                            </td>
+                            <td style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <a href="{% url 'delete_document' doc.id %}" class="action-btn" style="color: red;">Delete</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 15px;">No documents uploaded.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
+</div>
 
-    <!-- Document Tab Content -->
-    <div id="document" class="tab-content">
-        <h3 style="margin-top: 40px;">Upload New Document</h3>
-        <form method="post" enctype="multipart/form-data" action="{% url 'update_profile' request.session.user_id %}">
-            {% csrf_token %}
-
-            <label>Document Name</label>
-            <input type="text" name="document_name" required>
-            <label>Upload File</label>
-            <input type="file" name="document_file" accept=".pdf,.jpg,.png,.doc,.docx,.xlsx,.pptx" required>
-            <input type="hidden" name="emp_id" value="{{ profile.emp_id.id }}">
-            <button type="submit" style="margin-top: 15px;">Upload Document</button>
-        </form>
-
-        <!-- Document List -->
-        <h3 style="margin-top: 40px;">Uploaded Documents</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Name</th>
-                    <th>Uploaded At</th>
-                    <th>File</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for doc in documents %}
-                <tr>
-                    <td>{{ doc.document_type }}</td>
-                    <td>{{ doc.document_name }}</td>
-                    <td>{{ doc.uploaded_at|date:"Y-m-d H:i" }}</td>
-                    <td><a href="{{ doc.document_file.url }}" target="_blank">View</a></td>
-                    <td><a href="{% url 'delete_document' doc.id %}" class="action-btn">Delete</a></td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5">No documents uploaded.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
 
     <!-- Assets Tab Content -->
     <div id="assets" class="tab-content">
@@ -524,34 +558,67 @@ window.onclick = function(event) {
 let eduIndex = {{ educations|length|default:0 }};
 let expIndex = {{ experiences|length|default:0 }};
 
-function addEducation() {
-    eduIndex += 1;
-    const container = document.getElementById('education-container');
-    const div = document.createElement('div');
-    div.className = 'border p-2 mb-2';
-    div.innerHTML = `
-        <input type="text" name="degree_${eduIndex}" class="form-control mb-1" placeholder="Degree">
-        <input type="text" name="institution_${eduIndex}" class="form-control mb-1" placeholder="Institution">
-        <input type="number" name="year_${eduIndex}" class="form-control mb-1" placeholder="Year of Passing">
-        <input type="text" name="grade_${eduIndex}" class="form-control mb-1" placeholder="Grade">
-    `;
-    container.appendChild(div);
+
+
+
+
+function removeEducation(button) {
+    const entryDiv = button.closest('.education-entry');
+    if (entryDiv) {
+        entryDiv.remove();
+    }
 }
 
-function addExperience() {
-    expIndex += 1;
-    const container = document.getElementById('experience-container');
-    const div = document.createElement('div');
-    div.className = 'border p-2 mb-2';
-    div.innerHTML = `
-        <input type="text" name="organization_${expIndex}" class="form-control mb-1" placeholder="Organization">
-        <input type="text" name="position_${expIndex}" class="form-control mb-1" placeholder="Position">
-        <input type="date" name="from_date_${expIndex}" class="form-control mb-1">
-        <input type="date" name="to_date_${expIndex}" class="form-control mb-1">
-        <textarea name="description_${expIndex}" class="form-control mb-1" placeholder="Description"></textarea>
-    `;
-    container.appendChild(div);
-}
+<script>
+    let educationCounter = parseInt(document.getElementById('education_count').value || 1);
+    let experienceCounter = parseInt(document.getElementById('experience_count').value || 1);
+
+    function addEducation() {
+        educationCounter++;
+        const container = document.getElementById("education-container");
+        const div = document.createElement("div");
+        div.className = "border p-2 mb-2 position-relative education-entry";
+        div.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>
+            <input type="text" name="degree_${educationCounter}" class="form-control mb-1" placeholder="Degree">
+            <input type="text" name="institution_${educationCounter}" class="form-control mb-1" placeholder="Institution">
+            <input type="number" name="year_${educationCounter}" class="form-control mb-1" placeholder="Year of Passing" min="1900" max="{{ now|date:'Y' }}" step="1">
+            <input type="text" name="grade_${educationCounter}" class="form-control mb-1" placeholder="Grade">
+        `;
+        container.appendChild(div);
+        document.getElementById('education_count').value = educationCounter;
+    }
+
+    function addExperience() {
+        experienceCounter++;
+        const container = document.getElementById("experience-container");
+        const div = document.createElement("div");
+        div.className = "border p-2 mb-2 position-relative experience-entry";
+        div.innerHTML = `
+            <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>
+            <input type="text" name="title_${experienceCounter}" class="form-control mb-1" placeholder="Job Title">
+            <input type="text" name="company_${experienceCounter}" class="form-control mb-1" placeholder="Company">
+            <input type="number" name="start_year_${experienceCounter}" class="form-control mb-1" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">
+            <input type="number" name="end_year_${experienceCounter}" class="form-control mb-1" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">
+            <textarea name="description_${experienceCounter}" class="form-control mb-1" placeholder="Description"></textarea>
+        `;
+        container.appendChild(div);
+        document.getElementById('experience_count').value = experienceCounter;
+    }
+<!--function addExperience() {-->
+<!--    expIndex += 1;-->
+<!--    const container = document.getElementById('experience-container');-->
+<!--    const div = document.createElement('div');-->
+<!--    div.className = 'border p-2 mb-2';-->
+<!--    div.innerHTML = `-->
+<!--        <input type="text" name="organization_${expIndex}" class="form-control mb-1" placeholder="Organization">-->
+<!--        <input type="text" name="position_${expIndex}" class="form-control mb-1" placeholder="Position">-->
+<!--        <input type="date" name="from_date_${expIndex}" class="form-control mb-1">-->
+<!--        <input type="date" name="to_date_${expIndex}" class="form-control mb-1">-->
+<!--        <textarea name="description_${expIndex}" class="form-control mb-1" placeholder="Description"></textarea>-->
+<!--    `;-->
+<!--    container.appendChild(div);-->
+<!--}-->
 </script>
 
 <style>
@@ -698,6 +765,30 @@ function addExperience() {
         color: #999;
         cursor: pointer;
     }
+
+    function showTab(tabId) {
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+
+        const buttons = document.querySelectorAll('.tabs button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function expandImage() {
+        document.getElementById('fullView').style.display = 'block';
+    }
+
+    function closeImage() {
+        document.getElementById('fullView').style.display = 'none';
+    }
+
+    function openPasswordModal() {
+        alert('Password modal placeholder'); // Replace with actual modal logic
+    }
+
+
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -785,4 +876,123 @@ function addExperience() {
         cursor: pointer;
     }
 </style>
+<script>
+    function showTab(tabId) {
+        // Hide all tab contents
+        var contents = document.getElementsByClassName('tab-content');
+        for (var i = 0; i < contents.length; i++) {
+            contents[i].classList.remove('active');
+        }
+
+        // Remove 'active' class from all buttons
+        var buttons = document.querySelectorAll('.tabs button');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+        }
+
+        // Show the selected tab content
+        document.getElementById(tabId).classList.add('active');
+
+        // Add 'active' class to the clicked button
+        event.target.classList.add('active');
+    }
+</script>
+<script>
+function deleteEducation(eduId) {
+    if (!confirm("Are you sure you want to delete this education entry?")) return;
+
+    fetch(`/delete_education/${eduId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const entry = document.getElementById(`education-${eduId}`);
+            if (entry) {
+                entry.remove();  // ✅ Remove from DOM
+            }
+        } else {
+            alert(data.error || "Failed to delete education.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred while deleting.");
+    });
+}
+
+// Get CSRF token from cookie (needed for POST requests in Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+<script>
+let expIndex = {{ experiences|length|default:1 }};
+
+function addExperience() {
+    expIndex += 1;
+    const currentYear = new Date().getFullYear();
+    const container = document.getElementById('experience-container');
+
+    const div = document.createElement('div');
+    div.className = 'border p-2 mb-2 position-relative experience-entry';
+    div.innerHTML = `
+        <button type="button"
+                class="btn btn-danger btn-sm position-absolute"
+                style="top: 0.5rem; right: 0.5rem; z-index: 10;"
+                onclick="removeExperience(this)">
+            &minus;
+        </button>
+
+        <input type="text" name="title_${expIndex}" class="form-control mb-1" placeholder="Job Title">
+        <input type="text" name="company_${expIndex}" class="form-control mb-1" placeholder="Company">
+        <input type="number" name="start_year_${expIndex}" class="form-control mb-1" placeholder="Start Year"
+               min="1900" max="${currentYear}">
+        <input type="number" name="end_year_${expIndex}" class="form-control mb-1" placeholder="End Year"
+               min="1900" max="${currentYear}">
+        <textarea name="description_${expIndex}" class="form-control mb-1" placeholder="Description"></textarea>
+    `;
+    container.appendChild(div);
+}
+
+function removeExperience(button) {
+    const entry = button.closest('.experience-entry');
+    if (entry) {
+        entry.remove();
+    }
+}
+</script>
+<script>
+    function showTab(tabId) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(tab => tab.classList.remove('active'));
+
+        // Remove 'active' class from all buttons
+        const tabButtons = document.querySelectorAll('.tabs button');
+        tabButtons.forEach(button => button.classList.remove('active'));
+
+        // Show the selected tab
+        document.getElementById(tabId).classList.add('active');
+
+        // Highlight the selected tab button
+        const clickedButton = [...tabButtons].find(btn => btn.textContent.toLowerCase() === tabId.toLowerCase());
+        if (clickedButton) clickedButton.classList.add('active');
+    }
+</script>
+
 {% endblock %}

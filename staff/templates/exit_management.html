@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const resignDateInput = document.querySelector('input[name="resign_date"]');
+        const lastDateInput = document.querySelector('input[name="last_date"]');
+
+        const today = new Date().toISOString().split('T')[0];
+        resignDateInput.setAttribute('min', today);
+
+        resignDateInput.addEventListener('change', function () {
+            const selectedDate = new Date(this.value);
+            if (!isNaN(selectedDate)) {
+                const lastWorkingDate = new Date(selectedDate);
+                lastWorkingDate.setDate(lastWorkingDate.getDate() + 90);
+                lastDateInput.value = lastWorkingDate.toISOString().split('T')[0];
+            }
+        });
+    });
+</script>
+
+<div class="container mt-4">
+    <h3>Resignation Form</h3>
+    <form method="POST">
+        {% csrf_token %}
+
+        <h5 class="mt-4">Personal Details</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <label>Name</label>
+                <input type="text" class="form-control" value="{{ employee.name }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label>Employee ID</label>
+                <input type="text" class="form-control" value="{{ employee.id }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label>Department</label>
+                <input type="text" class="form-control" value="{{ employee.department }}" readonly>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label>Designation</label>
+                <input type="text" class="form-control" value="{{ employee.designation }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label>Report To</label>
+               <input type="text" class="form-control" value="{{ employee.reportto }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label>Joined Date</label>
+                <input type="text" class="form-control" value="{{ employee.joindate }}" readonly>
+            </div>
+        </div>
+
+        <h5 class="mt-4">Resignation Details</h5>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label>Resignation Apply Date</label>
+                <input type="date" class="form-control" name="resign_date" required>
+            </div>
+            <div class="col-md-4">
+                <label>Last Working Date</label>
+                <input type="date" class="form-control" name="last_date" required readonly>
+            </div>
+            <div class="col-md-4">
+                <label>Reason of Resignation</label>
+                <input type="text" class="form-control" name="reason" required>
+            </div>
+        </div>
+
+        <!-- Radios -->
+        <div class="mt-3">
+            <label>1. If selected anywhere else kindly furnish details.</label><br>
+            <input type="radio" name="selected_elsewhere" value="yes"> Yes
+            <input type="radio" name="selected_elsewhere" value="no" checked> No
+        </div>
+
+        <div class="mt-2">
+            <label>2. Whether bond period is over.</label><br>
+            <input type="radio" name="bond_over" value="yes"> Yes
+            <input type="radio" name="bond_over" value="no" checked> No
+        </div>
+
+        <div class="mt-2">
+            <label>3. Advance salary.</label><br>
+            <input type="radio" name="advance_salary" value="yes"> Yes
+            <input type="radio" name="advance_salary" value="no" checked> No
+        </div>
+
+        <div class="mt-2">
+            <label>4. Any dues pending.</label><br>
+            <input type="radio" name="dues_pending" value="yes"> Yes
+            <input type="radio" name="dues_pending" value="no" checked> No
+        </div>
+
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Resign</button>
+            <button type="reset" class="btn btn-secondary">Cancel</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

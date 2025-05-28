@@ -280,6 +280,7 @@
             <div class="update-status-section mt-3">
                 <form method="post">
                     {% csrf_token %}
+                      {% if request.session.postion != 'Employee' %}
                     <label for="status">Update Project Status:</label>
                     <select name="status" id="status" required>
                         {% for value, label in status_options %}
@@ -289,6 +290,10 @@
                         {% endfor %}
                     </select>
                     <button type="submit">Update</button>
+                    {% else %}
+                     <label for="status"> Project Status:</label>
+                    {{ project.status.status }}
+                    {% endif %}
                 </form>
             </div>
         </div>

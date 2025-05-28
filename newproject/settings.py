@@ -11,21 +11,33 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
-
+import certifi
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# newproject/settings.py
 
+import os
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# if not os.path.exists(LOG_DIR):
+#     os.makedirs(LOG_DIR)
+# if not os.path.exists(ARCHIVED_LOG_DIR):
+#     os.makedirs(ARCHIVED_LOG_DIR)
+# # ... other settings ...
 
+# ... (existing settings) ...
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+ARCHIVED_LOG_DIR = os.path.join(BASE_DIR, 'archived_logs')
+
+# ... (rest of your settings) ...
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-@vdlq9$q7b)56bd*-kn_@uoh=h9x(tjar+4$d_s=fdb_21p!w7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['GAURAV7192.pythonanywhere.com']
+
 
 
 # Application definition
@@ -91,8 +103,13 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = 'newproject.wsgi.application'
 
+AUTHENTICATION_BACKENDS = [
+    'users.backends.AccountLockoutBackend', # Your custom backend
+    'django.contrib.auth.backends.ModelBackend', # Keep Django's default if you need it for other auth methods
+]
 
 # Database
 # # https://docs.djangoproject.com/en/5.1/ref/settings/#databasesif
@@ -165,15 +182,83 @@ STATICFILES_DIRS=[
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',  # You can adjust the level to DEBUG or INFO depending on your needs
+            'class': 'logging.FileHandler',
+            'filename': 'activity_log.log',  # Ensure logs directory exists
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'myapp': {  # Replace with your app name (e.g., 'myapp')
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+# settings.py
+AUDIT_LOG_FILE = os.path.join(BASE_DIR, 'audit.log')
+# Email Backend Configuration for SMTP (Gmail)
+EMAIL_BACKEND = 'staff.email_backends.BypassSSLVerificationEmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT =465
+EMAIL_USE_TLS = True  # Crucial for TLS (port 587)
+EMAIL_USE_SSL = False # Ensure this is False if EMAIL_USE_TLS is True
+
+# Your Gmail account for sending emails
+EMAIL_HOST_USER = 'gauravsinghbhandari77@gmail.com'
+
+# IMPORTANT: This MUST be an "App Password" generated from your Google Account
+# if you have 2-Step Verification enabled. It is NOT your regular Gmail password.
+# Replace 'YOUR_GAURAV_APP_PASSWORD' with the actual 16-character App Password.
+EMAIL_HOST_PASSWORD = 'rdzs lpza yels nhbl'
+
+# Default sender email for your application
+DEFAULT_FROM_EMAIL = 'gauravsinghbhandari77@gmail.com'
+# Email address for server error notifications
+SERVER_EMAIL = 'gauravsinghbhandari77@gmail.com'
+import smtplib
+from django.core.mail.backends.smtp import EmailBackend
+#
+# class NoSSLContextEmailBackend(EmailBackend):
+#     def _get_ssl_context(self):
+#         import ssl
+#         context = ssl._create_default_https_context()  # Use default context without verification
+#         context.check_hostname = False
+#         context.verify_mode = ssl.CERT_NONE
+#         return context
+
 
 
 # Development email backend
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'yourgmail@gmail.com'
-# EMAIL_HOST_PASSWORD = 'your_app_password'  # not your Gmail password!
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#
+# import ssl
+# import certifi
+# from django.core.mail import utils
+#
+# # Create a custom SSL context using certifi
+# ssl_context = ssl.create_default_context(cafile=certifi.where())
+#
+# # Patch the global SMTP SSL context used by Django
+# utils.ssl.create_default_context = lambda *args, **kwargs: ssl_context

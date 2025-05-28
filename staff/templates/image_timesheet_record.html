@@ -1,95 +1,140 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-    <h2>Timesheet Records</h2>
-    <a href="{% url 'image_timesheet' request.session.user_id %}" style="padding: 10px 20px; background-color: #3498db; color: white; text-decoration: none; border: none; display: inline-block; cursor: pointer;">
-      Add Timesheet
-    </a>
-  </div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  {% if request.session.postion != 'Employee' %}
-    <label style="margin-top: 10px; display: inline-block;">
-      <input type="checkbox" id="toggleTeam" onchange="toggleTimesheet()"> Show Team Timesheet
-    </label>
-  {% endif %}
+<style>
+    .full-screen-preview {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1050;
+    }
+    .full-screen-preview img {
+        max-height: 90vh;
+        max-width: 90vw;
+        border-radius: 0.5rem;
+        box-shadow: 0 0 15px #000;
+    }
+    .top-right-buttons {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+    }
+    .top-right-buttons button {
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+        line-height: 36px;
+        text-align: center;
+        cursor: pointer;
+        box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    }
+</style>
 
-  <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-    <thead>
-      <tr style="background-color: #f2f2f2;">
-        <th>S.No</th>
-        <th>Name</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>View</th>
-      </tr>
-    </thead>
-    <tbody id="personalTable">
-      {% for t in timesheet %}
-        <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>{{ t.emp_id.name }}</td>
-          <td>{{ t.date }}</td>
-          <td>{{ t.end }}</td>
-          <td>
-       {% if t.attachment %}
-  <button onclick="openModal('{{ t.attachment.url }}', '{{ t.date }}', '{{ t.end }}')">View</button>
-{% else %}
-  No Image
-{% endif %}
+<div class="container mt-5">
+    <h2>Your Timesheets</h2>
+    <button><a href="{% url 'image_timesheet' request.session.user_id %}" >add image timesheet </a></button>
+    <table class="table table-bordered table-striped text-center align-middle mb-5">
+        <thead class="table-light">
+            <tr>
+                <th>S.No</th>
+                <th>Date</th>
+                <th>End Date</th>
+                <th>View</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ts in timesheet %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ ts.date }}</td>
+                <td>{{ ts.end }}</td>
+                <td>
+                    {% if ts.attachment %}
+                     <button onclick="showImage('{{ ts.attachment_url|escapejs }}')">View</button>
 
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-    <tbody id="teamTable" style="display: none;">
-      {% for t in team_timesheet %}
-        <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>{{ t.emp_id.name }}</td>
-          <td>{{ t.date }}</td>
-          <td>{{ t.end }}</td>
-          <td>
-            {% if t.img %}
-              <button onclick="openModal('{{ t.img.url }}', '{{ t.date }}', '{{ t.end }}')">View</button>
-            {% else %}
-              No Image
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+                    {% else %}
+                    No Attachment
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No timesheets found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
-  <!-- Modal -->
-  <div id="imageModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
-      <h3>Timesheet Preview</h3>
-      <img id="modalImage" src="" alt="Timesheet Image" style="width:100%; border:1px solid #ccc;">
-      <p><strong>Start Date:</strong> <span id="modalStartDate"></span></p>
-      <p><strong>End Date:</strong> <span id="modalEndDate"></span></p>
+    {% if team_timesheet %}
+    <h2>Your Team's Timesheets</h2>
+    <table class="table table-bordered table-striped text-center align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>S.No</th>
+                <th>Employee ID</th>
+                <th> Uploaded on </th>
+                <th>Date</th>
+                <th>End Date</th>
+                <th>View</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ts in team_timesheet %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ ts.name }}</td>
+                <td>{{ ts.upload_on }}</td>
+                <td>{{ ts.date }}</td>
+                <td>{{ ts.end }}</td>
+                <td>
+                    {% if ts.attachment %}
+                 <button onclick="showImage('{{ ts.attachment_url|escapejs }}')">View</button>
+
+
+
+                    {% else %}
+                    No Attachment
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No team timesheets found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+<!-- Fullscreen image preview -->
+<div id="fullView" style="display: none;">
+    <div class="full-screen-preview">
+        <div class="top-right-buttons">
+            <button onclick="closeImage()" title="Close">×</button>
+        </div>
+        <img id="previewImage" src="#" alt="Preview Image">
     </div>
-  </div>
-{% endblock %}
+</div>
 
-{% block scripts %}
-  <script>
-    function toggleTimesheet() {
-      const isChecked = document.getElementById("toggleTeam").checked;
-      document.getElementById("personalTable").style.display = isChecked ? "none" : "";
-      document.getElementById("teamTable").style.display = isChecked ? "" : "none";
+<script>
+    function showImage(url) {
+        const previewImage = document.getElementById("previewImage");
+        const fullView = document.getElementById("fullView");
+
+        previewImage.src = url;
+        fullView.style.display = "flex";
     }
 
-    function openModal(src, start, end) {
-      document.getElementById("modalImage").src = src;
-      document.getElementById("modalStartDate").textContent = start;
-      document.getElementById("modalEndDate").textContent = end;
-      document.getElementById("imageModal").style.display = "block";
+    function closeImage() {
+        document.getElementById("fullView").style.display = "none";
+        document.getElementById("previewImage").src = '#';
     }
-
-    function closeModal() {
-      document.getElementById("imageModal").style.display = "none";
-    }
-  </script>
+</script>
 {% endblock %}

@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Holiday List{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <div class="page-header">
+        <h3>Holiday List</h3>
+        {% if request.session.postion == 'HR' %}
+        <div style="text-align: right;">
+            <button class="btn btn-primary" onclick="toggleForm()">Add Holiday</button>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="margin-top: 30px;">
+        <h4>Holiday Calendar</h4>
+        <button class="btn btn-primary" onclick="toggleCalendar()" style="margin-bottom: 10px;">View Calendar</button>
+
+        <div id="calendarSection" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <button class="btn btn-primary" onclick="prevMonth()">&lt;</button>
+                <h5 id="calendarTitle" style="margin: 0;"></h5>
+                <button class="btn btn-primary" onclick="nextMonth()">&gt;</button>
+            </div>
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    {% if request.session.postion == 'HR' %}
+    <div id="holidayForm" style="display: none; margin-top: 20px;">
+        <form method="post" id="addHolidayForm">
+            {% csrf_token %}
+            <input type="text" name="holiday_name" placeholder="Holiday Name" required>
+            <input type="date" name="holiday_date" required>
+            <button type="submit" class="btn btn-success">Save</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <table class="holiday-table">
+        <thead>
+            <tr>
+                <th>S.no</th>
+                <th>Holiday</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="holidayBody">
+            {% for h in holidays %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ h.name }}</td>
+                <td>{{ h.date|date:"M. j, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">No holidays added yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.page-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+}
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.holiday-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+.holiday-table th {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+.holiday-table td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+input[type="text"], input[type="date"] {
+    padding: 6px;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+.btn {
+    padding: 6px 12px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+}
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+#calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 15px;
+    font-size: 12px;
+}
+#calendar .day {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-radius: 4px;
+}
+#calendar .holiday {
+    background-color: #ffcccc;
+    color: red;
+    font-weight: bold;
+}
+</style>
+
+<script>
+function toggleForm() {
+    const form = document.getElementById('holidayForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleCalendar() {
+    const calendarSection = document.getElementById('calendarSection');
+    calendarSection.style.display = calendarSection.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const holidays = [
+        {% for h in holidays %}
+            "{{ h.date|date:'Y-m-d' }}",
+        {% endfor %}
+    ];
+
+    const calendar = document.getElementById('calendar');
+    const title = document.getElementById('calendarTitle');
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth();
+
+    function renderCalendar(year, month) {
+        calendar.innerHTML = '';
+        const date = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const startDay = date.getDay();
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+                            "July", "August", "September", "October", "November", "December"];
+        title.innerText = `${monthNames[month]} ${year}`;
+
+        for (let i = 0; i < startDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'day';
+            calendar.appendChild(emptyCell);
+        }
+
+        for (let day = 1; day <= lastDay; day++) {
+            const cell = document.createElement('div');
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            cell.className = 'day';
+            cell.innerText = day;
+
+            if (holidays.includes(dateStr)) {
+                cell.classList.add('holiday');
+            }
+
+            calendar.appendChild(cell);
+        }
+    }
+
+    window.prevMonth = function () {
+        if (currentMonth === 0) {
+            currentMonth = 11;
+            currentYear -= 1;
+        } else {
+            currentMonth -= 1;
+        }
+        renderCalendar(currentYear, currentMonth);
+    };
+
+    window.nextMonth = function () {
+        if (currentMonth === 11) {
+            currentMonth = 0;
+            currentYear += 1;
+        } else {
+            currentMonth += 1;
+        }
+        renderCalendar(currentYear, currentMonth);
+    };
+
+    renderCalendar(currentYear, currentMonth);
+});
+</script>
+{% endblock %}

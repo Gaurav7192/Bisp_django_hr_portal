@@ -41,16 +41,19 @@
           <td>{{ leave.end_date }}</td>
           <td>{{ leave.no_of_days }}</td>
 
-          <!-- Conditionally display Leave Type based on Compensation Leave -->
-         <td>
+<td>
   {% if leave.compensatory_leave %}
-    <span class="badge bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ leave.compensation_leave_reason }}">
+    <span class="badge bg-info" style="cursor:pointer;"
+          data-bs-toggle="modal" data-bs-target="#compReasonModal"
+          onclick="showFullCompReason('{{ leave.compensatory_leave_reason|default_if_none:''|escapejs }}')">
       Compensation Leave
     </span>
   {% else %}
     {{ leave.leave_type.name }}
   {% endif %}
 </td>
+
+
 
 
            <td>
@@ -120,9 +123,41 @@
     </div>
   </div>
 </div>
+<!-- Compensation Leave Reason Modal -->
+<div class="modal fade" id="compReasonModal" tabindex="-1" aria-labelledby="compReasonModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="compReasonModalLabel">Compensation Leave Reason</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="fullCompReasonText">
+        <!-- Compensation leave reason will appear here -->
+      </div>
+    </div>
+  </div>
+</div>
 
+<!--half day leaves record-->
+<div class="modal fade" id="halfDayModal" tabindex="-1" aria-labelledby="halfDayModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="halfDayModalLabel">Half Day Info</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="halfDayModalBody">
+        <!-- Info will be loaded by JS -->
+      </div>
+    </div>
+  </div>
+</div>
 <!-- JavaScript -->
 <script>
+  function showFullCompReason(reason) {
+  document.getElementById("fullCompReasonText").innerText = reason;
+}
+
 let currentPage = 1;
 let filteredRows = [];
 
@@ -275,6 +310,13 @@ document.addEventListener('DOMContentLoaded', function () {
     return new bootstrap.Tooltip(tooltipTriggerEl);
   });
 });
+function showFullCompReason(reason) {
+  if (!reason || reason.trim() === "") {
+    document.getElementById("fullCompReasonText").innerText = "No reason provided.";
+  } else {
+    document.getElementById("fullCompReasonText").innerText = reason;
+  }
+}
 
 </script>
 

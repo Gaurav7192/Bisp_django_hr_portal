@@ -1,12 +1,42 @@
 from enum import unique
-
+from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from datetime import date,datetime,time,timedelta
 from django.db.models import JSONField
-
+import logging
+from datetime import timedelta
+from django.utils import timezone
+logger = logging.getLogger(__name__)
+from django.utils.timezone import now
 from simple_history.models import HistoricalRecords
+class DesignationMaster(models.Model):
+    designation_name = models.CharField(max_length=100, unique=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return self.designation_name
+class Video(models.Model):
+    CATEGORY_CHOICES = [
+        ('Learning', 'Learning Video'),
+        ('Project Management', 'Project Management'),
+        ('Task Management', 'Task Management'),
+        ('Timesheet', 'Timesheet Management'),
+        ('Leave', 'Leave Management'),
+        ('User Preference', 'User Preference'),
+        ('Exit', 'Exit Management'),
+    ]
+    title = models.CharField(max_length=200)
+    video=models.FileField(upload_to='videos/',null=True)
+    url = models.URLField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
 
 class RoleMaster(models.Model):
     role = models.CharField(max_length=50, unique=True)  # No need for choices anymore
@@ -121,10 +151,12 @@ class emp_registers(models.Model):
 
     position = models.ForeignKey(RoleMaster, on_delete=models.SET_NULL, null=True)
     department = models.ForeignKey(DepartmentMaster, on_delete=models.SET_NULL, null=True)
+    designation = models.ForeignKey(DesignationMaster, on_delete=models.SET_NULL, null=True, blank=True)
 
     registration_date = models.DateTimeField(auto_now_add=True,)
     joindate =models.DateField(null=True)
     reportto = models.CharField(max_length=100, null=True, blank=True)
+
 
     salary = models.DecimalField(
         max_digits=10,
@@ -134,6 +166,25 @@ class emp_registers(models.Model):
     )
     job_status = models.ForeignKey(JobStatusMaster, on_delete=models.SET_NULL, null=True, default=None)
     history = HistoricalRecords()
+
+    failed_login_attempts = models.IntegerField(default=0)
+    account_locked_until = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.username
+
+    def is_locked(self):
+        return self.account_locked_until and self.account_locked_until > timezone.now()
+
+    def lock_account(self, duration_hours=2):
+        self.account_locked_until = timezone.now() + timedelta(hours=duration_hours)
+        self.save()
+
+    def unlock_account(self):
+        self.failed_login_attempts = 0
+        self.account_locked_until = None
+        self.save()
+
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
         super().save(*args, **kwargs)
@@ -141,6 +192,10 @@ class emp_registers(models.Model):
     def __str__(self):
         return f"{self.name} ({self.email})"
 
+    def unlock_account(self):
+        self.failed_login_attempts = 0
+        self.account_locked_until = None
+        self.save()
 
 class Handbook(models.Model):
     document_name=models.CharField(max_length=100,null =False )
@@ -239,9 +294,13 @@ class emp_logins(models.Model):
 
 
 class Member(models.Model):
+
+
     name = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     emp_id = models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING)
+
+
 
     def __str__(self):
         return self.name
@@ -560,7 +619,7 @@ class Timesheet(models.Model):
     end_time = models.TimeField(null=True)
     description = models.TextField(null=True)
     attachment = models.ImageField(upload_to='attachments/')
-
+    upload_on=models.DateField(null=True)
     def __str__(self):
         return f"{self.emp_id} - {self.pname} - {self.date}"
 
@@ -595,3 +654,95 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.emp_id.emp_id} - {self.date} ({self.half_day_type.name})"
+
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.db import models
+
+class ResignationStatusMaster(models.Model):
+    status_name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return self.status_name
+from django import forms
+
+
+
+class Resignation(models.Model):
+    """Base resignation form info."""
+    employee = models.ForeignKey(emp_registers, on_delete=models.CASCADE)
+    resign_date = models.DateField()
+    last_date = models.DateField()
+    reason = models.TextField()
+    selected_elsewhere = models.BooleanField(default=False)
+    bond_over = models.BooleanField(default=False)
+    advance_salary = models.BooleanField(default=False)
+    dues_pending = models.BooleanField(default=False)
+    resign_status =models.ForeignKey(ResignationStatusMaster,on_delete=models.DO_NOTHING)
+
+    def __str__(self):
+        return f"Resignation of {self.employee.username}"
+
+class ResignStatusAction(models.Model):
+    """Tracks status changes for a resignation."""
+    resignation = models.ForeignKey(Resignation, on_delete=models.CASCADE, related_name='status_actions')
+    action = models.CharField(max_length=255)  # e.g., 'Submitted', 'Approved by Manager', 'HR Review', etc.
+    action_by = models.ForeignKey(emp_registers, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name='resign_actions')
+    action_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.resignation.employee.username} - {self.action} on {self.action_date.strftime('%Y-%m-%d')}"
+
+
+
+
+class ActionChecklist(models.Model):
+    """Each checkbox field as a separate boolean column."""
+    resignation = models.OneToOneField(Resignation, on_delete=models.CASCADE, related_name='checklist')
+
+    # Knowledge Transfer
+    status_ongoing_projects = models.BooleanField(default=False)
+    outstanding_tasks = models.BooleanField(default=False)
+    important_contacts = models.BooleanField(default=False)
+
+    # IT Permissions and Access
+    update_passwords = models.BooleanField(default=False)
+    revoke_access = models.BooleanField(default=False)
+    remove_from_payroll = models.BooleanField(default=False)
+    update_employee_directory = models.BooleanField(default=False)
+
+    # Paperwork
+    official_resignation_letter = models.BooleanField(default=False)
+    last_paycheck_arrangements = models.BooleanField(default=False)
+    nda = models.BooleanField(default=False)
+
+    # Recover Assets
+    laptop_and_charger = models.BooleanField(default=False)
+    mouse = models.BooleanField(default=False)
+
+    # Exit Interview
+    exit_interview_conducted = models.BooleanField(default=False)
+
+    # Announce Departure
+    send_announcement = models.BooleanField(default=False)
+    give_farewell_party = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Checklist for {self.resignation.employee.username}"
+
+
+
+class SentEmail(models.Model):
+    employee = models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING)  # Prevent cascade delete
+    recipient_email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    message_body = models.TextField()  # stores HTML including tags
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Email to {self.recipient_email} by {self.employee} on {self.sent_at.strftime('%Y-%m-%d')}"

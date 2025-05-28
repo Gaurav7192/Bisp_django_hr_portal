@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .acknowledgment-container {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .acknowledgment-container h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  .ack-controls {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    gap: 10px;
+  }
+
+  .ack-controls input,
+  .ack-controls select,
+  .ack-controls button {
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+
+  table thead th {
+    background: #007bff;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  table tbody td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+  }
+
+  #pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+
+  #pagination button {
+    padding: 6px 12px;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  #pagination button.active {
+    background: #0056b3;
+  }
+
+  #pagination button:hover {
+    background: #0056b3;
+  }
+</style>
+
+<div class="acknowledgment-container">
+  <h2>Employee Handbook Acknowledgments</h2>
+
+  <div class="ack-controls">
+    <input type="text" id="searchInput" placeholder="Search by employee or handbook">
+    <div>
+      Show
+      <select id="rowsPerPage">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select> entries
+    </div>
+    <div>
+      Export:
+      <button onclick="exportTable('csv')">CSV</button>
+      <button onclick="exportTable('json')">JSON</button>
+      <button onclick="exportTable('xls')">Excel</button>
+      <button onclick="exportTable('txt')">Text</button>
+      <button onclick="exportTable('pdf')">PDF</button>
+    </div>
+  </div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th data-key="0">#</th>
+        <th data-key="1">Employee</th>
+        <th data-key="2">Handbook</th>
+        <th data-key="3">Acknowledgment Date</th>
+        <th data-key="4">Acknowledgment</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ack in acknowledgments %}
+      <tr>
+        <td></td> <!-- Placeholder for serial number -->
+        <td>{{ ack.employee.name }}</td>
+        <td>{{ ack.handbook.document_name }}</td>
+        <td>{{ ack.acknowledgment_date }}</td>
+        <td>{{ ack.acknowledgment|capfirst }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div id="pagination"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+let currentPage = 1;
+let rowsPerPage = 10;
+const table = document.getElementById("dataTable");
+const rows = Array.from(table.querySelectorAll("tbody tr"));
+const searchInput = document.getElementById("searchInput");
+const rowsPerPageSelect = document.getElementById("rowsPerPage");
+
+function displayTable() {
+  const filter = searchInput.value.toLowerCase();
+  const filteredRows = rows.filter(row =>
+    row.innerText.toLowerCase().includes(filter)
+  );
+
+  const start = (currentPage - 1) * rowsPerPage;
+  const paginated = filteredRows.slice(start, start + rowsPerPage);
+
+  table.querySelector("tbody").innerHTML = "";
+  paginated.forEach((row, index) => {
+    // Set the serial number for each row
+    const serialNumberCell = row.querySelector("td");
+    serialNumberCell.innerText = start + index + 1;
+    table.querySelector("tbody").appendChild(row);
+  });
+
+  displayPagination(filteredRows.length);
+}
+
+function displayPagination(totalRows) {
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const pagination = document.getElementById("pagination");
+  pagination.innerHTML = "";
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.innerText = i;
+    if (i === currentPage) btn.classList.add("active");
+    btn.onclick = () => {
+      currentPage = i;
+      displayTable();
+    };
+    pagination.appendChild(btn);
+  }
+}
+
+function sortTable(index) {
+  const asc = table.rows[0].cells[index].classList.toggle("asc");
+  rows.sort((a, b) => {
+    const x = a.cells[index].innerText.toLowerCase();
+    const y = b.cells[index].innerText.toLowerCase();
+    return asc ? x.localeCompare(y) : y.localeCompare(x);
+  });
+  displayTable();
+}
+
+table.querySelectorAll("th").forEach((th, index) =>
+  th.addEventListener("click", () => sortTable(index))
+);
+
+searchInput.addEventListener("input", () => {
+  currentPage = 1;
+  displayTable();
+});
+
+rowsPerPageSelect.addEventListener("change", () => {
+  rowsPerPage = parseInt(rowsPerPageSelect.value);
+  currentPage = 1;
+  displayTable();
+});
+
+function exportTable(type) {
+  const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.innerText);
+  const data = rows.map(row =>
+    Array.from(row.cells).map(cell => cell.innerText)
+  );
+
+  if (type === "csv" || type === "txt") {
+    const delimiter = type === "csv" ? "," : "\t";
+    let content = headers.join(delimiter) + "\n";
+    data.forEach(row => content += row.join(delimiter) + "\n");
+    downloadFile(content, "table." + type, "text/plain");
+  } else if (type === "json") {
+    const json = JSON.stringify(data.map(row => {
+      let obj = {};
+      headers.forEach((h, i) => obj[h] = row[i]);
+      return obj;
+    }), null, 2);
+    downloadFile(json, "table.json", "application/json");
+  } else if (type === "xls") {
+    let content = "<table><tr>" + headers.map(h => `<th>${h}</th>`).join("") + "</tr>";
+    data.forEach(row => {
+      content += "<tr>" + row.map(cell => `<td>${cell}</td>`).join("") + "</tr>";
+    });
+    content += "</table>";
+    const blob = new Blob([content], { type: "application/vnd.ms-excel" });
+    downloadFile(blob, "table.xls", "application/vnd.ms-excel");
+  } else if (type === "pdf") {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Employee Acknowledgments", 10, 10);
+    let y = 20;
+    doc.setFontSize(10);
+    data.forEach(row => {
+      doc.text(row.join(" | "), 10, y);
+      y += 8;
+    });
+    doc.save("table.pdf");
+  }
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+displayTable();
+</script>
+{% endblock %}

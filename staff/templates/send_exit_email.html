@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Load CKEditor once -->
+<script src="https://cdn.ckeditor.com/4.25.1-lts/full/ckeditor.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        margin: 0;
+        padding: 0;
+    }
+
+    .main-content {
+        padding: 20px;
+    }
+
+    .breadcrumb {
+        font-size: 14px;
+        margin-bottom: 20px;
+        color: #6c757d;
+    }
+
+    .panel {
+        background: #fff;
+        border-radius: 6px;
+        padding: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    h3 {
+        font-size: 20px;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="file"],
+    textarea {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 15px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+</style>
+
+
+
+    <div class="panel">
+        <h3>Send Exit Email</h3>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'send_exit_email' request.session.user_id %}">
+            {% csrf_token %}
+
+          <div class="form-group">
+            <label>From</label>
+            <input type="email" name="from" value="{{ employee.email }}">
+        </div>
+
+
+            <div class="form-group">
+                <label>To</label>
+                <input type="email" name="to" required>
+            </div>
+
+            <div class="form-group">
+                <label>CC</label>
+                <input type="text" name="cc">
+            </div>
+
+            <div class="form-group">
+                <label>BCC</label>
+                <input type="text" name="bcc">
+            </div>
+
+            <div class="form-group">
+                <label>Subject</label>
+                <input type="text" name="subject" required>
+            </div>
+
+        <div class="form-group">
+    <label>Message</label>
+    <textarea name="message" id="editor" rows="10"></textarea>
+</div>
+
+<!-- CKEditor Script -->
+
+
+            <div class="form-group">
+                <label>Attachment</label>
+                <input type="file" name="attachment">
+            </div>
+
+            <button type="submit">Send Email</button>
+        </form>
+    </div>
+
+
+
+{% endblock %}

@@ -28,7 +28,8 @@
             <th>End Date</th>
             <th>View</th>
             <th>Status</th>
-            <th>+</th>
+            <th>list of acknowlege employee</button>
+</td></th>
         </tr>
     </thead>
     <tbody id="handbook-table-body">
@@ -39,8 +40,9 @@
             <td>{{ hb.end_date }}</td>
             <td><a href="{{ hb.document.url }}" target="_blank">View</a></td>
             <td>{{ hb.active_status|yesno:"Active,Inactive" }}</td>
-            <td><button type="button" onclick="toggleRecords({{ forloop.counter0 }})">+</button></td>
-        </tr>
+          <td>
+  <button type="button" onclick="window.location.href='{% url 'handbook_record' handbook_id=hb.id %}'">list of acknowlege employee</button>
+</td>
         <tr id="records-{{ forloop.counter0 }}" style="display: none;">
             <td colspan="6">
                 <div class="record-details">

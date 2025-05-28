@@ -146,7 +146,12 @@
             {% endif %}
           </ul>
         </li>
-
+ <li class="nav-item">
+          <a href="{% url 'learning_videos_dashboard'  %}" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Learning Video </p>
+          </a>
+        </li>
            <li class="nav-item">
     {% if request.session.postion == 'HR' %}
         <a href="{% url 'handbook_list' %}" class="nav-link">
@@ -186,9 +191,9 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="pages/examples/project-add.html" class="nav-link">
+              <a href="{% url 'holiday_list_view' %}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
-                <p>Project Add</p>
+                <p>Add Holiday</p>
               </a>
             </li>
             <li class="nav-item">
@@ -240,8 +245,12 @@
           </ul>
         </li>
         {% endif %}
-
-        <!-- Logout -->
+        <li class="nav-item">
+            <a href="{% url 'resignation_form' request.session.user_id %}" class="nav-link">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <p>Exit Management</p>
+            </a>
+        </li>
         <li class="nav-item">
           <form id="logout-form" action="{% url 'logout' %}" method="post">
             {% csrf_token %}

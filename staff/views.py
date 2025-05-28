@@ -29,6 +29,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import LeaveTypeMaster, LeaveRecord
 import json
 from django.db import transaction
+from .utils.audit import log_user_action
 
 def d1(request,id):
     user = get_object_or_404(emp_registers, id=id)
@@ -41,12 +42,269 @@ def d2(request,id):
     return render(request, '2.html', {'user': user})
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth import login as auth_login
+  # Your form
+from django.conf import settings  # For settings, if needed for context
 
 
+def employee_login(request):
+    # Redirect if already logged in (optional, but good practice)
+    if request.user.is_authenticated:
+        # Assuming request.user is an instance of emp_registers
+        # if AUTH_USER_MODEL is set to emp_registers, or you have custom logic
+        return redirect('dashboard')  # Or whatever your authenticated homepage is
+
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            # If form is valid, the user is authenticated and stored in form.user_cache
+            user = form.user_cache
+            auth_login(request, user)  # Log the user in
+
+            # Optional: handle remember_me here if you want to extend session
+            if form.cleaned_data.get('remember_me'):
+                request.session.set_expiry(settings.SESSION_COOKIE_AGE)  # Keep session alive for default period
+            else:
+                request.session.set_expiry(0)  # Session expires when browser closes
+
+            return redirect('dashboard')  # Redirect to dashboard or success page
+        # If form is not valid, errors are already attached to the fields
+        # and will be displayed by the template. No need for extra message framework.
+    else:
+        form = LoginForm()
+
+    return render(request, 'employees/login.html', {'form': form})
+
+# your_app/views.py
+
+# ... (imports) ...
+from .audit_logger import log_audit_action # Make sure this import is correct
+from .models import Project # Ensure Project is imported
+# newproject/staff/views.py
+
+from datetime import date, timedelta
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+
+from .models import (
+    emp_registers, EmployeeDetail, LeaveRecord, LeaveStatusMaster, Holiday,
+    Project, Resignation, Handbook, Acknowledgment, RoleMaster, ResignationStatusMaster # Ensure all models are imported
+)
+from .audit_logger import log_audit_action
+
+# Helper function to get the user identifier from session
+def get_user_audit_identifier(request):
+    # Prioritize request.session.name if set, otherwise use request.user.name as fallback
+    # If neither, fall back to a generic 'Unknown'
+    return request.session.get('name', request.user.name if request.user.is_authenticated else 'Unknown/Anonymous')
+
+
+
+def dashboard_view(request):
+    user = request.user
+    user_audit_name = get_user_audit_identifier(request) # Get name from session
+
+    employee_detail = None
+    user_total_holidays = 0
+    is_hr = False
+    pending_leaves = []
+    recent_projects = []
+    ending_projects = []
+    pending_resignations = []
+    show_handbook_notice = False
+
+    # ... (rest of your dashboard_view logic) ...
+
+    try:
+        employee_detail = EmployeeDetail.objects.get(emp_id=user)
+    except EmployeeDetail.DoesNotExist:
+        employee_detail = None
+        log_audit_action(user_audit_name, "attempted to view dashboard but EmployeeDetail missing")
+
+
+    user_total_holidays = Holiday.objects.count()
+
+    hr_role = RoleMaster.objects.filter(role='HR').first()
+    if hr_role and user.position == hr_role:
+        is_hr = True
+
+        pending_status = get_object_or_404(LeaveStatusMaster, status='Pending')
+        pending_leaves = LeaveRecord.objects.filter(approval_status=pending_status).select_related('emp_id', 'leave_type')
+
+        today = date.today()
+        three_days_ago = today - timedelta(days=3)
+        three_days_later = today + timedelta(days=3)
+
+        recent_projects = Project.objects.filter(start_date__gte=three_days_ago, start_date__lte=today).order_by('-start_date')
+
+        ending_projects = Project.objects.filter(
+            Q(end_date__gte=today) & Q(end_date__lte=three_days_later)
+        ).exclude(status__status='Completed').order_by('end_date')
+
+        pending_resignation_status = ResignationStatusMaster.objects.filter(
+            status_name__in=['Submitted', 'Pending']
+        ).first()
+
+        if pending_resignation_status:
+            pending_resignations = Resignation.objects.filter(
+                resign_status=pending_resignation_status
+            ).select_related('employee')
+
+    if not request.session.get('handbook_notice_shown', False):
+        active_handbooks = Handbook.objects.filter(
+            active_status=True,
+            start_date__lte=date.today()
+        ).exclude(end_date__lt=date.today())
+        latest_active_handbook = active_handbooks.order_by('-start_date').first()
+
+        if latest_active_handbook:
+            acknowledged = Acknowledgment.objects.filter(
+                employee=user,
+                handbook=latest_active_handbook,
+                acknowledgment='agree'
+            ).exists()
+
+            if not acknowledged:
+                show_handbook_notice = True
+                request.session['handbook_notice_shown'] = True
+                log_audit_action(user_audit_name, f"Handbook acknowledgment notice displayed for '{latest_active_handbook.document_name}'")
+
+
+    context = {
+        'user': user,
+        'employee_detail': employee_detail,
+        'user_total_holidays': user_total_holidays,
+        'is_hr': is_hr,
+        'pending_leaves': pending_leaves,
+        'recent_projects': recent_projects,
+        'ending_projects': ending_projects,
+        'pending_resignations': pending_resignations,
+        'show_handbook_notice': show_handbook_notice,
+        'latest_active_handbook': latest_active_handbook if show_handbook_notice else None,
+    }
+
+    log_audit_action(user_audit_name, "viewed dashboard") # Use the session name here
+    return render(request, 'staff/dashboard.html', context)
+
+
+@login_required
+def resignation_detail_view(request, pk):
+    user_audit_name = get_user_audit_identifier(request) # Get name from session
+    resignation = get_object_or_404(Resignation, pk=pk)
+    # Add security
+    if not request.user.is_superuser and not (request.user.position and request.user.position.role == 'HR') and resignation.employee != request.user:
+        log_audit_action(user_audit_name, f"attempted unauthorized access to resignation details for {resignation.employee.name} (ID: {pk})")
+        return redirect('dashboard')
+
+    context = {
+        'resignation': resignation
+    }
+    log_audit_action(user_audit_name, f"viewed resignation details for {resignation.employee.name} (ID: {pk})")
+    return render(request, 'staff/resignation_detail.html', context)
+
+@login_required
+def approve_leave_view(request, pk):
+    user_audit_name = get_user_audit_identifier(request) # Get name from session
+    if not (request.user.position and request.user.position.role == 'HR'):
+        log_audit_action(user_audit_name, f"attempted unauthorized leave approval for ID: {pk}")
+        return redirect('dashboard')
+
+    leave_record = get_object_or_404(LeaveRecord, pk=pk)
+    if request.method == 'POST':
+        approved_status = get_object_or_404(LeaveStatusMaster, status='Approved')
+        leave_record.approval_status = approved_status
+        leave_record.approved_by = request.user.name # Or request.user.email
+        leave_record.save()
+        log_audit_action(user_audit_name, f"approved leave request (ID: {pk}) for {leave_record.emp_id.name}")
+        return redirect('dashboard')
+    context = {'leave_record': leave_record}
+    return render(request, 'staff/confirm_leave_action.html', context)
+
+@login_required
+def reject_leave_view(request, pk):
+    user_audit_name = get_user_audit_identifier(request) # Get name from session
+    if not (request.user.position and request.user.position.role == 'HR'):
+        log_audit_action(user_audit_name, f"attempted unauthorized leave rejection for ID: {pk}")
+        return redirect('dashboard')
+
+    leave_record = get_object_or_404(LeaveRecord, pk=pk)
+    if request.method == 'POST':
+        rejected_status = get_object_or_404(LeaveStatusMaster, status='Rejected')
+        leave_record.approval_status = rejected_status
+        leave_record.approved_by = request.user.name # Or request.user.email
+        leave_record.save()
+        log_audit_action(user_audit_name, f"rejected leave request (ID: {pk}) for {leave_record.emp_id.name}")
+        return redirect('dashboard')
+    context = {'leave_record': leave_record}
+    return render(request, 'staff/confirm_leave_action.html', context)
+
+# Add other views here where you call log_audit_action
+# Example:
+
+def update_profile_view(request):
+    user_audit_name = get_user_audit_identifier(request)
+    employee_instance = get_object_or_404(emp_registers, pk=request.user.pk)
+    if request.method == 'POST':
+        # ... process form data and save employee_instance ...
+        employee_instance.save()
+        log_audit_action(user_audit_name, "updated own profile details")
+        return redirect('profile_view')
+    return render(request, 'profile_form.html', {'employee_instance': employee_instance})
+
+def view_all_projects(request):
+    print(f"*** VIEW FUNCTION CALLED: view_all_projects for {request.user.username} ***") # <-- ADD THIS
+    projects = Project.objects.all()
+    log_audit_action(request.user.username, "opened all projects list")
+    return render(request, 'projects/project_list.html', {'projects': projects})
 def home_view(request):
     return render(request, 'home.html')
 
+# newproject/staff/views.py
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+# --- Import from the same app's audit_logger.py ---
+from .audit_logger import log_audit_action
+# -------------------------------------------------
+
+from .models import Project, emp_registers, LeaveRecord # Your models used in views
+
+def view_all_projects(request):
+    print(f"DEBUG: 'view_all_projects' view function called by {request.user.username}") # More debug
+    projects = Project.objects.all()
+    log_audit_action(request.user.username, "opened all projects list")
+    return render(request, 'projects/project_list.html', {'projects': projects})
+
+
+def approve_leave_view(request, leave_id):
+    leave_record = get_object_or_404(LeaveRecord, pk=leave_id)
+    if request.method == 'POST':
+        # ... logic to approve the leave ...
+        # Make sure your LeaveRecord save logic is correct and updates the instance
+        # Example:
+        # leave_record.approval_status = LeaveStatusMaster.objects.get(status='Approved')
+        # leave_record.approved_by = request.user.emp_registers.name # Adjust based on how you link Auth.User to emp_registers
+        leave_record.save() # This save triggers the post_save signal for LeaveRecord
+
+        log_audit_action(request.user.username,
+                         f"approved leave application (ID: {leave_id}) for {leave_record.emp_id.name}")
+        return redirect('leave_list')
+    return render(request, 'approve_leave_form.html', {'leave_record': leave_record})
+
+# Add log_audit_action calls to any other views where specific user actions occur
+# Example: Employee updating their profile (if not via a model signal)
+
+def update_profile_view(request):
+    employee_detail = get_object_or_404(emp_registers, pk=request.user.pk) # Adjust based on your user model
+    if request.method == 'POST':
+        # ... process form data and save employee_detail ...
+        employee_detail.save() # This save will trigger the post_save for emp_registers
+        log_audit_action(request.user.username, "updated own profile details")
+        return redirect('profile_view')
+    return render(request, 'profile_form.html', {'employee_detail': employee_detail})
 
 
 from django.contrib import messages
@@ -112,42 +370,163 @@ def update_employee(request, id):
 
 
 
+# staff/views.py (or wherever your login view is located)
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.conf import settings  # To access LOGIN_ATTEMPT_THRESHOLD and LOCKOUT_DURATION_HOURS
+from django.utils import timezone  # For time-based lockout calculations
+from .models import emp_registers  # Your custom user model (emp_registers)
+from django.contrib.auth.hashers import check_password # <<< IMPORTANT: Ensure this import is present!
+
+# Make sure emp_registers model has:
+# - failed_login_attempts (IntegerField, default=0)
+# - account_locked_until (DateTimeField, null=True, blank=True)
+# - is_locked() method
+# - lock_account(duration_hours=2) method
+# - unlock_account() method
+# And that you've run migrations after adding these fields/methods.
 
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me', False)
+        remember_me = request.POST.get('remember_me', False) # Checkbox value is 'on' or None
 
+        # Convert 'on' or None to a proper boolean
+        remember_me = True if remember_me == 'on' else False
+
+        # Get lockout configuration from settings.py.
+        # If not defined in settings, these defaults will be used.
+        LOGIN_ATTEMPT_THRESHOLD = getattr(settings, 'LOGIN_ATTEMPT_THRESHOLD', 5)
+        LOCKOUT_DURATION_HOURS = getattr(settings, 'LOCKOUT_DURATION_HOURS', 2)
+
+        # Basic input validation for empty fields
         if not email or not password:
             messages.error(request, 'Email and password are required.', extra_tags='login')
             return render(request, 'login.html')
 
         try:
+            # Attempt to retrieve the user by email
             user = emp_registers.objects.get(email=email)
-            if check_password(password, user.password):
+
+            # --- Account Lockout Pre-Check ---
+            # If the account is currently locked, prevent login and inform the user.
+            if user.is_locked():
+                remaining_seconds = (user.account_locked_until - timezone.now()).total_seconds()
+                hours, remainder = divmod(remaining_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+
+                # Format remaining time for a user-friendly message
+                time_parts = []
+                if hours >= 1:
+                    time_parts.append(f"{int(hours)} hour{'s' if hours > 1 else ''}")
+                if minutes >= 1:
+                    time_parts.append(f"{int(minutes)} minute{'s' if minutes > 1 else ''}")
+                if time_parts:
+                    time_str = " and ".join(time_parts)
+                else:
+                    time_str = "a moment" # For very short remaining times
+
+                messages.error(request, f"Your account is locked due to too many failed login attempts. Please try again after {time_str}.", extra_tags='login')
+                return render(request, 'login.html')
+
+            # --- Password Verification ---
+            # Corrected: Using the standalone check_password function
+            if check_password(password, user.password): # <<< Corrected line!
+                # Password is correct!
+                # Reset failed attempts and clear any active lockout upon successful login.
+                if user.failed_login_attempts > 0 or user.account_locked_until:
+                    user.unlock_account()
+                    # Resets counter to 0 and sets account_locked_until to None
+
+                # Set user session variables
                 request.session['user_id'] = user.id
                 request.session['name'] = user.name
+                # Ensure 'position' attribute exists and has a 'role' attribute
                 request.session['postion'] = user.position.role
 
-                # request.session['img'] = user.profile_pic.url
-
+                # Handle "remember me" for session expiry
                 if remember_me:
-                    request.session.set_expiry(604800)  # 1 week
+                    request.session.set_expiry(604800)  # Session lasts for 1 week (60*60*24*7 seconds)
                 else:
-                    request.session.set_expiry(0)
+                    request.session.set_expiry(0)      # Session expires when browser closes
 
+                # messages.success(request, f"Welcome back, {user.name}!", extra_tags='login')
+                return redirect('d2', id=user.id) # Redirect to your dashboard or success page
 
-                return redirect('d2', id=user.id)
             else:
-                messages.error(request, 'Invalid email or password.', extra_tags='login')
-        except emp_registers.DoesNotExist:
-            messages.error(request, 'Invalid email or password.', extra_tags='login')
+                # Password is incorrect
+                user.failed_login_attempts += 1 # Increment the failed attempt counter
 
+                # --- Account Lockout Trigger ---
+                if user.failed_login_attempts >= LOGIN_ATTEMPT_THRESHOLD:
+                    user.lock_account(duration_hours=LOCKOUT_DURATION_HOURS) # Lock the account
+                    messages.error(request, f"Incorrect password. Too many failed attempts. Your account has been locked for {LOCKOUT_DURATION_HOURS} hours.", extra_tags='login')
+                else:
+                    # Generic error for invalid credentials, avoids revealing if it's the email or password
+                    messages.error(request, 'Invalid email or password.', extra_tags='login')
+
+                user.save() # Crucial: Save the updated failed_login_attempts or lockout status to the database
+                return render(request, 'login.html') # Re-render login page with error message
+
+        except emp_registers.DoesNotExist:
+            # If no user is found with the given email, provide a generic error
+            # This prevents attackers from enumerating valid email addresses.
+            messages.error(request, 'Invalid email or password.', extra_tags='login')
+            return render(request, 'login.html')
+
+    # If the request method is GET, just render the empty login form
     return render(request, 'login.html')
 
 
+# staff/views.py (or wherever your views are located)
 
+from django.core.mail import send_mail
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.contrib.auth.hashers import make_password # For hashing passwords
+
+# Assuming generate_random_password is a function that creates a random string
+
+def generate_random_password():
+    # Example simple random password generator (you might have your own)
+    import random
+    import string
+    characters = string.ascii_letters + string.digits + string.punctuation
+    return ''.join(random.choice(characters) for i in range(12))
+
+
+def Forget_passord(request):
+    if request.method == "POST":
+        email = request.POST.get("Email")
+        user = emp_registers.objects.filter(email=email).first()
+
+        if user:
+            new_password = generate_random_password()
+            user.password = make_password(new_password)  # Hash the new password
+            user.save()
+
+            try:
+                send_mail(
+                    "Password Reset Request for Your Account", # Clearer subject
+                    f"Hello,\n\nYour new password is: {new_password}\n\nPlease log in and consider changing your password immediately.\n\nThank you.",
+                    # Django automatically uses DEFAULT_FROM_EMAIL from settings.py
+                    # If not set, it uses EMAIL_HOST_USER.
+                    # You can explicitly set it here if you prefer: EMAIL_HOST_USER
+                    None, # Use None here to let Django use DEFAULT_FROM_EMAIL or EMAIL_HOST_USER from settings
+                    [email],
+                    fail_silently=False, # Set to False to raise exceptions on email sending failure
+                )
+                messages.success(request, "A password reset email has been sent successfully.")
+            except Exception as e:
+                messages.error(request, f"Failed to send password reset email. Please try again later. Error: {e}")
+                print(f"Error sending email: {e}") # Log the full error for debugging
+        else:
+            messages.error(request, "No account found with that email address.")
+
+    # Redirect to the same page or a confirmation page
+    return redirect("Forget_password")
 
 
 
@@ -247,74 +626,156 @@ def change_password(request):
             return redirect('/update_profile/',user_id =user_id)  # or wherever your profile page is
     return render(request, 'change_password.html')
 
+# newproject/staff/views.py
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 
-def update_profile(request,user_id):
-    if 'user_id' not in request.session:
-        return redirect('login')
-    emp = emp_registers.objects.get(id=request.session['user_id'])  # Get logged-in user
-    profile, created = EmployeeDetail.objects.get_or_create(emp_id=emp)  # Get or create profile
+from .audit_logger import log_audit_action
+from .models import Project, emp_registers, LeaveRecord # Your models used in views
+
+@login_required
+def view_all_projects(request):
+    # Use request.session.user_id as the identifier
+    user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
+    print(f"DEBUG: 'view_all_projects' view function called by {user_identifier}")
+    projects = Project.objects.all()
+    log_audit_action(user_identifier, "opened all projects list")
+    return render(request, 'projects/project_list.html', {'projects': projects})
+
+@login_required
+def approve_leave_view(request, leave_id):
+    leave_record = get_object_or_404(LeaveRecord, pk=leave_id)
+    if request.method == 'POST':
+        # ... logic to approve the leave ...
+        leave_record.save() # This save triggers the post_save signal for LeaveRecord
+
+        # Use request.session.user_id as the identifier
+        user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
+        log_audit_action(user_identifier,
+                         f"approved leave application (ID: {leave_id}) for {leave_record.emp_id.name}")
+        return redirect('leave_list')
+    return render(request, 'approve_leave_form.html', {'leave_record': leave_record})
+
+@login_required
+def generate_custom_report(request):
+    if request.method == 'POST':
+        report_type = request.POST.get('report_type', 'unknown')
+        # ... logic to generate the report ...
+        user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
+        log_audit_action(user_identifier, f"generated a custom '{report_type}' report")
+        return redirect('report_download_page')
+    return render(request, 'reports/generate_report_form.html')
+
+@login_required
+def deactivate_employee(request, employee_id):
+    employee = get_object_or_404(emp_registers, pk=employee_id)
+    if request.method == 'POST':
+        employee.save() # This save will trigger the post_save for emp_registers
+        user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
+        log_audit_action(user_identifier, f"deactivated employee {employee.name} (ID: {employee.pk})")
+        return redirect('employee_list')
+    return render(request, 'employee_deactivate_confirm.html', {'employee': employee})
+
+@login_required
+def update_profile_view(request):
+    # Assuming 'emp_registers' is your custom user model or linked to Auth.User
+    # You might need to adjust how you get the current emp_registers instance
+    # For example, if request.user is an Auth.User, and emp_registers is linked via OneToOneField:
+    # employee_instance = request.user.employee_profile # Or whatever your related_name is
+    # For simplicity, if emp_registers is your actual user model:
+    employee_instance = get_object_or_404(emp_registers, pk=request.user.pk)
 
     if request.method == 'POST':
-        profile.phone_number = request.POST.get('phone_number')
-        profile.guidance_phone_number = request.POST.get('guidance_phone_number')
-        profile.address = request.POST.get('address')
-        profile.father_guidance_name = request.POST.get('father_guidance_name')
-        profile.blood_group = request.POST.get('blood_group')
-        profile.permanent_address = request.POST.get('permanent_address')
-        profile.total_leave = request.POST.get('total_leave') or 0
-        profile.balance_leave = request.POST.get('balance_leave') or 0
-        profile.used_leave = request.POST.get('used_leave') or 0
-        profile.job_status = request.POST.get('job_status')
-
-        # Passport
-        profile.passport = request.POST.get('passport')
-        profile.passport_no = request.POST.get('passport_no')
-        profile.tel = request.POST.get('tel')
-        profile.nationality = request.POST.get('nationality')
-        profile.religion = request.POST.get('religion')
-        profile.marital_status = request.POST.get('marital_status')
-
-        # Emergency Contact
-        profile.primary_contact_name = request.POST.get('primary_contact_name')
-        profile.primary_relationship = request.POST.get('primary_relationship')
-        profile.primary_phone = request.POST.get('primary_phone')
-        profile.secondary_contact_name = request.POST.get('secondary_contact_name')
-        profile.secondary_relationship = request.POST.get('secondary_relationship')
-        profile.secondary_phone = request.POST.get('secondary_phone')
-
-        # Bank Info
-        profile.bank_name = request.POST.get('bank_name')
-        profile.bank_account_no = request.POST.get('bank_account_no')
-        profile.ifsc_code = request.POST.get('ifsc_code')
-        profile.pan_no = request.POST.get('pan_no')
-
-        # Education & Experience
-        profile.education_info = request.POST.get('education_info')
-        profile.experience = request.POST.get('experience')
-
-        # Image Upload
-        if 'profile_image' in request.FILES:
-            profile.profile_image = request.FILES['profile_image']
-
-        profile.save()
-        if 'document_file' in request.FILES:
-            doc_file = request.FILES['document_file']
-            doc_name = request.POST.get('document_name')
-            doc_type = request.POST.get('document_type')
-            if doc_name and doc_type:
-                Document.objects.create(
-                    emp_id=profile.emp_id,
-                    document_name=doc_name,
-                    document_type=doc_type,
-                    document_file=doc_file
-                )
-                messages.success(request, "Document uploaded.")
-                return redirect('update_profile')
-        messages.success(request, "Profile updated successfully.")
-        return redirect('update_profile')
-
-    return render(request, 'update_profile.html', {'profile': profile})
+        # ... process form data and save employee_instance ...
+        employee_instance.save() # This save will trigger the post_save for emp_registers
+        user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
+        log_audit_action(user_identifier, "updated own profile details")
+        return redirect('profile_view')
+    return render(request, 'profile_form.html', {'employee_instance': employee_instance})
+#
+# def update_profile(request,user_id):
+#     if 'user_id' not in request.session:
+#         return redirect('login')
+#     emp = emp_registers.objects.get(id=request.session['user_id'])  # Get logged-in user
+#     profile, created = EmployeeDetail.objects.get_or_create(emp_id=emp)  # Get or create profile
+#     print('\n\n\n 257')
+#     if request.method == 'POST':
+#         profile.phone_number = request.POST.get('phone_number')
+#         profile.guidance_phone_number = request.POST.get('guidance_phone_number')
+#         profile.address = request.POST.get('address')
+#         profile.father_guidance_name = request.POST.get('father_guidance_name')
+#         profile.blood_group = request.POST.get('blood_group')
+#         profile.permanent_address = request.POST.get('permanent_address')
+#         profile.total_leave = request.POST.get('total_leave') or 0
+#         profile.balance_leave = request.POST.get('balance_leave') or 0
+#         profile.used_leave = request.POST.get('used_leave') or 0
+#         profile.job_status = request.POST.get('job_status')
+#
+#         # Passport
+#         profile.passport = request.POST.get('passport')
+#         profile.passport_no = request.POST.get('passport_no')
+#         profile.tel = request.POST.get('tel')
+#         profile.nationality = request.POST.get('nationality')
+#         profile.religion = request.POST.get('religion')
+#         profile.marital_status = request.POST.get('marital_status')
+#
+#         # Emergency Contact
+#         profile.primary_contact_name = request.POST.get('primary_contact_name')
+#         profile.primary_relationship = request.POST.get('primary_relationship')
+#         profile.primary_phone = request.POST.get('primary_phone')
+#         profile.secondary_contact_name = request.POST.get('secondary_contact_name')
+#         profile.secondary_relationship = request.POST.get('secondary_relationship')
+#         profile.secondary_phone = request.POST.get('secondary_phone')
+#
+#         # Bank Info
+#         profile.bank_name = request.POST.get('bank_name')
+#         profile.bank_account_no = request.POST.get('bank_account_no')
+#         profile.ifsc_code = request.POST.get('ifsc_code')
+#         profile.pan_no = request.POST.get('pan_no')
+#
+#         # Image Upload
+#         if 'profile_image' in request.FILES:
+#             profile.profile_image = request.FILES['profile_image']
+#
+#         profile.save()
+#         education = Education.objects.filter(emp_id=emp.id).first()
+#         experience = Experience.objects.filter(emp_id=emp.id).first()
+#         # Education & Experience
+#         education.degree = request.POST.get('degree')
+#         education.institution = request.POST.get('institution')
+#         education.year_of_passing = request.POST.get('year_of_passing') or None
+#         education.grade = request.POST.get('grade')
+#         print('\n\n\n\nhcj', education.degree)
+#         education.save()
+#
+#         # Save or create experience
+#         if not experience:
+#             experience = Experience(emp_id=emp.id)
+#         experience.organization = request.POST.get('organization')
+#         experience.position = request.POST.get('position')
+#         experience.from_date = request.POST.get('from_date') or None
+#         experience.to_date = request.POST.get('to_date') or None
+#         experience.description = request.POST.get('description')
+#         experience.save()
+#
+#         if 'document_file' in request.FILES:
+#             doc_file = request.FILES['document_file']
+#             doc_name = request.POST.get('document_name')
+#             doc_type = request.POST.get('document_type')
+#             if doc_name and doc_type:
+#                 Document.objects.create(
+#                     emp_id=profile.emp_id,
+#                     document_name=doc_name,
+#                     document_type=doc_type,
+#                     document_file=doc_file
+#                 )
+#                 messages.success(request, "Document uploaded.")
+#                 return redirect('update_profile')
+#         messages.success(request, "Profile updated successfully.")
+#         return redirect('update_profile')
+#
+#     return render(request, 'update_profile.html', {'profile': profile})
 
 
 
@@ -667,9 +1128,10 @@ def add_project_view(request, user_id):
         # Add team members
         team_members = []
         for emp_id in team_member_ids:
+
             employee = emp_registers.objects.filter(id=emp_id).first()
             if employee:
-
+                print(employee.name)
                 member, _ = Member.objects.get_or_create(
                     emp_id=employee,
                     defaults={
@@ -826,6 +1288,105 @@ def delete_employee(request, id):
     messages.success(request, "emp_registers deleted successfully!")
     return redirect('employee_list')
 
+from .models import Video
+
+
+from moviepy import VideoFileClip
+from PIL import Image
+from io import BytesIO
+from django.core.files.base import ContentFile
+import os
+import uuid
+def learning_videos_dashboard(request):
+    categories = [choice[0] for choice in Video.CATEGORY_CHOICES]
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        category = request.POST.get('category')
+        file = request.FILES.get('file')
+
+        if title and category and file:
+            Video.objects.create(title=title, category=category, video=file)
+            if title and category and file:
+                # Save video first
+                video_obj = Video.objects.create(title=title, category=category, video=file)
+
+                # Generate thumbnail
+                try:
+                    clip = VideoFileClip(video_obj.video.path)
+                    frame = clip.get_frame(0)  # Get the first frame
+                    image = Image.fromarray(frame)
+                    buffer = BytesIO()
+                    image.save(buffer, format='JPEG')
+                    buffer.seek(0)
+
+                    thumbnail_filename = f"{uuid.uuid4().hex}.jpg"
+                    video_obj.thumbnail.save(thumbnail_filename, ContentFile(buffer.read()), save=True)
+                    clip.close()
+                except Exception as e:
+                    print(f"Thumbnail generation failed: {e}")
+
+                return redirect('learning_videos_dashboard')
+
+            return redirect('learning_videos_dashboard')
+
+    videos_by_category = {
+        cat: Video.objects.filter(category=cat) for cat in categories
+    }
+
+    return render(request, 'learning_videos_dashboard.html', {
+        'categories': categories,
+        'videos_by_category': videos_by_category
+    })
+
+
+# views.py
+from django.shortcuts import redirect, get_object_or_404
+from .models import Video
+import os
+from django.conf import settings
+
+
+def delete_video(request, video_id):
+    if request.method == 'POST':
+        video = get_object_or_404(Video, id=video_id)
+
+        # Remove video file from media folder
+        if video.video and os.path.isfile(video.video.path):
+            os.remove(video.video.path)
+
+        # Delete video entry from database
+        video.delete()
+
+    return redirect('learning_videos_dashboard')  # replace with actual view name
+from moviepy import VideoFileClip
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+import os
+from io import BytesIO
+from PIL import Image
+
+def add_learning_video(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        category = request.POST.get('category')
+        video_file = request.FILES.get('file')
+
+        video = LearningVideo(title=title, category=category, video=video_file)
+        video.save()
+
+        # Generate thumbnail
+
+        return redirect('your_learning_video_page_name')
+
+    ...
+
+
+# views.py
+
+from django.shortcuts import render
+
+
 
 
 from datetime import datetime, timedelta
@@ -908,8 +1469,9 @@ def apply_leave(request, user_id):
 
         available_balance = leave_details[leave_code].get('balance', 0)
 
+        # Check for balance
         if available_balance < leave_days:
-            messages.error(request, "Insufficient leave balance.")
+            messages.error(request, "Insufficient leave balance.", extra_tags='apply_leave')
             return redirect('apply_leave', user_id=user_id)
 
         pending_status = LeaveStatusMaster.objects.filter(status__iexact='pending').first()
@@ -1097,6 +1659,7 @@ def leave_dashboard(request, user_id):
 
     # Get logged-in user details
     username = request.session.get('name')
+    user_id=request.session.get('user_id')
     today = now().date()
 
     # Fetch leave records for the logged-in employee
@@ -1134,6 +1697,8 @@ def leave_dashboard(request, user_id):
                 'compensatory_leave_reason': leave.compensatory_leave_reason,  # Corrected to use dot notation
                 'leave_type': leave_type_obj,  # leave_type is a LeaveTypeMaster object
                 'half_day': half_day_list,  # Corrected to use previously generated half_day_list
+                'department':emp_data.department.name,
+                'id':leave.id
             })
 
             # Same field as in LeaveRecord,
@@ -1151,7 +1716,8 @@ def leave_dashboard(request, user_id):
     return render(request, 'leave_dashboard.html', {
         'leave_data': leave_data,
         'username': username,
-        'today': today,'emp':emp
+        'today': today,'emp':emp,
+        'user_id':user_id,
     })
 
 from django.http import JsonResponse
@@ -1159,16 +1725,21 @@ from .models import Task  # Replace with your actual Task model
 
 def get_tasks(request):
     project_id = request.GET.get('project_id')
+    user_id = request.GET.get('user_id')
+    print(user_id)
 
     if project_id:
-        tasks = Task.objects.filter(project_id=project_id).values('id', 'title')
+
+        tasks = Task.objects.filter(
+            project_id=project_id,
+            assigned_to__emp_id=user_id
+        ).exclude(
+            status__status__iexact='Complete'
+        ).values('id', 'title')
         task_list = [{'id': task['id'], 'name': task['title']} for task in tasks]
 
         return JsonResponse({'tasks': task_list})
     return JsonResponse({'tasks': []})
-
-
-
 
 
 
@@ -1249,10 +1820,23 @@ def update_leave_status(request, user_id):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+from django.shortcuts import render, redirect
+from .models import Holiday
+from django.utils.dateparse import parse_date
 
+def holiday_list_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('holiday_name')
+        date_str = request.POST.get('holiday_date')
 
+        if name and date_str:
+            date = parse_date(date_str)
+            Holiday.objects.create(name=name, date=date)
 
+        return redirect('holiday_list_view')
 
+    holidays = Holiday.objects.all().order_by('date')
+    return render(request, 'holiday_list.html', {'holidays': holidays})
 
 from django.http import JsonResponse
 from .models import Task
@@ -1542,7 +2126,7 @@ def update_timesheet(request, user_id):
         'days': days,
         'tasks': tasks
     })
-
+from django.conf import settings
 def image_timesheet_record(request,user_id):
     user_name = request.session.get('name')  # Assuming user_id is saved in session
     today = date.today()
@@ -1561,8 +2145,14 @@ def image_timesheet_record(request,user_id):
     timesheets = Timesheet.objects.filter(
             emp_id=user_id,
             description__isnull=True
-        ).values('id', 'emp_id', 'date', 'attachment')
+        ).values('id', 'emp_id', 'date', 'attachment').order_by('-id')
     emp=emp_registers.objects.get(id=user_id)
+
+    for ts in timesheets:
+        if ts['attachment']:
+            ts['attachment_url'] = settings.MEDIA_URL + ts['attachment']
+        else:
+            ts['attachment_url'] = None
     for t in timesheets:
 
         t['end'] = t['date'] + timedelta(days=5)  # Add 5 days to the start date
@@ -1573,12 +2163,28 @@ def image_timesheet_record(request,user_id):
         team_timesheets = Timesheet.objects.filter(
             Q(pname__manager__startswith=user_name) | Q(pname__admin__startswith=user_name),
             date__range=[start_of_last_week, end_of_week]
-        ).values('id', 'emp_id', 'date', 'attachment')
+        ).values('id', 'emp_id', 'date', 'attachment','upload_on').order_by('-id')
 
+        for ts in team_timesheets:
+            if ts['attachment']:
+                ts['attachment_url'] = settings.MEDIA_URL + ts['attachment']
+            else:
+                ts['attachment_url'] = None
+
+        print("h")
+        for t in team_timesheets:
+            emp=emp_registers.objects.get(id=t['emp_id'])
+            print('\n\n\n\na aaaa',t)
+            t['name']=emp.name
+            team_timesheet.append(t)
         for a in team_timesheets:
             a['end'] = a['date'] + timedelta(days=5)
             team_timesheet.append(a)
     return render(request, 'image_timesheet_record.html', context={'timesheet': timesheet,'team_timesheet':team_timesheet})
+
+
+
+
 
 
 def image_timesheet(request, user_id):
@@ -1606,7 +2212,8 @@ def image_timesheet(request, user_id):
                 attachment=attachment,
                 date=start_date,
                 pname=projects,
-                emp_id=emp
+                emp_id=emp,
+                upload_on=timezone.now().date()
             )
             messages.success(request, "Attachment uploaded successfully!")
             return redirect('image_timesheet_record', user_id=user_id)
@@ -1660,7 +2267,7 @@ def task_list_view(request, user_id):
     emp_name = employee.name
 
     # Filter tasks where assigned_to.name matches the employee's name
-    tasks = Task.objects.filter(assigned_to__name=emp_name).order_by('-id')
+    tasks = Task.objects.filter(assigned_to__emp_id=employee.id).order_by('-id')
 
     context = {
         'tasks': tasks,
@@ -1690,6 +2297,7 @@ def add_task_view(request, user_id):
 
     projects = Project.objects.filter(Q(manager=emp) | Q(admin=emp.name) & ~Q(status__status='complete'))
     members = Member.objects.filter(projects__in=projects).distinct()
+
 
     if request.method == "POST":
         project_id = request.POST.get('project')
@@ -1746,6 +2354,20 @@ def add_task_view(request, user_id):
         'members': members,
         'user_id': user_id
     })
+from django.http import JsonResponse
+ # Adjust import based on your model names
+#
+# def get_members(request, project_id):
+#
+#     try:
+#         project = Project.objects.get(id=project_id)
+#         members = project.members.all()  # Adjust this to your actual relation
+#         data = [{"id": member.id, "name": member.emp_id} for member in members]
+#         print('\n\n\n\n\n',data)  # Log members to see if they're correct
+#         return JsonResponse(data, safe=False)
+#     except Project.DoesNotExist:
+#         return JsonResponse([], safe=False)  # Return empty list if project is not found
+
 
 
 def get_members(request, project_id):
@@ -1844,6 +2466,9 @@ def user_timesheet(request):
         'timesheets': page_obj.object_list  # Only display the timesheets for the current page
     })
 
+import os
+import certifi
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 def reset_password(request):
     step = 'email'  # default step
@@ -1856,12 +2481,28 @@ def reset_password(request):
             otp = str(random.randint(100000, 999999))
             request.session['reset_email'] = email
             request.session['otp'] = otp
+            print(f"Sending OTP to {email}...")
 
-            # Send OTP email
+            print(f"From: {settings.DEFAULT_FROM_EMAIL}")
+            print(f"Recipient: {email}")
+
             send_mail(
-                'Your OTP for Password Reset',
-                f'Your OTP is: {otp}',
-                'noreply@yourdomain.com',
+                'Password Reset Request - Your OTP',
+                f"""
+                Dear User,
+
+                We received a request to reset your password. Please use the One-Time Password (OTP) below to proceed:
+
+                OTP: {otp}
+
+                This OTP is valid for the next 15 minutes. If you did not request a password reset, please ignore this email.
+
+                If you have any issues, please contact our support team.
+
+                Best regards,
+                Your Company Team
+                """,
+                settings.DEFAULT_FROM_EMAIL,  # Use the default sender email from settings
                 [email],
                 fail_silently=False,
             )
@@ -2015,19 +2656,67 @@ def update_profile(request, user_id):
         profile.save()
 
         # Education (create new entries)
-        Education.objects.filter(emp_id=emp).delete()
-        i = 0
-        while True:
-            if not request.POST.get(f'degree_{i + 1}'):
-                break
-            Education.objects.create(
+        education =Education.objects.filter(emp_id=emp)
+       #
+        print(request.POST)
+
+        existing_degrees = Education.objects.filter(emp_id=emp).values_list('degree', flat=True)
+        count = int(request.POST.get("education_count"))
+        print("\n\n\n",count)
+        for i in range(count):
+
+            index = i + 1
+            degree = request.POST.get(f'degree_{index}')
+            s=request.POST.get(f'year_{index}')
+            print(i,degree,s,)
+
+            if not degree :
+                continue
+            if degree in existing_degrees:
+                continue  # skip if degree already exists for this employee
+
+            year_str = request.POST.get(f'year_{index}')
+            institution = request.POST.get(f'institution_{index}')
+            grade = request.POST.get(f'grade_{index}')
+
+            try:
+                year = int(year_str)
+            except (ValueError, TypeError):
+                continue  # skip invalid year
+            # skip empty row
+            # Education.objects.create(
+            #     emp_id=emp,
+            #     degree=degree,
+            #     institution=request.POST.get(f'institution_{index}'),
+            #     year_of_passing=int(s),
+            #     grade=request.POST.get(f'grade_{index}')
+            # )
+            education = Education(
                 emp_id=emp,
-                degree=request.POST.get(f'degree_{i + 1}'),
-                institution=request.POST.get(f'institution_{i + 1}'),
-                year_of_passing=request.POST.get(f'year_{i + 1}'),
-                grade=request.POST.get(f'grade_{i + 1}')
+                degree=degree,
+                institution=request.POST.get(f'institution_{index}'),
+                year_of_passing=int(s),
+                grade=request.POST.get(f'grade_{index}')
             )
-            i += 1
+            print(education)
+            education.save()
+
+
+
+        # while True:
+        #
+        #     if not request.POST.get(f'degree_{i + 1}'):
+        #         break
+        #     s=request.POST.get(f'year_{i + 1}')
+        #     Education.objects.create(
+        #         emp_id=emp,
+        #         degree=request.POST.get(f'degree_{i + 1}'),
+        #         institution=request.POST.get(f'institution_{i + 1}'),
+        #         year_of_passing=int(s),
+        #         grade=request.POST.get(f'grade_{i + 1}')
+        #     )
+        #
+        #     i += 1
 
         # Experience (update if exist)
         Experience.objects.filter(emp_id=emp).delete()
@@ -2048,17 +2737,17 @@ def update_profile(request, user_id):
         # Document (update if exist)
         Document.objects.filter(emp_id=emp).delete()
         i = 0
-        while True:
-            if not request.POST.get(f'document_type_{i + 1}'):
-                break
-            doc_file = request.FILES.get(f'document_file_{i + 1}')
-            Document.objects.create(
-                emp_id=emp,
-                document_type=request.POST.get(f'document_type_{i + 1}'),
-                document_name=request.POST.get(f'document_name_{i + 1}'),
-                document_file=doc_file
-            )
-            i += 1
+        # while True:
+        #     if not request.POST.get(f'document_type_{i + 1}'):
+        #         break
+        #     doc_file = request.FILES.get(f'document_file_{i + 1}')
+        #     Document.objects.create(
+        #         emp_id=emp,
+        #         document_type=request.POST.get(f'document_type_{i + 1}'),
+        #         document_name=request.POST.get(f'document_name_{i + 1}'),
+        #         document_file=doc_file
+        #     )
+        #     i += 1
 
         messages.success(request, "Profile and related information updated with history.")
         return redirect('update_profile', user_id=user_id)
@@ -2073,11 +2762,60 @@ def update_profile(request, user_id):
         'educations': educations,
         'experiences': experiences,
         'documents': documents,
-        'employee_name': emp.name,
+        'employee': emp,
         'now': now()
     })
+def delete_education(request, pk):
+    try:
+        # Adjust this if your education model relates differently to the user
 
 
+
+        # Attempt to retrieve the education object
+        education = Education.objects.get(pk=pk)
+        print("Found education:", education)
+        education.delete()
+        return JsonResponse({'success': True})
+    except Education.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Education not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def delete_experience(request, pk):
+    # Ensure the user is logged in
+    if request.method == 'POST':
+        try:
+            # Find the experience by ID and ensure it belongs to the logged-in user
+            experience = Experience.objects.get(pk=pk)
+            experience.delete()  # Delete the experience entry
+            return JsonResponse({'success': True})
+        except Experience.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Experience not found or not owned by user'})
+
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def handbook_record(request, handbook_id):
+    handbook = get_object_or_404(Handbook, id=handbook_id)
+    employees = emp_registers.objects.all()  # All active employees
+
+    # Create missing acknowledgment records for this handbook
+    for employee in employees:
+        Acknowledgment.objects.get_or_create(
+            employee=employee,
+            handbook=handbook,
+            defaults={
+                'acknowledgment': 'Not Acknowladge',  # Default to not acknowledged
+                'acknowledgment_date': None
+            }
+        )
+
+    # Now fetch all acknowledgment records
+    acknowledgments = Acknowledgment.objects.filter(handbook=handbook).select_related('employee', 'handbook')
+
+    return render(request, 'handbook_record.html', {
+        'handbook': handbook,
+        'acknowledgments': acknowledgments
+    })
 from django.shortcuts import render, get_object_or_404
 from .models import EmployeeDetail, Education, Experience
 
@@ -2662,9 +3400,188 @@ def leave_type_detail_view(request, leave_type_id):
     })
 
 
-#
-# def get_tasks(request):
-#     project_id = request.GET.get('project_id')
-#     tasks = Task.objects.filter(project_id=project_id)
-#     task_data = [{'id': task.id, 'title': task.title} for task in tasks]
-#     return JsonResponse({'tasks': task_data})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from datetime import datetime, timedelta
+from django.utils import timezone
+from .models import emp_registers, Resignation, ResignationStatusMaster, ResignStatusAction
+
+def resignation_form(request, user_id):
+    employee = get_object_or_404(emp_registers, id=user_id)
+
+    # Get all resignations for this employee
+    resignation_qs = Resignation.objects.filter(employee=employee).order_by('-id')  # latest first
+
+    if not resignation_qs.exists():
+        # No resignation found, show resignation form
+        if request.method == 'POST':
+            resign_date_str = request.POST.get('resign_date')
+            reason = request.POST.get('reason')
+
+            # Helper to convert 'yes'/'no' to True/False
+            def to_bool(value):
+                return value == 'yes'
+
+            selected_elsewhere = to_bool(request.POST.get('selected_elsewhere'))
+            bond_over = to_bool(request.POST.get('bond_over'))
+            advance_salary = to_bool(request.POST.get('advance_salary'))
+            dues_pending = to_bool(request.POST.get('dues_pending'))
+
+            resign_date = datetime.strptime(resign_date_str, "%Y-%m-%d").date()
+            last_date = resign_date + timedelta(days=90)
+
+            default_status = ResignationStatusMaster.objects.get(id=1)
+
+            # Create new resignation
+            resignation = Resignation.objects.create(
+                employee=employee,
+                resign_date=resign_date,
+                last_date=last_date,
+                reason=reason,
+                selected_elsewhere=selected_elsewhere,
+                bond_over=bond_over,
+                advance_salary=advance_salary,
+                dues_pending=dues_pending,
+                resign_status=default_status
+            )
+
+            # Create initial status action
+            ResignStatusAction.objects.create(
+                resignation=resignation,
+                action=default_status,
+                action_by=employee,
+                action_date=timezone.now()
+            )
+
+            return redirect('send_exit_email', user_id=user_id)
+
+        return render(request, 'exit_management.html', {'employee': employee})
+
+    else:
+        latest_resignation = resignation_qs.first()
+        if latest_resignation.resign_status.id == 1:  # Pending status
+            return render(request, 'send_exit_email.html', {'employee': employee})
+        else:
+            return render(request, 'resignation_activity.html', {'employee': employee, 'resignation': latest_resignation})
+
+
+
+def get_tasks(request):
+    project_id = request.GET.get('project_id')
+    tasks = Task.objects.filter(project_id=project_id)
+    task_data = [{'id': task.id, 'title': task.title} for task in tasks]
+    return JsonResponse({'tasks': task_data})
+
+from django.core.mail import EmailMultiAlternatives
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt  # optional for testing
+from django.conf import settings
+
+from django.core.mail import EmailMultiAlternatives
+from django.contrib import messages
+from django.shortcuts import redirect, render, get_object_or_404
+from .models import SentEmail, emp_registers  # Ensure you import your model
+
+def send_exit_email(request, user_id):
+
+    if request.method == 'POST':
+        print('inside send mail post \n\n\n')
+        from_email = request.POST.get('from')
+        to_email = request.POST.get('to')
+        cc = request.POST.get('cc', '')
+        bcc = request.POST.get('bcc', '')
+        subject = request.POST.get('subject')
+        message = request.POST.get('message')
+
+        to_list = [to_email]
+        cc_list = [email.strip() for email in cc.split(',') if email.strip()]
+        bcc_list = [email.strip() for email in bcc.split(',') if email.strip()]
+
+        try:
+            print(" inside try \n\n")
+            email_msg = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=from_email,
+                to=to_list,
+                cc=cc_list,
+                bcc=bcc_list,
+            )
+            email_msg.attach_alternative(message, "text/html")
+            print(email_msg)
+            email_msg.send()
+
+            # Save to DB after successful send
+            employee = get_object_or_404(emp_registers, id=user_id)
+            SentEmail.objects.create(
+                employee=employee,
+                recipient_email=to_email,
+                subject=subject,
+                message_body=message
+            )
+
+            messages.success(request, "Email sent and stored successfully!")
+        except Exception as e:
+            messages.error(request, f"Failed to send email: {e}")
+
+        return redirect('send_exit_email', user_id)
+
+    return render(request, 'send_exit_email.html')
+# your_app/views.py
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .audit_logger import log_audit_action # Import your new logging utility
+from .models import LeaveRecord, Project, emp_registers # Import models as needed by your views
+
+@login_required
+def approve_leave_view(request, leave_id):
+    leave_record = get_object_or_404(LeaveRecord, pk=leave_id)
+    if request.method == 'POST':
+        # ... logic to approve the leave ...
+        leave_record.approval_status = LeaveRecord.objects.get(status='Approved') # Assuming you fetch the Approved status
+        leave_record.approved_by = request.user.emp_registers.name # Assuming user.emp_registers gives the employee instance
+        leave_record.save() # This save will trigger the post_save signal for LeaveRecord
+
+        log_audit_action(request.user.username,
+                         f"approved leave application (ID: {leave_id}) for {leave_record.emp_id.name}")
+        return redirect('leave_list')
+    return render(request, 'approve_leave_form.html', {'leave_record': leave_record})
+
+@login_required
+def view_all_projects(request):
+    projects = Project.objects.all()
+    log_audit_action(request.user.username, "opened all projects list")
+    return render(request, 'projects/project_list.html', {'projects': projects})
+
+@login_required
+def generate_custom_report(request):
+    if request.method == 'POST':
+        report_type = request.POST.get('report_type', 'unknown')
+        # ... logic to generate the report ...
+        log_audit_action(request.user.username, f"generated a custom '{report_type}' report")
+        return redirect('report_download_page')
+    return render(request, 'reports/generate_report_form.html')
+
+# Example for an admin action not directly tied to a model save/delete
+# such as deactivating a user (which might not delete the emp_registers entry)
+@login_required
+def deactivate_employee(request, employee_id):
+    employee = get_object_or_404(emp_registers, pk=employee_id)
+    if request.method == 'POST':
+        # Assuming you have a 'is_active' or 'job_status' field to deactivate
+        employee.job_status = JobStatusMaster.objects.get(status='Inactive') # Or set is_active=False
+        employee.save()
+        log_audit_action(request.user.username, f"deactivated employee {employee.name} (ID: {employee.pk})")
+        return redirect('employee_list')
+    return render(request, 'employee_deactivate_confirm.html', {'employee': employee})
+
+# You'll do this for all other views where specific, non-CRUD actions happen.
+from django.http import HttpResponse
+from .utils.audit import log_user_action
+
+def sample_view(request):
+    if request.user.is_authenticated:
+        log_user_action(request.user.id, "Accessed sample view")
+    return HttpResponse("Audit logged.")
