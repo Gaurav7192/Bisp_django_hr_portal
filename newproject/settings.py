@@ -36,9 +36,13 @@ SECRET_KEY = 'django-insecure-@vdlq9$q7b)56bd*-kn_@uoh=h9x(tjar+4$d_s=fdb_21p!w7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['GAURAV7192.pythonanywhere.com']
+ALLOWED_HOSTS = ['GAURAV7192.pythonanywhere.com','127.0.0.1']
 
+# settings.py
+import os
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+AUDIT_LOG_DIR = os.path.join(BASE_DIR, 'audit_logs')
 
 # Application definition
 

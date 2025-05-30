@@ -14,8 +14,9 @@ class Command(BaseCommand):
 
         ist = pytz.timezone("Asia/Kolkata")
         yesterday = (datetime.now(ist) - timedelta(days=1)).date()
-        zip_path = os.path.join(ZIP_DIR, f"audit_{yesterday}.zip")
-
+        # Changed line for the desired zip file name format
+        zip_file_name = yesterday.strftime("%d-%m-%Y") + " zipped audit.zip"
+        zip_path = os.path.join(ZIP_DIR, zip_file_name)
         with zipfile.ZipFile(zip_path, "w") as zipf:
             for file in os.listdir(AUDIT_DIR):
                 if file.endswith(f"{yesterday}.txt"):

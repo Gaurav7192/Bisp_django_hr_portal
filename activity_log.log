@@ -4382,3 +4382,1101 @@ ERROR 2025-05-28 15:49:12,315 basehttp "POST /reset_password/ HTTP/1.1" 500 1205
 INFO 2025-05-28 15:55:24,921 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\newproject\settings.py changed, reloading.
 INFO 2025-05-28 15:55:25,192 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\newproject\settings.py changed, reloading.
 INFO 2025-05-28 15:55:28,684 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 11:17:12,325 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 11:17:38,056 exception Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\http\request.py", line 186, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+WARNING 2025-05-29 11:17:38,137 log Bad Request: /
+WARNING 2025-05-29 11:17:38,138 basehttp "GET / HTTP/1.1" 400 71313
+ERROR 2025-05-29 11:17:38,374 exception Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\http\request.py", line 186, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+WARNING 2025-05-29 11:17:38,414 log Bad Request: /
+WARNING 2025-05-29 11:17:38,416 basehttp "GET / HTTP/1.1" 400 71039
+ERROR 2025-05-29 11:17:39,192 exception Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\deprecation.py", line 119, in __call__
+    response = self.process_request(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\http\request.py", line 186, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: '127.0.0.1:8000'. You may need to add '127.0.0.1' to ALLOWED_HOSTS.
+WARNING 2025-05-29 11:17:39,215 log Bad Request: /favicon.ico
+WARNING 2025-05-29 11:17:39,216 basehttp "GET /favicon.ico HTTP/1.1" 400 70864
+INFO 2025-05-29 11:19:15,605 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\newproject\settings.py changed, reloading.
+INFO 2025-05-29 11:19:16,945 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 11:19:18,045 basehttp "GET / HTTP/1.1" 200 2752
+WARNING 2025-05-29 11:19:18,357 log Not Found: /favicon.ico
+WARNING 2025-05-29 11:19:18,358 basehttp "GET /favicon.ico HTTP/1.1" 404 18410
+INFO 2025-05-29 11:19:18,415 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 11:19:30,785 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 11:19:30,819 basehttp "GET /d2/10/ HTTP/1.1" 200 57500
+WARNING 2025-05-29 11:19:30,913 log Not Found: /d2/10/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 11:19:30,922 basehttp "GET /d2/10/dist/img/user1-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:30,935 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:19:30,935 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:19:30,936 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:19:30,974 log Not Found: /d2/10/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 11:19:30,975 basehttp "GET /d2/10/dist/img/user3-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:30,985 log Not Found: /d2/10/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 11:19:30,997 log Not Found: /d2/10/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 11:19:31,012 log Not Found: /d2/10/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 11:19:31,013 basehttp "GET /d2/10/dist/img/user7-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:31,017 basehttp "GET /d2/10/dist/img/user4-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:31,038 log Not Found: /d2/10/dist/img/default-150x150.png
+WARNING 2025-05-29 11:19:31,039 basehttp "GET /d2/10/dist/img/user5-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:31,067 log Not Found: /d2/10/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 11:19:31,067 basehttp "GET /d2/10/dist/img/default-150x150.png HTTP/1.1" 404 18479
+WARNING 2025-05-29 11:19:31,080 log Not Found: /d2/10/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 11:19:31,089 log Not Found: /d2/10/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 11:19:31,091 basehttp "GET /d2/10/dist/img/user6-128x128.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:31,109 basehttp "GET /d2/10/dist/img/user2-160x160.jpg HTTP/1.1" 404 18473
+WARNING 2025-05-29 11:19:31,110 basehttp "GET /d2/10/dist/img/user8-128x128.jpg HTTP/1.1" 404 18473
+INFO 2025-05-29 11:19:33,897 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 11:19:33,904 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 11:19:42,550 basehttp "POST / HTTP/1.1" 200 2961
+INFO 2025-05-29 11:26:34,275 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 11:26:38,596 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 11:26:45,671 basehttp "POST / HTTP/1.1" 200 2981
+INFO 2025-05-29 11:26:53,900 basehttp "POST / HTTP/1.1" 200 2981
+INFO 2025-05-29 11:27:05,478 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 11:37:34,226 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\audit_logger.py changed, reloading.
+INFO 2025-05-29 11:37:35,689 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 11:39:33,621 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 11:39:33,657 basehttp "GET /d2/4/ HTTP/1.1" 200 53818
+WARNING 2025-05-29 11:39:33,752 log Not Found: /d2/4/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 11:39:33,755 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:39:33,756 basehttp "GET /d2/4/dist/img/user1-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,769 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:39:33,773 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:39:33,804 log Not Found: /d2/4/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 11:39:33,813 log Not Found: /d2/4/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 11:39:33,813 basehttp "GET /d2/4/dist/img/user3-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,819 log Not Found: /d2/4/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 11:39:33,823 basehttp "GET /d2/4/dist/img/user7-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,829 log Not Found: /d2/4/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 11:39:33,838 log Not Found: /d2/4/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 11:39:33,845 log Not Found: /d2/4/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 11:39:33,845 basehttp "GET /d2/4/dist/img/user5-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,853 log Not Found: /d2/4/dist/img/default-150x150.png
+WARNING 2025-05-29 11:39:33,858 log Not Found: /d2/4/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 11:39:33,859 basehttp "GET /d2/4/dist/img/user8-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,859 basehttp "GET /d2/4/dist/img/user6-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,860 basehttp "GET /d2/4/dist/img/user4-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:39:33,861 basehttp "GET /d2/4/dist/img/default-150x150.png HTTP/1.1" 404 18476
+WARNING 2025-05-29 11:39:33,861 basehttp "GET /d2/4/dist/img/user2-160x160.jpg HTTP/1.1" 404 18470
+INFO 2025-05-29 11:40:00,664 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 11:40:00,673 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 11:40:08,541 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 11:40:16,134 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 11:40:26,640 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 11:40:44,124 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 11:40:44,139 basehttp "GET /d2/2/ HTTP/1.1" 200 57474
+WARNING 2025-05-29 11:40:44,171 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:40:44,175 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:40:44,220 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 11:40:44,228 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 11:40:44,234 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 11:40:44,239 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 11:40:44,245 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 11:40:44,251 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,251 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,252 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,253 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,253 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,256 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:40:44,261 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 11:40:44,273 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 11:40:44,281 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 11:40:44,286 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-29 11:40:44,286 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,287 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,288 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:40:44,288 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18476
+INFO 2025-05-29 11:41:58,162 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\audit_logger.py changed, reloading.
+INFO 2025-05-29 11:41:59,378 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 11:42:32,649 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 11:42:32,660 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 11:42:46,057 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 11:42:46,075 basehttp "GET /d2/7/ HTTP/1.1" 200 53821
+WARNING 2025-05-29 11:42:46,153 log Not Found: /d2/7/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 11:42:46,158 basehttp "GET /d2/7/dist/img/user1-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,159 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:42:46,168 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:42:46,168 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:42:46,208 log Not Found: /d2/7/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 11:42:46,211 basehttp "GET /d2/7/dist/img/user3-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,223 log Not Found: /d2/7/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 11:42:46,231 log Not Found: /d2/7/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 11:42:46,236 log Not Found: /d2/7/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 11:42:46,238 basehttp "GET /d2/7/dist/img/user7-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,241 basehttp "GET /d2/7/dist/img/user2-160x160.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,246 log Not Found: /d2/7/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 11:42:46,247 basehttp "GET /d2/7/dist/img/user5-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,254 log Not Found: /d2/7/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 11:42:46,260 log Not Found: /d2/7/dist/img/default-150x150.png
+WARNING 2025-05-29 11:42:46,266 log Not Found: /d2/7/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 11:42:46,266 basehttp "GET /d2/7/dist/img/user6-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,267 basehttp "GET /d2/7/dist/img/user8-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:42:46,267 basehttp "GET /d2/7/dist/img/default-150x150.png HTTP/1.1" 404 18476
+WARNING 2025-05-29 11:42:46,267 basehttp "GET /d2/7/dist/img/user4-128x128.jpg HTTP/1.1" 404 18470
+INFO 2025-05-29 11:42:56,198 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 11:42:56,203 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 11:44:03,476 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 11:44:03,486 basehttp "GET /d2/7/ HTTP/1.1" 200 53821
+WARNING 2025-05-29 11:44:03,567 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:03,572 log Not Found: /d2/7/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 11:44:03,581 basehttp "GET /d2/7/dist/img/user1-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,584 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:03,585 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:03,634 log Not Found: /d2/7/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 11:44:03,636 basehttp "GET /d2/7/dist/img/user3-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,644 log Not Found: /d2/7/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 11:44:03,654 log Not Found: /d2/7/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 11:44:03,656 basehttp "GET /d2/7/dist/img/user7-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,669 log Not Found: /d2/7/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 11:44:03,673 basehttp "GET /d2/7/dist/img/user4-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,679 log Not Found: /d2/7/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 11:44:03,690 log Not Found: /d2/7/dist/img/default-150x150.png
+WARNING 2025-05-29 11:44:03,690 basehttp "GET /d2/7/dist/img/user5-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,698 log Not Found: /d2/7/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 11:44:03,698 basehttp "GET /d2/7/dist/img/user6-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,703 basehttp "GET /d2/7/dist/img/default-150x150.png HTTP/1.1" 404 18476
+WARNING 2025-05-29 11:44:03,704 log Not Found: /d2/7/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 11:44:03,705 basehttp "GET /d2/7/dist/img/user8-128x128.jpg HTTP/1.1" 404 18470
+WARNING 2025-05-29 11:44:03,706 basehttp "GET /d2/7/dist/img/user2-160x160.jpg HTTP/1.1" 404 18470
+INFO 2025-05-29 11:44:09,381 basehttp "GET /apply_leave/7/ HTTP/1.1" 200 24632
+WARNING 2025-05-29 11:44:09,463 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:09,468 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:09,469 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 11:44:27,410 basehttp "POST /apply_leave/7/ HTTP/1.1" 302 0
+INFO 2025-05-29 11:44:27,486 basehttp "GET /leave_dashboard/7/ HTTP/1.1" 200 26915
+WARNING 2025-05-29 11:44:27,557 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:27,567 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 11:44:27,569 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 14:29:40,461 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 14:29:44,539 basehttp "GET /leave_dashboard/7/ HTTP/1.1" 200 26915
+WARNING 2025-05-29 14:29:44,718 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:29:44,727 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:29:44,728 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 14:29:48,012 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 14:29:48,025 basehttp "GET / HTTP/1.1" 200 2915
+INFO 2025-05-29 14:29:57,076 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 14:30:06,265 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 14:30:06,282 basehttp "GET /d2/2/ HTTP/1.1" 200 57623
+WARNING 2025-05-29 14:30:06,316 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:30:06,316 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:30:06,360 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 14:30:06,367 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 14:30:06,372 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,375 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,379 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 14:30:06,379 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:30:06,385 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 14:30:06,391 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 14:30:06,396 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 14:30:06,396 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,397 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,398 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,398 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,407 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 14:30:06,412 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 14:30:06,419 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-29 14:30:06,420 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,420 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 14:30:06,421 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18739
+ERROR 2025-05-29 14:30:09,612 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3621, in attendance_view
+    leave_records = LeaveRecord.objects.filter(
+        Q(start_date__year=selected_year, start_date__month=selected_month) |
+    ...<2 lines>...
+        approval_status__status_name='Approved' # Assumes LeaveStatusMaster has a 'status_name' field
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1491, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1509, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1516, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1643, in add_q
+    clause, _ = self._add_q(q_object, can_reuse)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1675, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1585, in build_filter
+    condition = self.build_lookup(lookups, col, value)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1406, in build_lookup
+    lhs = self.try_transform(lhs, lookup_name)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1455, in try_transform
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Unsupported lookup 'status_name' for ForeignKey or join on the field not permitted.
+ERROR 2025-05-29 14:30:09,636 basehttp "GET /attendance/ HTTP/1.1" 500 125065
+INFO 2025-05-29 14:31:30,054 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:31:31,391 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 14:31:35,636 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\fields\__init__.py", line 2128, in get_prep_value
+    return int(value)
+ValueError: invalid literal for int() with base 10: 'Approved'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3621, in attendance_view
+    leave_records = LeaveRecord.objects.filter(
+        Q(start_date__year=selected_year, start_date__month=selected_month) |
+    ...<2 lines>...
+        approval_status='Approved' # Assumes LeaveStatusMaster has a 'status_name' field
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1491, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1509, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1516, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1643, in add_q
+    clause, _ = self._add_q(q_object, can_reuse)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1675, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1585, in build_filter
+    condition = self.build_lookup(lookups, col, value)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1412, in build_lookup
+    lookup = lookup_class(lhs, rhs)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\lookups.py", line 38, in __init__
+    self.rhs = self.get_prep_lookup()
+               ~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\fields\related_lookups.py", line 112, in get_prep_lookup
+    self.rhs = target_field.get_prep_value(self.rhs)
+               ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\fields\__init__.py", line 2130, in get_prep_value
+    raise e.__class__(
+        "Field '%s' expected a number but got %r." % (self.name, value),
+    ) from e
+ValueError: Field 'id' expected a number but got 'Approved'.
+ERROR 2025-05-29 14:31:35,659 basehttp "GET /attendance/ HTTP/1.1" 500 137227
+INFO 2025-05-29 14:33:26,559 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:33:31,105 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 14:33:38,735 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3723, in attendance_view
+    return render(request, 'attendance.html', context)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 861, in do_for
+    sequence = parser.compile_filter(bits[in_index + 1])
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 705, in __init__
+    filter_func = parser.find_filter(filter_name)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 615, in find_filter
+    raise TemplateSyntaxError("Invalid filter: '%s'" % filter_name)
+django.template.exceptions.TemplateSyntaxError: Invalid filter: 'split'
+ERROR 2025-05-29 14:33:38,746 basehttp "GET /attendance/ HTTP/1.1" 500 284684
+INFO 2025-05-29 14:40:11,085 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:40:13,285 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 14:40:32,858 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3732, in attendance_view
+    return render(request, 'attendance.html', context)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 861, in do_for
+    sequence = parser.compile_filter(bits[in_index + 1])
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 705, in __init__
+    filter_func = parser.find_filter(filter_name)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 615, in find_filter
+    raise TemplateSyntaxError("Invalid filter: '%s'" % filter_name)
+django.template.exceptions.TemplateSyntaxError: Invalid filter: 'split'
+ERROR 2025-05-29 14:40:32,865 basehttp "GET /attendance/ HTTP/1.1" 500 284523
+INFO 2025-05-29 14:45:15,586 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:45:17,487 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 14:45:34,171 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3741, in attendance_view
+    return render(request, 'attendance.html', context)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 299, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 862, in do_for
+    nodelist_loop = parser.parse(
+        (
+    ...<2 lines>...
+        )
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 862, in do_for
+    nodelist_loop = parser.parse(
+        (
+    ...<2 lines>...
+        )
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 489, in parse
+    raise self.error(token, e)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 487, in parse
+    filter_expression = self.compile_filter(token.contents)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 609, in compile_filter
+    return FilterExpression(token, self)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 710, in __init__
+    raise TemplateSyntaxError(
+    ...<2 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Could not parse the remainder: ':day_num.class' from 'employee.days.get_item:day_num.class'
+ERROR 2025-05-29 14:45:34,185 basehttp "GET /attendance/ HTTP/1.1" 500 269710
+INFO 2025-05-29 14:49:22,060 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:49:26,390 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 14:49:33,777 basehttp "GET /attendance/ HTTP/1.1" 200 218738
+WARNING 2025-05-29 14:49:33,860 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:49:33,861 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:49:33,861 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 14:56:02,093 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:56:04,852 autoreload Watching for file changes with StatReloader
+ERROR 2025-05-29 14:57:19,317 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3653, in attendance_view
+    leave_records = LeaveRecord.objects.filter(
+        Q(start_date__year=selected_year, start_date__month=selected_month) |
+    ...<2 lines>...
+        approval_status__status_name='Approved' # Ensure 'Approved' is the correct status name
+    )
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1491, in filter
+    return self._filter_or_exclude(False, args, kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1509, in _filter_or_exclude
+    clone._filter_or_exclude_inplace(negate, args, kwargs)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\query.py", line 1516, in _filter_or_exclude_inplace
+    self._query.add_q(Q(*args, **kwargs))
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1643, in add_q
+    clause, _ = self._add_q(q_object, can_reuse)
+                ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1675, in _add_q
+    child_clause, needed_inner = self.build_filter(
+                                 ~~~~~~~~~~~~~~~~~^
+        child,
+        ^^^^^^
+    ...<7 lines>...
+        update_join_types=update_join_types,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1585, in build_filter
+    condition = self.build_lookup(lookups, col, value)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1406, in build_lookup
+    lhs = self.try_transform(lhs, lookup_name)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\models\sql\query.py", line 1455, in try_transform
+    raise FieldError(
+    ...<2 lines>...
+    )
+django.core.exceptions.FieldError: Unsupported lookup 'status_name' for ForeignKey or join on the field not permitted.
+ERROR 2025-05-29 14:57:19,327 basehttp "GET /attendance/ HTTP/1.1" 500 125066
+INFO 2025-05-29 14:57:33,068 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 14:57:37,051 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 14:59:38,172 basehttp - Broken pipe from ('127.0.0.1', 51920)
+INFO 2025-05-29 14:59:39,187 basehttp "GET /attendance/ HTTP/1.1" 200 215698
+WARNING 2025-05-29 14:59:39,300 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:59:39,301 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 14:59:39,301 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:02:04,317 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 15:02:06,116 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 15:09:14,171 basehttp "GET /attendance/ HTTP/1.1" 200 221365
+WARNING 2025-05-29 15:09:14,398 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:09:14,401 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:09:14,433 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:11:21,801 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 221365
+WARNING 2025-05-29 15:11:21,899 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:11:21,900 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:11:21,900 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:11:29,546 basehttp "GET /attendance/?month=5&year=2025&search=gaurav HTTP/1.1" 200 48265
+WARNING 2025-05-29 15:11:29,652 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:11:29,654 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:11:29,654 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:12:50,185 basehttp "GET /attendance/?month=1&year=2025&search=gaurav HTTP/1.1" 200 48297
+WARNING 2025-05-29 15:12:50,251 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:12:50,264 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:12:50,264 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:13:16,155 basehttp "GET /attendance/?month=7&year=2025&search=gaurav HTTP/1.1" 200 48615
+WARNING 2025-05-29 15:13:16,209 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:13:16,209 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:13:16,215 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:13:22,177 basehttp "GET /attendance/?month=5&year=2025&search=gaurav HTTP/1.1" 200 48265
+WARNING 2025-05-29 15:13:22,314 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:13:22,315 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:13:22,322 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:51:16,097 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 15:51:22,560 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 15:51:26,842 basehttp "GET /attendance/?month=5&year=2025&search=gaurav HTTP/1.1" 200 47318
+WARNING 2025-05-29 15:51:27,012 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:51:27,012 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:51:27,023 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:51:42,335 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 219305
+WARNING 2025-05-29 15:51:42,418 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:51:42,432 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:51:42,445 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 15:51:58,352 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 15:51:58,372 basehttp "GET / HTTP/1.1" 200 2752
+ERROR 2025-05-29 15:52:10,662 log Internal Server Error: /attendance/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 3763, in attendance_view
+    return render(request, 'attendance.html', context)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 210, in render
+    return template.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 173, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 480, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'update_profile' with arguments '('',)' not found. 1 pattern(s) tried: ['update_profile/(?P<user_id>[0-9]+)\\Z']
+ERROR 2025-05-29 15:52:10,674 basehttp "GET /attendance/?month=5&year=2025&search=gaurav HTTP/1.1" 500 319133
+INFO 2025-05-29 15:52:17,042 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 15:52:35,365 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 15:52:35,418 basehttp "GET /d2/2/ HTTP/1.1" 200 57623
+WARNING 2025-05-29 15:52:35,508 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 15:52:35,509 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 15:52:35,519 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,524 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:52:35,525 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,543 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 15:52:35,552 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 15:52:35,565 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 15:52:35,565 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:52:35,566 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,574 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,582 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 15:52:35,586 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,589 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 15:52:35,613 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 15:52:35,624 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 15:52:35,630 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-29 15:52:35,630 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,632 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,632 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 15:52:35,633 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18739
+INFO 2025-05-29 15:52:42,971 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 15:52:42,983 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 15:52:46,600 basehttp "GET / HTTP/1.1" 200 2752
+ERROR 2025-05-29 15:53:02,595 log Internal Server Error: /d2/2/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 42, in d2
+    return render(request, '2.html', {'user': user})
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 210, in render
+    return template.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 173, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 480, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'update_profile' with arguments '('',)' not found. 1 pattern(s) tried: ['update_profile/(?P<user_id>[0-9]+)\\Z']
+ERROR 2025-05-29 15:53:02,604 basehttp "GET /d2/2/ HTTP/1.1" 500 169721
+ERROR 2025-05-29 16:36:13,268 log Internal Server Error: /d2/2/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 42, in d2
+    return render(request, '2.html', {'user': user})
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader.py", line 62, in render_to_string
+    return template.render(context, request)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\backends\django.py", line 107, in render
+    return self.template.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 171, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 159, in render
+    return compiled_parent._render(context)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\loader_tags.py", line 210, in render
+    return template.render(context)
+           ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 173, in render
+    return self._render(context)
+           ~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 163, in _render
+    return self.nodelist.render(context)
+           ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 1016, in render
+    return SafeString("".join([node.render_annotated(context) for node in self]))
+                               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\base.py", line 977, in render_annotated
+    return self.render(context)
+           ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\template\defaulttags.py", line 480, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\base.py", line 98, in reverse
+    resolved_url = resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'update_profile' with arguments '('',)' not found. 1 pattern(s) tried: ['update_profile/(?P<user_id>[0-9]+)\\Z']
+ERROR 2025-05-29 16:36:13,284 basehttp "GET /d2/2/ HTTP/1.1" 500 169858
+INFO 2025-05-29 16:36:16,348 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 16:36:24,945 basehttp "POST / HTTP/1.1" 200 2961
+INFO 2025-05-29 16:36:38,619 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 16:36:48,145 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-29 16:37:00,244 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 16:37:00,270 basehttp "GET /d2/2/ HTTP/1.1" 200 57623
+WARNING 2025-05-29 16:37:00,384 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 16:37:00,406 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:37:00,406 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,408 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:37:00,416 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:37:00,472 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 16:37:00,480 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,492 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 16:37:00,505 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 16:37:00,513 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 16:37:00,518 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,527 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 16:37:00,549 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,554 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 16:37:00,555 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,564 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 16:37:00,572 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-29 16:37:00,572 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,575 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,576 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 16:37:00,576 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18739
+INFO 2025-05-29 16:37:05,463 basehttp "GET /attendance/ HTTP/1.1" 200 219305
+WARNING 2025-05-29 16:37:05,561 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:37:05,562 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:37:05,565 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 16:38:55,797 basehttp "GET /attendance/ HTTP/1.1" 200 250754
+WARNING 2025-05-29 16:38:55,898 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:38:55,898 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:38:55,898 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 16:41:50,723 basehttp "GET /attendance/ HTTP/1.1" 200 314271
+WARNING 2025-05-29 16:41:50,845 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:41:50,860 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 16:41:50,861 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 16:47:15,376 basehttp "GET / HTTP/1.1" 200 2752
+WARNING 2025-05-29 16:47:16,036 log Not Found: /favicon.ico
+WARNING 2025-05-29 16:47:16,037 basehttp "GET /favicon.ico HTTP/1.1" 404 18673
+INFO 2025-05-29 17:02:20,053 basehttp "GET / HTTP/1.1" 200 2752
+WARNING 2025-05-29 17:02:20,856 log Not Found: /favicon.ico
+WARNING 2025-05-29 17:02:20,859 basehttp "GET /favicon.ico HTTP/1.1" 404 18673
+INFO 2025-05-29 17:02:26,438 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 17:02:26,466 basehttp "GET /d2/12/ HTTP/1.1" 200 53832
+WARNING 2025-05-29 17:02:26,566 log Not Found: /d2/12/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 17:02:26,589 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:26,590 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:26,591 basehttp "GET /d2/12/dist/img/user1-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,592 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:26,606 log Not Found: /d2/12/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 17:02:26,612 log Not Found: /d2/12/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 17:02:26,624 log Not Found: /d2/12/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 17:02:26,627 basehttp "GET /d2/12/dist/img/user3-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,627 basehttp "GET /d2/12/dist/img/user7-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,638 log Not Found: /d2/12/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 17:02:26,650 log Not Found: /d2/12/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 17:02:26,651 basehttp "GET /d2/12/dist/img/user5-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,659 log Not Found: /d2/12/dist/img/default-150x150.png
+WARNING 2025-05-29 17:02:26,661 basehttp "GET /d2/12/dist/img/user6-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,664 basehttp "GET /d2/12/dist/img/user8-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,677 log Not Found: /d2/12/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 17:02:26,682 log Not Found: /d2/12/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 17:02:26,683 basehttp "GET /d2/12/dist/img/default-150x150.png HTTP/1.1" 404 18742
+WARNING 2025-05-29 17:02:26,684 basehttp "GET /d2/12/dist/img/user4-128x128.jpg HTTP/1.1" 404 18736
+WARNING 2025-05-29 17:02:26,684 basehttp "GET /d2/12/dist/img/user2-160x160.jpg HTTP/1.1" 404 18736
+INFO 2025-05-29 17:02:33,400 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-29 17:02:33,410 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-29 17:02:40,821 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-29 17:02:40,869 basehttp "GET /d2/1/ HTTP/1.1" 200 57637
+WARNING 2025-05-29 17:02:40,938 log Not Found: /d2/1/dist/img/user1-128x128.jpg
+WARNING 2025-05-29 17:02:40,974 log Not Found: /d2/1/dist/img/user7-128x128.jpg
+WARNING 2025-05-29 17:02:40,986 log Not Found: /d2/1/dist/img/user3-128x128.jpg
+WARNING 2025-05-29 17:02:40,992 basehttp "GET /d2/1/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:40,994 basehttp "GET /d2/1/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:40,999 basehttp "GET /d2/1/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,019 log Not Found: /d2/1/dist/img/user6-128x128.jpg
+WARNING 2025-05-29 17:02:41,025 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:41,033 basehttp "GET /d2/1/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,046 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:41,060 log Not Found: /d2/1/dist/img/user5-128x128.jpg
+WARNING 2025-05-29 17:02:41,067 log Not Found: /d2/1/dist/img/user8-128x128.jpg
+WARNING 2025-05-29 17:02:41,067 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:41,072 log Not Found: /d2/1/dist/img/user2-160x160.jpg
+WARNING 2025-05-29 17:02:41,077 basehttp "GET /d2/1/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,078 basehttp "GET /d2/1/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,089 log Not Found: /d2/1/dist/img/user4-128x128.jpg
+WARNING 2025-05-29 17:02:41,078 basehttp "GET /d2/1/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,100 log Not Found: /d2/1/dist/img/default-150x150.png
+WARNING 2025-05-29 17:02:41,101 basehttp "GET /d2/1/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-29 17:02:41,102 basehttp "GET /d2/1/dist/img/default-150x150.png HTTP/1.1" 404 18739
+INFO 2025-05-29 17:02:43,414 basehttp "GET /attendance/ HTTP/1.1" 200 314285
+WARNING 2025-05-29 17:02:43,451 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:43,460 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:02:43,466 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:04:29,840 basehttp "GET /attendance/?month=5&year=2023&search= HTTP/1.1" 200 310105
+WARNING 2025-05-29 17:04:29,908 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:29,908 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:29,910 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:04:42,219 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 314285
+WARNING 2025-05-29 17:04:42,261 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:42,272 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:42,272 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:04:55,042 basehttp "GET /attendance/?month=1&year=2025&search= HTTP/1.1" 200 320669
+WARNING 2025-05-29 17:04:55,102 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:55,103 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:04:55,108 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:05:24,561 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 314285
+WARNING 2025-05-29 17:05:24,609 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:05:24,618 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:05:24,619 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:05:39,273 basehttp "GET /attendance/?month=6&year=2025&search= HTTP/1.1" 200 301311
+WARNING 2025-05-29 17:05:39,311 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:05:39,323 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:05:39,329 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:13:08,421 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 314285
+WARNING 2025-05-29 17:13:08,473 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:13:08,480 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:13:08,488 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:14:16,989 basehttp "GET /attendance/?month=1&year=2025&search= HTTP/1.1" 200 320669
+WARNING 2025-05-29 17:14:17,033 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:14:17,042 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:14:17,043 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:14:25,949 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 314285
+WARNING 2025-05-29 17:14:26,005 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:14:26,006 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:14:26,008 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:16:50,690 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 17:16:54,000 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 17:18:29,529 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 312982
+WARNING 2025-05-29 17:18:29,585 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:18:29,586 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:18:29,598 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:20:09,484 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 312982
+WARNING 2025-05-29 17:20:09,536 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:20:09,551 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:20:09,553 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:21:08,424 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-05-29 17:21:11,743 autoreload Watching for file changes with StatReloader
+INFO 2025-05-29 17:21:14,016 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 313627
+WARNING 2025-05-29 17:21:14,087 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:21:14,088 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:21:14,095 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-29 17:27:45,864 basehttp "GET /attendance/?month=5&year=2025&search= HTTP/1.1" 200 319466
+WARNING 2025-05-29 17:27:45,944 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:27:45,944 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-29 17:27:45,945 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 10:17:45,239 autoreload Watching for file changes with StatReloader
+INFO 2025-05-30 10:18:02,012 basehttp "GET / HTTP/1.1" 200 2752
+WARNING 2025-05-30 10:18:02,481 log Not Found: /favicon.ico
+WARNING 2025-05-30 10:18:02,482 basehttp "GET /favicon.ico HTTP/1.1" 404 18673
+INFO 2025-05-30 10:18:13,946 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-30 10:18:26,031 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-30 10:18:26,066 basehttp "GET /d2/2/ HTTP/1.1" 200 57623
+WARNING 2025-05-30 10:18:26,141 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-30 10:18:26,149 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,155 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:26,162 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:26,163 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:26,198 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-30 10:18:26,200 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,207 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-30 10:18:26,215 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-30 10:18:26,222 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-30 10:18:26,223 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,229 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-30 10:18:26,230 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,238 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-30 10:18:26,239 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,246 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-30 10:18:26,253 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-30 10:18:26,254 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,254 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 10:18:26,255 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18739
+WARNING 2025-05-30 10:18:26,255 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+INFO 2025-05-30 10:18:39,821 basehttp "GET /employee_list, HTTP/1.1" 200 37402
+WARNING 2025-05-30 10:18:39,891 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:39,891 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:39,899 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 10:18:44,030 basehttp "GET /update/10/ HTTP/1.1" 200 23932
+WARNING 2025-05-30 10:18:44,084 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:44,089 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:18:44,090 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 10:19:00,068 basehttp "POST /update/10/ HTTP/1.1" 302 0
+INFO 2025-05-30 10:19:00,088 basehttp "GET /update/10/ HTTP/1.1" 200 24053
+WARNING 2025-05-30 10:19:00,129 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:19:00,139 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:19:00,139 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 10:19:15,456 basehttp "POST /update/10/ HTTP/1.1" 302 0
+INFO 2025-05-30 10:19:15,502 basehttp "GET /employee_list, HTTP/1.1" 200 37540
+WARNING 2025-05-30 10:19:15,549 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:19:15,550 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 10:19:15,557 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 10:19:23,404 basehttp "POST /logout/ HTTP/1.1" 302 0
+INFO 2025-05-30 10:19:23,409 basehttp "GET / HTTP/1.1" 200 2752
+INFO 2025-05-30 10:19:31,886 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-30 10:19:43,994 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-30 10:19:53,957 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-30 10:20:20,211 basehttp "POST / HTTP/1.1" 200 2900
+INFO 2025-05-30 11:30:03,140 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\newproject\settings.py changed, reloading.
+INFO 2025-05-30 11:30:05,144 autoreload Watching for file changes with StatReloader
+INFO 2025-05-30 12:19:53,837 autoreload Watching for file changes with StatReloader
+INFO 2025-05-30 12:22:41,870 basehttp "POST / HTTP/1.1" 200 2961
+INFO 2025-05-30 12:23:00,428 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-05-30 12:23:00,505 basehttp "GET /d2/2/ HTTP/1.1" 200 57623
+WARNING 2025-05-30 12:23:00,706 log Not Found: /d2/2/dist/img/user1-128x128.jpg
+WARNING 2025-05-30 12:23:00,718 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:00,719 basehttp "GET /d2/2/dist/img/user1-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,722 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:00,729 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:00,751 log Not Found: /d2/2/dist/img/user3-128x128.jpg
+WARNING 2025-05-30 12:23:00,761 log Not Found: /d2/2/dist/img/user5-128x128.jpg
+WARNING 2025-05-30 12:23:00,765 basehttp "GET /d2/2/dist/img/user3-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,771 log Not Found: /d2/2/dist/img/user7-128x128.jpg
+WARNING 2025-05-30 12:23:00,777 basehttp "GET /d2/2/dist/img/user5-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,784 log Not Found: /d2/2/dist/img/user6-128x128.jpg
+WARNING 2025-05-30 12:23:00,796 basehttp "GET /d2/2/dist/img/user7-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,798 log Not Found: /d2/2/dist/img/user8-128x128.jpg
+WARNING 2025-05-30 12:23:00,817 log Not Found: /d2/2/dist/img/user4-128x128.jpg
+WARNING 2025-05-30 12:23:00,817 log Not Found: /d2/2/dist/img/default-150x150.png
+WARNING 2025-05-30 12:23:00,824 basehttp "GET /d2/2/dist/img/user6-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,829 log Not Found: /d2/2/dist/img/user2-160x160.jpg
+WARNING 2025-05-30 12:23:00,830 basehttp "GET /d2/2/dist/img/user8-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,830 basehttp "GET /d2/2/dist/img/user4-128x128.jpg HTTP/1.1" 404 18733
+WARNING 2025-05-30 12:23:00,831 basehttp "GET /d2/2/dist/img/default-150x150.png HTTP/1.1" 404 18739
+WARNING 2025-05-30 12:23:00,835 basehttp "GET /d2/2/dist/img/user2-160x160.jpg HTTP/1.1" 404 18733
+INFO 2025-05-30 12:23:07,715 basehttp "GET /employee_list, HTTP/1.1" 200 37402
+WARNING 2025-05-30 12:23:07,815 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:07,819 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:07,828 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 12:23:33,611 basehttp "GET /update/3/ HTTP/1.1" 200 23894
+WARNING 2025-05-30 12:23:33,678 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:33,693 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:33,694 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-05-30 12:23:50,807 basehttp "POST /update/3/ HTTP/1.1" 302 0
+INFO 2025-05-30 12:23:50,922 basehttp "GET /employee_list, HTTP/1.1" 200 37540
+WARNING 2025-05-30 12:23:50,988 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:51,009 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-05-30 12:23:51,009 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898

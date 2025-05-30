@@ -77,6 +77,7 @@ path('delete_education/<int:pk>/',delete_education, name='delete_education'),
     path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset_password_complete/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('attendance/',attendance_view, name='attendance')
 ]
     #path('team_image_timesheet_record/<int:user_id',team_image_timesheet_record,name='team_image_timesheet_record')
     #path('handbooks/', handbook_panel, name='handbook_panel'),

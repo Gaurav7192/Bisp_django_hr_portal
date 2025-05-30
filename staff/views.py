@@ -386,38 +386,50 @@ from django.contrib.auth.hashers import check_password # <<< IMPORTANT: Ensure t
 # - lock_account(duration_hours=2) method
 # - unlock_account() method
 # And that you've run migrations after adding these fields/methods.
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.hashers import check_password # Make sure this is imported
+
+# Assuming emp_registers is your emp_registers_transition_ model with the lockout logic
+from .models import emp_registers # Adjust this import based on your app's name
 
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        remember_me = request.POST.get('remember_me', False) # Checkbox value is 'on' or None
+        remember_me = request.POST.get('remember_me', False)
 
         # Convert 'on' or None to a proper boolean
         remember_me = True if remember_me == 'on' else False
 
-        # Get lockout configuration from settings.py.
-        # If not defined in settings, these defaults will be used.
         LOGIN_ATTEMPT_THRESHOLD = getattr(settings, 'LOGIN_ATTEMPT_THRESHOLD', 5)
         LOCKOUT_DURATION_HOURS = getattr(settings, 'LOCKOUT_DURATION_HOURS', 2)
 
-        # Basic input validation for empty fields
         if not email or not password:
             messages.error(request, 'Email and password are required.', extra_tags='login')
             return render(request, 'login.html')
 
         try:
-            # Attempt to retrieve the user by email
-            user = emp_registers.objects.get(email=email)
+            user = emp_registers.objects.get(email=email) # Ensure emp_registers is your model with lockout logic
 
-            # --- Account Lockout Pre-Check ---
-            # If the account is currently locked, prevent login and inform the user.
-            if user.is_locked():
+            # --- CRITICAL FIX START ---
+            # 1. Check if the account was locked, but the lockout period has now expired.
+            #    If so, unlock it immediately so the user can proceed with login.
+            if user.account_locked_until and user.account_locked_until <= timezone.now():
+                user.unlock_account()
+                # No message needed here, as the user can now proceed to attempt login.
+                # The user object is now "unlocked" and can go through the password verification.
+
+            # 2. Now, after potentially unlocking, check if the account is *still* locked
+            #    (i.e., account_locked_until is in the future).
+            if user.is_locked(): # This will now correctly return True only if the lock is active
                 remaining_seconds = (user.account_locked_until - timezone.now()).total_seconds()
                 hours, remainder = divmod(remaining_seconds, 3600)
                 minutes, seconds = divmod(remainder, 60)
 
-                # Format remaining time for a user-friendly message
                 time_parts = []
                 if hours >= 1:
                     time_parts.append(f"{int(hours)} hour{'s' if hours > 1 else ''}")
@@ -430,55 +442,45 @@ def login_view(request):
 
                 messages.error(request, f"Your account is locked due to too many failed login attempts. Please try again after {time_str}.", extra_tags='login')
                 return render(request, 'login.html')
+            # --- CRITICAL FIX END ---
 
             # --- Password Verification ---
-            # Corrected: Using the standalone check_password function
-            if check_password(password, user.password): # <<< Corrected line!
+            if check_password(password, user.password):
                 # Password is correct!
-                # Reset failed attempts and clear any active lockout upon successful login.
+                # This `unlock_account()` is still important for resetting failed_login_attempts
+                # if the user was NOT locked, but had some failed attempts.
                 if user.failed_login_attempts > 0 or user.account_locked_until:
                     user.unlock_account()
-                    # Resets counter to 0 and sets account_locked_until to None
 
-                # Set user session variables
                 request.session['user_id'] = user.id
                 request.session['name'] = user.name
-                # Ensure 'position' attribute exists and has a 'role' attribute
                 request.session['postion'] = user.position.role
 
-                # Handle "remember me" for session expiry
                 if remember_me:
-                    request.session.set_expiry(604800)  # Session lasts for 1 week (60*60*24*7 seconds)
+                    request.session.set_expiry(604800)
                 else:
-                    request.session.set_expiry(0)      # Session expires when browser closes
+                    request.session.set_expiry(0)
 
-                # messages.success(request, f"Welcome back, {user.name}!", extra_tags='login')
-                return redirect('d2', id=user.id) # Redirect to your dashboard or success page
+                return redirect('d2', id=user.id)
 
             else:
                 # Password is incorrect
-                user.failed_login_attempts += 1 # Increment the failed attempt counter
+                user.failed_login_attempts += 1
 
-                # --- Account Lockout Trigger ---
                 if user.failed_login_attempts >= LOGIN_ATTEMPT_THRESHOLD:
-                    user.lock_account(duration_hours=LOCKOUT_DURATION_HOURS) # Lock the account
+                    user.lock_account(duration_hours=LOCKOUT_DURATION_HOURS)
                     messages.error(request, f"Incorrect password. Too many failed attempts. Your account has been locked for {LOCKOUT_DURATION_HOURS} hours.", extra_tags='login')
                 else:
-                    # Generic error for invalid credentials, avoids revealing if it's the email or password
                     messages.error(request, 'Invalid email or password.', extra_tags='login')
 
-                user.save() # Crucial: Save the updated failed_login_attempts or lockout status to the database
-                return render(request, 'login.html') # Re-render login page with error message
+                user.save()
+                return render(request, 'login.html')
 
         except emp_registers.DoesNotExist:
-            # If no user is found with the given email, provide a generic error
-            # This prevents attackers from enumerating valid email addresses.
             messages.error(request, 'Invalid email or password.', extra_tags='login')
             return render(request, 'login.html')
 
-    # If the request method is GET, just render the empty login form
     return render(request, 'login.html')
-
 
 # staff/views.py (or wherever your views are located)
 
@@ -3585,3 +3587,175 @@ def sample_view(request):
     if request.user.is_authenticated:
         log_user_action(request.user.id, "Accessed sample view")
     return HttpResponse("Audit logged.")
+# your_app/views.py
+
+
+from datetime import date, timedelta
+from django.shortcuts import render
+from django.db.models import Q
+from calendar import monthrange
+import calendar
+from django.utils import timezone
+# No Paginator import needed for client-side pagination here
+
+# Import your models
+from .models import Holiday, LeaveRecord, emp_registers, LeaveStatusMaster
+import calendar
+from datetime import date, timedelta
+from django.utils import timezone
+from calendar import monthrange
+from django.db.models import Q
+
+
+# Assuming these are your models
+# from .models import emp_registers, Holiday, LeaveRecord
+
+def attendance_view(request):
+    selected_year = int(request.GET.get('year', timezone.localdate().year))
+    selected_month = int(request.GET.get('month', timezone.localdate().month))
+
+    today = timezone.localdate()
+
+    # --- Employee Search Filter (Optional but good to include) ---
+    search_query = request.GET.get('search')
+    if search_query:
+        employees_qs = emp_registers.objects.filter(
+            Q(name__icontains=search_query) | Q(id__icontains=search_query)
+        ).order_by('id')
+    else:
+        employees_qs = emp_registers.objects.all().order_by('id')
+
+    holidays_query = Holiday.objects.filter(
+        date__year=selected_year,
+        date__month=selected_month
+    ).values_list('date', 'name')
+    holidays_dict = {h_date: h_name for h_date, h_name in holidays_query}
+
+    # Optimize leave record fetching
+    leave_records = LeaveRecord.objects.filter(
+        (Q(start_date__year=selected_year, start_date__month=selected_month) |
+         Q(end_date__year=selected_year, end_date__month=selected_month) |
+         (Q(start_date__lt=date(selected_year, selected_month, 1)) &
+          Q(end_date__gt=date(selected_year, selected_month, monthrange(selected_year, selected_month)[1])))),
+        approval_status__status='Approved'
+    ).select_related('emp_id')
+
+    attendance_data = []
+    num_days_in_month = monthrange(selected_year, selected_month)[1]
+
+    # Pre-calculate 2nd and 3rd Saturdays for efficiency
+    second_saturday = None
+    third_saturday = None
+    saturday_count = 0
+
+    for day_num in range(1, num_days_in_month + 1):
+        temp_date = date(selected_year, selected_month, day_num)
+        if temp_date.weekday() == 5:  # 5 corresponds to Saturday
+            saturday_count += 1
+            if saturday_count == 2:
+                second_saturday = temp_date
+            elif saturday_count == 3:
+                third_saturday = temp_date
+                # Once we found the 3rd Saturday, we can break early
+                break
+
+    for employee in employees_qs:
+        employee_attendance_row = {
+            'id': employee.id,
+            'name': employee.name,
+            'days_data': []
+        }
+
+        for day_num in range(1, num_days_in_month + 1):
+            current_date_obj = date(selected_year, selected_month, day_num)
+            day_of_week = current_date_obj.weekday()  # Monday is 0, Sunday is 6
+
+            status = '-'  # Default status for future dates or unhandled days
+            reason = ''
+            cell_class = ''
+
+            if current_date_obj > today:
+                # Mark future dates
+                status = '-'
+                reason = 'Future Date'
+                cell_class = 'future-date'
+            elif day_of_week == 6:  # Sunday
+                # Always mark Sunday as 'W'
+                status = 'W'
+                reason = 'Weekend'
+                cell_class = 'weekend-day'
+            elif day_of_week == 5:  # Saturday
+                # Mark 2nd and 3rd Saturdays as 'W'
+                if current_date_obj == second_saturday or current_date_obj == third_saturday:
+                    status = 'W'
+                    reason = 'Weekend'
+                    cell_class = 'weekend-day'
+                else:
+                    # Other Saturdays (1st, 4th, etc.) are treated as regular working days
+                    # and will fall through to check for holidays/leaves/present
+                    pass  # Let the next conditions handle it
+
+            # --- Holiday Check (only if not already marked as a weekend) ---
+            if status != 'W' and current_date_obj in holidays_dict:
+                status = 'H'
+                reason = holidays_dict[current_date_obj]
+                cell_class = 'holiday-day'
+
+            # --- Leave Check (only if not already marked as a weekend or holiday) ---
+            if status not in ['W', 'H']:  # Check if it's not a weekend or holiday
+                employee_leave_found = False
+                for leave in leave_records:
+                    if leave.emp_id == employee and leave.start_date <= current_date_obj <= leave.end_date:
+                        status = 'L'
+                        reason = leave.reason
+                        cell_class = 'leave-day'
+                        employee_leave_found = True
+                        break
+
+                if not employee_leave_found and status not in ['W', 'H', 'L']:
+                    # If not weekend, holiday, or leave, then assume present
+                    status = 'P'
+                    reason = 'Present'
+                    cell_class = 'present-day'
+
+            # Handle cases where Saturday was not the 2nd or 3rd, but still needs a default status
+            # This ensures any Saturday that isn't the 2nd or 3rd, and isn't a holiday/leave,
+            # defaults to 'P' if it falls within the current date.
+            if status == '-' and current_date_obj <= today:
+                status = 'P'
+                reason = 'Present'
+                cell_class = 'present-day'
+
+            employee_attendance_row['days_data'].append({
+                'day_num': day_num,
+                'status': status,
+                'reason': reason,
+                'class': cell_class
+            })
+        attendance_data.append(employee_attendance_row)
+
+    month_options = []
+    for m in range(1, 13):
+        month_options.append({
+            'value': m,
+            'name': calendar.month_name[m],
+            'selected': (m == selected_month)
+        })
+
+    current_year_py = timezone.localdate().year
+    year_options_list = list(range(current_year_py - 2, current_year_py + 3))
+
+    context = {
+        'selected_year': selected_year,
+        'selected_month': selected_month,
+        'num_days_in_month': num_days_in_month,
+        'employees_attendance': attendance_data,
+        'today_date': today,
+        'current_day': today.day,
+        'current_month': today.month,
+        'current_year': today.year,
+        'year_options': year_options_list,
+        'month_options': month_options,
+        'days_in_month_header_range': list(range(1, num_days_in_month + 1)),
+    }
+    return render(request, 'attendance.html', context)

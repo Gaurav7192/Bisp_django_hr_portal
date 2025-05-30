@@ -19,21 +19,24 @@ _audit_loggers = {}
 # --- Logging Function ---
 def get_user_audit_logger(user_identifier):
     """
-    Returns a specific logger for the given user identifier.
-    If the logger doesn't exist, it creates and configures it.
+    Returns a logger for the given user identifier that logs to a date-specific file.
+    Reinitializes the logger if the date has changed to create a new file per day.
     """
-    if user_identifier not in _audit_loggers:
-        logger_name = f"audit_log_user_{user_identifier}"
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    logger_key = f"{user_identifier}_{current_date}"
+
+    if logger_key not in _audit_loggers:
+        logger_name = f"audit_log_user_{logger_key}"
         user_logger = logging.getLogger(logger_name)
         user_logger.setLevel(logging.INFO)
-        user_logger.propagate = False # Prevent logs from going to root logger
+        user_logger.propagate = False
 
-        log_file_path = os.path.join(AUDIT_LOG_DIR, f"{user_identifier}_audit.log")
+        log_file_path = os.path.join(AUDIT_LOG_DIR, f"{user_identifier}_{current_date}.txt")
 
         try:
             handler = RotatingFileHandler(
                 log_file_path,
-                maxBytes=1 * 1024 * 1024, # 1 MB per user log file
+                maxBytes=1 * 1024 * 1024,
                 backupCount=5,
                 encoding='utf-8'
             )
@@ -44,10 +47,12 @@ def get_user_audit_logger(user_identifier):
         except Exception as e:
             print(f"ERROR: Could not set up audit logger handler for {user_identifier}: {e}")
             user_logger.addHandler(logging.StreamHandler())
-            user_logger.propagate = True # Allow errors to be seen
+            user_logger.propagate = True
 
-        _audit_loggers[user_identifier] = user_logger
-    return _audit_loggers[user_identifier]
+        _audit_loggers[logger_key] = user_logger
+
+    return _audit_loggers[logger_key]
+
 
 def log_audit_action(user_identifier, action_description):
     """
