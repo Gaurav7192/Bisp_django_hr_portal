@@ -6,10 +6,17 @@ from django.conf.urls.static import static
 urlpatterns = [
     # path('', home_view, name='home'),
     # path('about/', about_view, name='about'),
-
+    # path('employee/deactivate/<int:pk>/', deactivate_employee, name='deactivate_employee'),
+    # path('employee/activate/<int:pk>/', activate_employee, name='activate_employee'),
 
 #     path('d2/<int:id>/',d2, name='d2l'),
     # path('contact/', contact_view, name='contact'),
+path('deactivate_employee/<int:emp_id>/',deactivate_employee, name='deactivate_employee'),
+path('activate_employee/<int:emp_id>/',activate_employee, name='activate_employee'),
+    path('deactive_employee_list',deactive_employee_list,name='deactive_employee_list'),
+path('employee-lock-status/', employee_lock_status_view, name='employee_lock_status'),
+    path('unlock-account/<int:emp_id>/', unlock_account_view, name='unlock_account'),
+
     path('apply_leave/<int:user_id>/',apply_leave, name='apply_leave'),
   #  path('forgot_password/',forgot_password, name='forgot_password'),
     path('add_project/<int:user_id>',add_project_view,name='add_project'),

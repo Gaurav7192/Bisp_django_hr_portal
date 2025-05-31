@@ -105,7 +105,7 @@ class EmployeeForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        instance.password = instance.password  # Note: Apply hashing elsewhere if needed
+        instance.password = make_password(instance.password)  # Hash the password
         if commit:
             instance.save()
         return instance

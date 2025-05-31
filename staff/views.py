@@ -42,49 +42,9 @@ def d2(request,id):
     return render(request, '2.html', {'user': user})
 
 
-from django.shortcuts import render, redirect
-from django.contrib.auth import login as auth_login
-  # Your form
-from django.conf import settings  # For settings, if needed for context
 
 
-def employee_login(request):
-    # Redirect if already logged in (optional, but good practice)
-    if request.user.is_authenticated:
-        # Assuming request.user is an instance of emp_registers
-        # if AUTH_USER_MODEL is set to emp_registers, or you have custom logic
-        return redirect('dashboard')  # Or whatever your authenticated homepage is
 
-    if request.method == 'POST':
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            # If form is valid, the user is authenticated and stored in form.user_cache
-            user = form.user_cache
-            auth_login(request, user)  # Log the user in
-
-            # Optional: handle remember_me here if you want to extend session
-            if form.cleaned_data.get('remember_me'):
-                request.session.set_expiry(settings.SESSION_COOKIE_AGE)  # Keep session alive for default period
-            else:
-                request.session.set_expiry(0)  # Session expires when browser closes
-
-            return redirect('dashboard')  # Redirect to dashboard or success page
-        # If form is not valid, errors are already attached to the fields
-        # and will be displayed by the template. No need for extra message framework.
-    else:
-        form = LoginForm()
-
-    return render(request, 'employees/login.html', {'form': form})
-
-# your_app/views.py
-
-# ... (imports) ...
-from .audit_logger import log_audit_action # Make sure this import is correct
-from .models import Project # Ensure Project is imported
-# newproject/staff/views.py
-
-from datetime import date, timedelta
-from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 
@@ -395,14 +355,11 @@ from django.contrib.auth.hashers import check_password # Make sure this is impor
 
 # Assuming emp_registers is your emp_registers_transition_ model with the lockout logic
 from .models import emp_registers # Adjust this import based on your app's name
-
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
         remember_me = request.POST.get('remember_me', False)
-
-        # Convert 'on' or None to a proper boolean
         remember_me = True if remember_me == 'on' else False
 
         LOGIN_ATTEMPT_THRESHOLD = getattr(settings, 'LOGIN_ATTEMPT_THRESHOLD', 5)
@@ -413,67 +370,66 @@ def login_view(request):
             return render(request, 'login.html')
 
         try:
-            user = emp_registers.objects.get(email=email) # Ensure emp_registers is your model with lockout logic
+            user = emp_registers.objects.get(email=email)
+            is_support_user = user.email.lower() == 'support@bispgmail.com'
 
-            # --- CRITICAL FIX START ---
-            # 1. Check if the account was locked, but the lockout period has now expired.
-            #    If so, unlock it immediately so the user can proceed with login.
-            if user.account_locked_until and user.account_locked_until <= timezone.now():
-                user.unlock_account()
-                # No message needed here, as the user can now proceed to attempt login.
-                # The user object is now "unlocked" and can go through the password verification.
-
-            # 2. Now, after potentially unlocking, check if the account is *still* locked
-            #    (i.e., account_locked_until is in the future).
-            if user.is_locked(): # This will now correctly return True only if the lock is active
-                remaining_seconds = (user.account_locked_until - timezone.now()).total_seconds()
-                hours, remainder = divmod(remaining_seconds, 3600)
-                minutes, seconds = divmod(remainder, 60)
-
-                time_parts = []
-                if hours >= 1:
-                    time_parts.append(f"{int(hours)} hour{'s' if hours > 1 else ''}")
-                if minutes >= 1:
-                    time_parts.append(f"{int(minutes)} minute{'s' if minutes > 1 else ''}")
-                if time_parts:
-                    time_str = " and ".join(time_parts)
-                else:
-                    time_str = "a moment" # For very short remaining times
-
-                messages.error(request, f"Your account is locked due to too many failed login attempts. Please try again after {time_str}.", extra_tags='login')
+            if str(user.job_status).lower() != 'active':
+                messages.error(request, 'Your account is closed. Please contact administration.', extra_tags='login')
                 return render(request, 'login.html')
-            # --- CRITICAL FIX END ---
 
-            # --- Password Verification ---
+            # --- Skip locking checks for support user ---
+            if not is_support_user:
+                if user.account_locked_until and user.account_locked_until <= timezone.now():
+                    user.unlock_account()
+
+                if user.is_locked():
+                    remaining_seconds = (user.account_locked_until - timezone.now()).total_seconds()
+                    hours, remainder = divmod(remaining_seconds, 3600)
+                    minutes, _ = divmod(remainder, 60)
+
+                    time_parts = []
+                    if hours >= 1:
+                        time_parts.append(f"{int(hours)} hour{'s' if hours > 1 else ''}")
+                    if minutes >= 1:
+                        time_parts.append(f"{int(minutes)} minute{'s' if minutes > 1 else ''}")
+                    time_str = " and ".join(time_parts) if time_parts else "a moment"
+
+                    messages.error(
+                        request,
+                        f"Your account is locked due to too many failed login attempts. Please try again after {time_str}.",
+                        extra_tags='login'
+                    )
+                    return render(request, 'login.html')
+
+            # --- Check password ---
             if check_password(password, user.password):
-                # Password is correct!
-                # This `unlock_account()` is still important for resetting failed_login_attempts
-                # if the user was NOT locked, but had some failed attempts.
-                if user.failed_login_attempts > 0 or user.account_locked_until:
+                if not is_support_user and (user.failed_login_attempts > 0 or user.account_locked_until):
                     user.unlock_account()
 
                 request.session['user_id'] = user.id
                 request.session['name'] = user.name
                 request.session['postion'] = user.position.role
-
-                if remember_me:
-                    request.session.set_expiry(604800)
-                else:
-                    request.session.set_expiry(0)
+                request.session.set_expiry(604800 if remember_me else 0)
 
                 return redirect('d2', id=user.id)
 
             else:
-                # Password is incorrect
-                user.failed_login_attempts += 1
-
-                if user.failed_login_attempts >= LOGIN_ATTEMPT_THRESHOLD:
-                    user.lock_account(duration_hours=LOCKOUT_DURATION_HOURS)
-                    messages.error(request, f"Incorrect password. Too many failed attempts. Your account has been locked for {LOCKOUT_DURATION_HOURS} hours.", extra_tags='login')
+                if not is_support_user:
+                    user.failed_login_attempts += 1
+                    if user.failed_login_attempts >= LOGIN_ATTEMPT_THRESHOLD:
+                        user.lock_account(duration_hours=LOCKOUT_DURATION_HOURS)
+                        messages.error(
+                            request,
+                            f"Incorrect password. Too many failed attempts. Your account has been locked for {LOCKOUT_DURATION_HOURS} hours.",
+                            extra_tags='login'
+                        )
+                    else:
+                        messages.error(request, 'Invalid email or password.', extra_tags='login')
+                    user.save()
                 else:
+                    # For support user, allow infinite wrong attempts with no penalty
                     messages.error(request, 'Invalid email or password.', extra_tags='login')
 
-                user.save()
                 return render(request, 'login.html')
 
         except emp_registers.DoesNotExist:
@@ -481,6 +437,7 @@ def login_view(request):
             return render(request, 'login.html')
 
     return render(request, 'login.html')
+
 
 # staff/views.py (or wherever your views are located)
 
@@ -669,17 +626,10 @@ def generate_custom_report(request):
         return redirect('report_download_page')
     return render(request, 'reports/generate_report_form.html')
 
-@login_required
-def deactivate_employee(request, employee_id):
-    employee = get_object_or_404(emp_registers, pk=employee_id)
-    if request.method == 'POST':
-        employee.save() # This save will trigger the post_save for emp_registers
-        user_identifier = request.session.get('user_id', 'Anonymous/Unknown')
-        log_audit_action(user_identifier, f"deactivated employee {employee.name} (ID: {employee.pk})")
-        return redirect('employee_list')
-    return render(request, 'employee_deactivate_confirm.html', {'employee': employee})
 
-@login_required
+
+
+
 def update_profile_view(request):
     # Assuming 'emp_registers' is your custom user model or linked to Auth.User
     # You might need to adjust how you get the current emp_registers instance
@@ -1170,41 +1120,90 @@ def add_employee(request):
 
 
 
+# views.py
 def employee_list(request):
-    if 'user_id' not in request.session:
-        return redirect('login')  # 'log
-    # Get filters from request
-    position_filter = request.GET.get('position', '')
-    department_filter = request.GET.get('department', '')
-    page_number = request.GET.get('page', 1)
-
-    # Only allow specific page sizes
-    allowed_page_sizes = ['5', '10', '20']
-    page_size_str = request.GET.get('page_size', '10')
-    page_size = int(page_size_str) if page_size_str in allowed_page_sizes else 10
-
-    # Base queryset
-    employees = emp_registers.objects.all()
-
-    # Filter by role
-    if position_filter:
-        employees = employees.filter(position__role=position_filter)
-
-    # Filter by department name or ID
-    if department_filter:
-        employees = employees.filter(department__id=department_filter)
-
-    # Apply pagination
-    paginator = Paginator(employees, page_size)
-    page_obj = paginator.get_page(page_number)
-
-    # Fetch for dropdowns
-    department_choices = DepartmentMaster.objects.all()
-
+    employees = emp_registers.objects.filter(job_status=1)
+    departments = DepartmentMaster.objects.all()
     return render(request, 'employee_list.html', {
-        'employees': page_obj,
-        'department_choices': department_choices,
+        'employees': employees,
+        'department_choices': departments
     })
+
+def deactivate_employee(request, emp_id):
+    try:
+        data = json.loads(request.body)
+        status = data.get('status')
+
+        if status == 'deactive':  # <-- updated check
+            job_status=JobStatusMaster.objects.get(status='deactive')
+            employee = emp_registers.objects.get(id=emp_id)
+            employee.job_status = job_status  # <-- updated field value
+            employee.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid status'})
+    except emp_registers.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Employee not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+def deactive_employee_list(request):
+    employees = emp_registers.objects.filter(job_status=4)
+    departments = DepartmentMaster.objects.all()
+    return render(request, 'deactive_employee_list.html', {
+        'employees': employees,
+        'department_choices': departments
+    })
+
+def activate_employee(request, emp_id):
+    try:
+        data = json.loads(request.body)
+        status = data.get('status')
+
+        if status == 'active':  # <-- updated check
+            job_status=JobStatusMaster.objects.get(status='active')
+            employee = emp_registers.objects.get(id=emp_id)
+            employee.job_status = job_status  # <-- updated field value
+            employee.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid status'})
+    except emp_registers.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Employee not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+# views.py
+
+from django.views.decorators.http import require_POST
+
+def employee_lock_status_view(request):
+    employees = emp_registers.objects.filter(job_status=1)
+    return render(request, 'employee_lock_status.html', {'employees': employees})
+
+
+def unlock_account_view(request, emp_id):
+    try:
+        employee = emp_registers.objects.get(id=emp_id)
+        employee.failed_login_attempts = 0
+        employee.account_locked_until = None
+        employee.save()
+        messages.success(request, f"Account for {employee.name} has been unlocked.")
+    except emp_registers.DoesNotExist:
+        messages.error(request, "Employee not found.")
+    return redirect('employee_lock_status')
+
+from django import template
+
+register = template.Library()
+
+
+def first_name(value):
+    """Returns the first word in the string (assumed to be the first name)."""
+    if isinstance(value, str):
+        return value.split()[0]
+    return value
+
 
 
 import json
@@ -2508,7 +2507,6 @@ def reset_password(request):
                 [email],
                 fail_silently=False,
             )
-
             step = 'otp'
         except emp_registers.DoesNotExist:
             messages.error(request, "Email not found.")
@@ -3568,16 +3566,7 @@ def generate_custom_report(request):
 
 # Example for an admin action not directly tied to a model save/delete
 # such as deactivating a user (which might not delete the emp_registers entry)
-@login_required
-def deactivate_employee(request, employee_id):
-    employee = get_object_or_404(emp_registers, pk=employee_id)
-    if request.method == 'POST':
-        # Assuming you have a 'is_active' or 'job_status' field to deactivate
-        employee.job_status = JobStatusMaster.objects.get(status='Inactive') # Or set is_active=False
-        employee.save()
-        log_audit_action(request.user.username, f"deactivated employee {employee.name} (ID: {employee.pk})")
-        return redirect('employee_list')
-    return render(request, 'employee_deactivate_confirm.html', {'employee': employee})
+
 
 # You'll do this for all other views where specific, non-CRUD actions happen.
 from django.http import HttpResponse

@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'newapp','staff',
+    'staff',
     'simple_history',
 
 # 'django.contrib.messages',
@@ -223,7 +223,7 @@ LOGGING = {
 # settings.py
 AUDIT_LOG_FILE = os.path.join(BASE_DIR, 'audit.log')
 # Email Backend Configuration for SMTP (Gmail)
-EMAIL_BACKEND = 'staff.email_backends.BypassSSLVerificationEmailBackend'
+# EMAIL_BACKEND = 'staff.email_backends.BypassSSLVerificationEmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT =465
 EMAIL_USE_TLS = True  # Crucial for TLS (port 587)
@@ -232,14 +232,8 @@ EMAIL_USE_SSL = False # Ensure this is False if EMAIL_USE_TLS is True
 # Your Gmail account for sending emails
 EMAIL_HOST_USER = 'gauravsinghbhandari77@gmail.com'
 
-# IMPORTANT: This MUST be an "App Password" generated from your Google Account
-# if you have 2-Step Verification enabled. It is NOT your regular Gmail password.
-# Replace 'YOUR_GAURAV_APP_PASSWORD' with the actual 16-character App Password.
 EMAIL_HOST_PASSWORD = 'rdzs lpza yels nhbl'
-
-# Default sender email for your application
 DEFAULT_FROM_EMAIL = 'gauravsinghbhandari77@gmail.com'
-# Email address for server error notifications
 SERVER_EMAIL = 'gauravsinghbhandari77@gmail.com'
 import smtplib
 from django.core.mail.backends.smtp import EmailBackend

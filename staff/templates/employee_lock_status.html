@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    h2 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    #searchInput {
+        margin: 10px 0;
+        padding: 8px;
+        width: 300px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #rowsPerPage {
+        padding: 5px;
+        margin-left: 10px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    th, td {
+        text-align: center;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+    }
+
+    thead {
+        background-color: #3498db;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .status {
+        font-weight: bold;
+    }
+
+    .status[style*="red"] {
+        color: red;
+    }
+
+    .status[style*="green"] {
+        color: green;
+    }
+
+    button {
+        padding: 6px 12px;
+        background-color: #27ae60;
+        border: none;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    button:hover {
+        background-color: #219150;
+    }
+
+    .pagination-controls {
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .pagination-controls button {
+        margin: 0 5px;
+        padding: 6px 10px;
+        border: 1px solid #3498db;
+        background-color: white;
+        color: #3498db;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .pagination-controls button:hover {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .dropdown-label {
+        margin-left: 10px;
+    }
+</style>
+
+<h2>Employee Account Lock Status</h2>
+
+<input type="text" id="searchInput" placeholder="Search by name, email, department, or designation" onkeyup="filterTable()" style="margin-bottom: 10px; padding: 5px; width: 300px;" />
+
+<label for="rowsPerPage">Rows per page:</label>
+<select id="rowsPerPage" onchange="paginateTable()">
+    <option value="5">5</option>
+    <option value="10" selected>10</option>
+    <option value="25">25</option>
+</select>
+
+<table id="employeeTable" border="1" cellpadding="10">
+    <thead>
+        <tr>
+            <th>S.No</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Lock Status</th>
+        </tr>
+    </thead>
+    <tbody id="tableBody">
+        {% for emp in employees %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td class="emp-name">{{ emp.name }}</td>
+            <td class="emp-email">{{ emp.email }}</td>
+            <td class="emp-dept">{{ emp.department.name }}</td>
+            <td class="emp-role">{{ emp.position.role }}</td>
+            <td>
+                {% if emp.account_locked_until%}
+                    <span style="color: red;">Locked</span><br>
+                    <form action="{% url 'unlock_account' emp.id %}" method="POST" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="action-btn">Unlock</button>
+                    </form>
+                {% else %}
+                    <span style="color: green;">Unlocked</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6">No employees found.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin-top: 10px;">
+    <button onclick="prevPage()">Prev</button>
+    <span id="pageInfo"></span>
+    <button onclick="nextPage()">Next</button>
+</div>
+
+<script>
+    let currentPage = 1;
+    let rowsPerPage = 10;
+
+    function paginateTable() {
+        rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
+        currentPage = 1;
+        displayTable();
+    }
+
+    function filterTable() {
+        currentPage = 1;
+        displayTable();
+    }
+
+    function displayTable() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const rows = document.querySelectorAll("#tableBody tr");
+        let filteredRows = [];
+
+        rows.forEach(row => {
+            const name = row.querySelector(".emp-name").innerText.toLowerCase();
+            const email = row.querySelector(".emp-email").innerText.toLowerCase();
+            const dept = row.querySelector(".emp-dept").innerText.toLowerCase();
+            const role = row.querySelector(".emp-role").innerText.toLowerCase();
+            if (name.includes(input) || email.includes(input) || dept.includes(input) || role.includes(input)) {
+                row.style.display = "";
+                filteredRows.push(row);
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        let startIndex = (currentPage - 1) * rowsPerPage;
+        let endIndex = startIndex + rowsPerPage;
+
+        filteredRows.forEach((row, index) => {
+            row.style.display = (index >= startIndex && index < endIndex) ? "" : "none";
+        });
+
+        document.getElementById("pageInfo").innerText = `Page ${currentPage} of ${Math.ceil(filteredRows.length / rowsPerPage)}`;
+    }
+
+    function prevPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            displayTable();
+        }
+    }
+
+    function nextPage() {
+        const input = document.getElementById("searchInput").value.toLowerCase();
+        const rows = document.querySelectorAll("#tableBody tr");
+        let count = 0;
+
+        rows.forEach(row => {
+            const name = row.querySelector(".emp-name").innerText.toLowerCase();
+            const email = row.querySelector(".emp-email").innerText.toLowerCase();
+            const dept = row.querySelector(".emp-dept").innerText.toLowerCase();
+            const role = row.querySelector(".emp-role").innerText.toLowerCase();
+            if (name.includes(input) || email.includes(input) || dept.includes(input) || role.includes(input)) count++;
+        });
+
+        if (currentPage < Math.ceil(count / rowsPerPage)) {
+            currentPage++;
+            displayTable();
+        }
+    }
+
+    window.onload = () => {
+        paginateTable();
+    };
+</script>
+
+{% endblock %}

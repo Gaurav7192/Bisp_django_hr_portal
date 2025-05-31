@@ -185,17 +185,12 @@ class emp_registers(models.Model):
         self.account_locked_until = None
         self.save()
 
-    def save(self, *args, **kwargs):
-        self.password = make_password(self.password)
-        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.name} ({self.email})"
 
-    def unlock_account(self):
-        self.failed_login_attempts = 0
-        self.account_locked_until = None
-        self.save()
+
 
 class Handbook(models.Model):
     document_name=models.CharField(max_length=100,null =False )
