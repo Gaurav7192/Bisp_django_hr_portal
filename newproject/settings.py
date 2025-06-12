@@ -65,7 +65,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
     'staff',
+=======
+   'staff',
+>>>>>>> 42d7668bcb48967ff0541abffa23e1d2e9004495
     'simple_history',
 
 # 'django.contrib.messages',
