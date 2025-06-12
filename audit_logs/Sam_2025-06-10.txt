@@ -1,0 +1,17 @@
+2025-06-10 14.40.35 - Login  for Sam (ID: 3)
+2025-06-10 14.40.42 - Login  for Sam (ID: 3)
+2025-06-10 14.40.53 - submitted resignation with status 'Apply' (ID: 1)
+2025-06-10 14.40.53 - recorded resignation action 'Apply' for Sam (ID: 1)
+2025-06-10 14.41.28 - sent email to gauravsinghbhandari7192@gmail.com with subject 'resination ' (ID: 8)
+2025-06-10 14.41.28 - updated resignation with status 'Submit' (ID: 1)
+2025-06-10 14.41.28 - recorded resignation action 'Submit' for Sam (ID: 2)
+2025-06-10 14.41.35 - logged out
+2025-06-10 15.24.18 - updated resignation with status 'Manager Approved' (ID: 1)
+2025-06-10 15.24.18 - recorded resignation action 'Manager Approved' for Sam (ID: 3)
+2025-06-10 15.32.20 - updated resignation with status 'Manager Approved' (ID: 1)
+2025-06-10 15.32.20 - recorded resignation action 'Manager Approved' for Sam (ID: 4)
+2025-06-10 15.34.55 - updated resignation with status 'Manager Approved' (ID: 1)
+2025-06-10 15.37.58 - updated resignation with status 'Manager Approved' (ID: 1)
+2025-06-10 15.55.28 - logged out
+2025-06-10 16.07.19 - updated resignation with status 'HR Approve' (ID: 1)
+2025-06-10 16.19.49 - logged out

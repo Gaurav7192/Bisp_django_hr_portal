@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Activity Log Section */
+    .activity-log-container {
+        padding: 15px;
+        border-left: 1px solid #ccc;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .activity-log-container h3 {
+        font-size: 1.4rem;
+        margin-bottom: 15px;
+        color: #2c3e50;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 5px;
+    }
+
+    .activity-log-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .activity-log-table th,
+    .activity-log-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border: 1px solid #dee2e6;
+    }
+
+    .activity-log-table th {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: 500;
+    }
+
+    .activity-log-table tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .activity-log-table tbody tr:hover {
+        background-color: #e6f7ff;
+    }
+</style>
+<style>
+.badge-teal {
+    background-color: #20c997;  /* Bootstrap teal */
+    color: white;
+}
+</style>
+
+<h2 style="display: flex; justify-content: space-between; align-items: center;">
+    Resignation Activity for {{ resignation.employee.name }}
+        <form method="POST">
+        {% csrf_token %}
+
+
+        {% if request.session.postion == 'HR' and resignation.resign_status.id != 7 %}
+            <button type="submit" name="action" value="finish" class="btn btn-success">Mark as Finished</button>
+        {% endif %}
+        </form>
+
+</h2>
+
+<div style="display: flex; gap: 20px;">
+    <div style="flex: 7;">
+        <form method="POST"> {# This form is for personal and resignation details update #}
+            {% csrf_token %}
+            <h5 class="mt-4">Personal Details</h5>
+            <div class="row">
+                <div class="col-md-4">
+                    <p><strong>Name:</strong> {{ employee.name }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Employee ID:</strong> {{ employee.id }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Department:</strong> {{ employee.department }}</p>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <p><strong>Designation:</strong> {{ employee.designation }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Report To:</strong> {{ employee.reportto }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p><strong>Joined Date:</strong> {{ employee.joindate }}</p>
+                </div>
+            </div>
+
+            <h5 class="mt-4">Resignation Details</h5>
+            <div class="row mt-3">
+                <div class="col-md-4"><label>Resignation Apply Date</label>
+                    <input type="text" class="form-control" value="{{ resignation.resign_date }}" readonly>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Last Working Date</label>
+                    {% if request.session.postion == 'HR' and resignation.resign_status != 'Finalized' and resignation.resign_status != 'Withdraw' %}
+                        <input type="date" class="form-control" name="last_date" value="{{  resignation.last_date|date:'Y-m-d'}}">
+                        <button type="submit" name="action" value="update_last_date" class="btn btn-secondary mt-1">Change last working day</button>
+                    {% else %}
+                        <input type="text" class="form-control" value="{{ resignation.last_date|date:'Y-m-d' }}" readonly>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4"><label>Reason of Resignation</label>
+                    <input type="text" class="form-control" value="{{ resignation.reason }}" readonly>
+                </div>
+            </div>
+        </form>
+
+        <div class="email-content mt-4">
+            <h3>Email Content</h3>
+            {% if email %}
+                <p><strong>Subject:</strong> {{ email.subject }}</p>
+                <div style="border: 1px solid #ccc; padding: 10px;">{{ email.message_body|safe }}</div>
+            {% else %}
+                <p>No email record found.</p>
+            {% endif %}
+        </div>
+
+        {# --- START: Exit Checklist with Checkboxes and Two Columns --- #}
+        <div id="checklist" style="display: none; margin-top: 10px;">
+            <h3>Exit Checklist</h3>
+            <form method="POST" id="checklist-form"> {# Separate form for checklist #}
+                {% csrf_token %}
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+                    {# Column 1 #}
+                    <ul style="list-style: none; padding: 0; flex: 1; min-width: 48%; margin-right: 1%;">
+                        <li>
+                            <input type="checkbox" id="ongoing_projects" name="ongoing_projects" value="True" {% if checklist.status_ongoing_projects %}checked{% endif %}>
+                            <label for="ongoing_projects">Ongoing Projects</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="outstanding_tasks" name="outstanding_tasks" value="True" {% if checklist.outstanding_tasks %}checked{% endif %}>
+                            <label for="outstanding_tasks">Outstanding Tasks</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="important_contacts" name="important_contacts" value="True" {% if checklist.important_contacts %}checked{% endif %}>
+                            <label for="important_contacts">Important Contacts</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="update_passwords" name="update_passwords" value="True" {% if checklist.update_passwords %}checked{% endif %}>
+                            <label for="update_passwords">Update Passwords</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="revoke_access" name="revoke_access" value="True" {% if checklist.revoke_access %}checked{% endif %}>
+                            <label for="revoke_access">Revoke Access</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="remove_from_payroll" name="remove_from_payroll" value="True" {% if checklist.remove_from_payroll %}checked{% endif %}>
+                            <label for="remove_from_payroll">Remove from Payroll</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="update_employee_directory" name="update_employee_directory" value="True" {% if checklist.update_employee_directory %}checked{% endif %}>
+                            <label for="update_employee_directory">Directory Update</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="official_resignation_letter" name="official_resignation_letter" value="True" {% if checklist.official_resignation_letter %}checked{% endif %}>
+                            <label for="official_resignation_letter">Official Letter</label>
+                        </li>
+                    </ul>
+
+                    {# Column 2 #}
+                    <ul style="list-style: none; padding: 0; flex: 1; min-width: 48%; margin-left: 1%;">
+                        <li>
+                            <input type="checkbox" id="last_paycheck_arrangements" name="last_paycheck_arrangements" value="True" {% if checklist.last_paycheck_arrangements %}checked{% endif %}>
+                            <label for="last_paycheck_arrangements">Paycheck</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="nda" name="nda" value="True" {% if checklist.nda %}checked{% endif %}>
+                            <label for="nda">NDA</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="laptop_and_charger" name="laptop_and_charger" value="True" {% if checklist.laptop_and_charger %}checked{% endif %}>
+                            <label for="laptop_and_charger">Laptop Return</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="mouse" name="mouse" value="True" {% if checklist.mouse %}checked{% endif %}>
+                            <label for="mouse">Mouse Return</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="exit_interview_conducted" name="exit_interview_conducted" value="True" {% if checklist.exit_interview_conducted %}checked{% endif %}>
+                            <label for="exit_interview_conducted">Exit Interview</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="send_announcement" name="send_announcement" value="True" {% if checklist.send_announcement %}checked{% endif %}>
+                            <label for="send_announcement">Announcement</label>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="give_farewell_party" name="give_farewell_party" value="True" {% if checklist.give_farewell_party %}checked{% endif %}>
+                            <label for="give_farewell_party">Farewell Party</label>
+                        </li>
+                    </ul>
+                </div> {# End of flex container #}
+
+                <button type="submit" name="checklist_action" value="save_checklist" class="btn btn-primary mt-3">Save Checklist</button>
+            </form>
+        </div>
+        {# --- END: Exit Checklist with Checkboxes and Two Columns --- #}
+    </div>
+
+   <div class="activity-log-container" style="flex: 3;">
+    <h3>Status Action History</h3>
+    <table class="activity-log-table">
+        <thead>
+            <tr>
+                <th>Action</th>
+                <th>Date</th>
+                <th>By</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for action in status_actions %}
+            <tr>
+               <td>
+   {% if action.action == 'Finalized' %}
+    <span class="badge badge-teal">Finalized</span>
+{% elif action.action == 'HR Approve' or action.action == 'Manager Approved' %}
+    <span class="badge badge-success">{{ action.action }}</span>
+{% elif action.action == 'Reject by Manager' or action.action == 'Reject by HR' %}
+    <span class="badge badge-danger">{{ action.action }}</span>
+{% elif action.action == 'Submit' %}
+    <span class="badge badge-warning">Submit</span>
+{% elif action.action == 'Apply' %}
+    <span class="badge badge-info">Apply</span>
+{% elif action.action == 'Withdraw' %}
+    <span class="badge badge-secondary">Withdraw</span>
+{% elif action.action == 'Finished' %}
+    <span class="badge badge-primary">Finished</span>
+{% else %}
+    <span class="badge badge-light">{{ action.action }}</span>
+{% endif %}
+
+</td>
+
+                <td>{{ action.action_date }}</td>
+                <td>{{ action.action_by.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<div class="mt-4">
+    <form method="POST" style="text-align: right; margin-bottom: 20px;"> {# Added text-align: right #}
+        {% csrf_token %}
+
+        {% if request.session.postion == 'Manager' and resignation.resign_status.id  < 3 %}
+            <button type="submit" name="action" value="approve" class="btn btn-primary">Approve</button>
+            <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
+        {% endif %}
+
+        {% if request.session.postion == 'Employee' and resignation.resign_status != 'Finalized' and resignation.resign_status != 'Reject by HR' %}
+            <button type="submit" name="action" value="withdraw" class="btn btn-warning">Withdraw</button>
+        {% endif %}
+
+        {% if request.session.postion == 'HR' and resignation.resign_status.id  == 4 %}
+            <button type="submit" name="action" value="approve_hr" class="btn btn-success">Approve (HR)</button>
+            <button type="submit" name="action" value="reject_hr" class="btn btn-danger">Reject (HR)</button>
+            <button type="button" onclick="toggleChecklist()" title="Click to view checklist" class="btn btn-info">Checklist</button>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+    function toggleChecklist() {
+        const checklist = document.getElementById('checklist');
+        checklist.style.display = checklist.style.display === 'none' ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

@@ -45,6 +45,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIT_LOG_DIR = os.path.join(BASE_DIR, 'audit_logs')
 
 # Application definition
+# Base directory of your project
+# BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Static files (CSS, JavaScript, Images)
+# STATIC_URL = '/static/'  # URL to use when referring to static files
+#
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'static'),  # Your static folder path
+# ]
+#
+# # This is used in production when using collectstatic
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -175,6 +187,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
+
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS=[

@@ -59,7 +59,7 @@
                             {{ day_data.status }}
                         </td>
                         {% else %}
-                        {# For 'P', 'W' or '-' statuses, keep them non-clickable #}
+                        {# For 'P', 'W', or '-' statuses, keep them non-clickable. #}
                         <td class="{{ day_data.class }} {% if selected_year == current_year and selected_month == current_month and day_data.day_num == current_day %}today-date{% endif %}">
                             {{ day_data.status }}
                         </td>
@@ -206,8 +206,6 @@
             }
         };
         // --- End New JavaScript Function ---
-
-        // Removed the old custom tooltip JS
     });
 </script>
 
@@ -353,7 +351,7 @@
     }
     .future-date {
         background-color: #f8f9fa; /* Even lighter gray */
-        color: #999;
+        color: #999; /* Gray text */
         font-style: italic;
     }
     .future-date-header {

@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="mb-4">Payslip List</h2>
+
+        <!-- Filters and Export Buttons -->
+        <div class="mb-3 row">
+            <div class="col">
+                <input type="text" id="search" class="form-control" placeholder="Search by Employee Name or ID" value="{{ request.GET.search }}">
+            </div>
+            <div class="col">
+                <select id="month_filter" class="form-control">
+                    <option value="">Select Month</option>
+                    <option value="June 2025" {% if month_filter == 'June 2025' %}selected{% endif %}>June 2025</option>
+                    <option value="July 2025" {% if month_filter == 'July 2025' %}selected{% endif %}>July 2025</option>
+                    <!-- Add other months as needed -->
+                </select>
+            </div>
+            <div class="col-auto">
+                <a href="{% url 'export_payslips_csv' %}?search={{ request.GET.search }}&month={{ request.GET.month }}" class="btn btn-success">Export to CSV</a>
+                <a href="{% url 'export_payslips_excel' %}?search={{ request.GET.search }}&month={{ request.GET.month }}" class="btn btn-primary">Export to Excel</a>
+            </div>
+        </div>
+
+        <!-- Rows per page selection -->
+        <div class="mb-3 row">
+            <div class="col-auto">
+                <select id="rows_per_page" class="form-control">
+                    <option value="10" {% if rows_per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if rows_per_page == 20 %}selected{% endif %}>20</option>
+                    <option value="all" {% if rows_per_page == 'all' %}selected{% endif %}>All</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th><button class="btn btn-link" onclick="sortTable(0)">Employee Name</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(1)">Employee ID</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(2)">Month</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(3)">Department</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(4)">Basic</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(5)">HRA</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(6)">Allowance</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(7)">Deductions</button></th>
+                    <th><button class="btn btn-link" onclick="sortTable(8)">Net Salary</button></th>
+                </tr>
+            </thead>
+            <tbody id="payslip-table-body">
+                {% for payslip in page_obj %}
+                <tr>
+                   <td>
+                        <a href="{% url 'employee_salary_history' payslip.employee_id %}" class="btn btn-link">
+                            {{ payslip.employee_name }}
+                        </a>
+                   </td>
+
+                    <td>{{ payslip.employee_id }}</td>
+                    <td>{{ payslip.month }}</td>
+                    <td>{{ payslip.department }}</td>
+                    <td>{{ payslip.basic }}</td>
+                    <td>{{ payslip.hra }}</td>
+                    <td>{{ payslip.allowance }}</td>
+                    <td>{{ payslip.deductions }}</td>
+                    <td>{{ payslip.net_salary }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9">No payslips found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <nav>
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ current_page }} of {{ total_pages }}</span>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle search input change
+        document.getElementById('search').addEventListener('input', function() {
+            let searchQuery = this.value;
+            let monthFilter = document.getElementById('month_filter').value;
+            let rowsPerPage = document.getElementById('rows_per_page').value;
+            let url = new URL(window.location.href);
+            url.searchParams.set('search', searchQuery);
+            url.searchParams.set('month', monthFilter);
+            url.searchParams.set('rows_per_page', rowsPerPage);
+            window.location.href = url.toString();
+        });
+
+        // Handle month filter change
+        document.getElementById('month_filter').addEventListener('change', function() {
+            let month = this.value;
+            let searchQuery = document.getElementById('search').value;
+            let rowsPerPage = document.getElementById('rows_per_page').value;
+            let url = new URL(window.location.href);
+            url.searchParams.set('month', month);
+            url.searchParams.set('search', searchQuery);
+            url.searchParams.set('rows_per_page', rowsPerPage);
+            window.location.href = url.toString();
+        });
+
+        // Handle rows per page selection change
+        document.getElementById('rows_per_page').addEventListener('change', function() {
+            let rowsPerPage = this.value;
+            let searchQuery = document.getElementById('search').value;
+            let monthFilter = document.getElementById('month_filter').value;
+            let url = new URL(window.location.href);
+            url.searchParams.set('rows_per_page', rowsPerPage);
+            url.searchParams.set('search', searchQuery);
+            url.searchParams.set('month', monthFilter);
+            window.location.href = url.toString();
+        });
+
+        // Table sorting
+        function sortTable(n) {
+            let rows = document.getElementById('payslip-table-body').rows;
+            let switching = true;
+            let shouldSwitch, dir = "asc", switchcount = 0;
+
+            while (switching) {
+                switching = false;
+                for (let i = 0; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    let x = rows[i].cells[n];
+                    let y = rows[i + 1].cells[n];
+                    if (dir === "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir === "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount === 0 && dir === "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}

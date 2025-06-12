@@ -20,7 +20,16 @@ GENDER_CHOICES = [
 
 
 
-
+class ActionChecklistForm(forms.ModelForm):
+    class Meta:
+        model = ActionChecklist
+        fields = [
+            'status_ongoing_projects', 'outstanding_tasks', 'important_contacts',
+            'update_passwords', 'revoke_access', 'remove_from_payroll', 'update_employee_directory',
+            'official_resignation_letter', 'last_paycheck_arrangements', 'nda',
+            'laptop_and_charger', 'mouse', 'exit_interview_conducted',
+            'send_announcement', 'give_farewell_party',
+        ]
 from django.contrib.auth.hashers import check_password
 
 class EmployeeForm(forms.ModelForm):

@@ -56,6 +56,12 @@
             <p>Project</p>
           </a>
         </li>
+       <li class="nav-item">
+              <a href="{% url 'todo' %}" class="nav-link">
+                <i class="far fa-circle nav-icon"></i>
+                <p>Todo List</p>
+              </a>
+            </li>
 
         <!-- Task -->
         <li class="nav-item has-treeview">
@@ -191,12 +197,14 @@
               </a>
             </li>
 
-            <li class="nav-item">
-              <a href="pages/examples/projects.html" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Projects</p>
-              </a>
-            </li>
+         <li class="nav-item">
+            <a href="{% url 'payslip_from_csv'  %}" class="nav-link">
+              <i class="nav-icon fas fa-money-bill-wave"></i>
+              <p>Payslip</p>
+            </a>
+         </li>
+
+
             <li class="nav-item">
               <a href="{% url 'holiday_list_view' %}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
@@ -204,9 +212,10 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="pages/examples/project-edit.html" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Project Edit</p>
+              <a href="{% url 'resignation_list' %}" class="nav-link"> {# Assuming 'resignation_form' is the name of your URL pattern #}
+               <i class="fas fa-file-signature nav-icon"></i>
+
+                <p>Resignation Application </p>
               </a>
             </li>
             <li class="nav-item">

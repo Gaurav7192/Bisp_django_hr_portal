@@ -4,13 +4,18 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from datetime import date,datetime,time,timedelta
-from django.db.models import JSONField
+from django.db.models import JSONField, DO_NOTHING
 import logging
 from datetime import timedelta
 from django.utils import timezone
 logger = logging.getLogger(__name__)
 from django.utils.timezone import now
 from simple_history.models import HistoricalRecords
+from decimal import Decimal
+from django.db import models
+from django.core.exceptions import ValidationError
+
+
 class DesignationMaster(models.Model):
     designation_name = models.CharField(max_length=100, unique=True)
 
@@ -143,20 +148,18 @@ class JobStatusMaster(models.Model):
         return self.status
 
 class emp_registers(models.Model):
-
     id = models.AutoField(primary_key=True)
-    name=models.CharField(max_length=100,null=False)
-    email=models.EmailField(unique=True,null=False)
-    password=models.CharField(max_length=128,null=False)
+    name = models.CharField(max_length=100, null=False)
+    email = models.EmailField(unique=True, null=False)
+    password = models.CharField(max_length=128, null=False)
 
     position = models.ForeignKey(RoleMaster, on_delete=models.SET_NULL, null=True)
     department = models.ForeignKey(DepartmentMaster, on_delete=models.SET_NULL, null=True)
     designation = models.ForeignKey(DesignationMaster, on_delete=models.SET_NULL, null=True, blank=True)
 
-    registration_date = models.DateTimeField(auto_now_add=True,)
-    joindate =models.DateField(null=True)
+    registration_date = models.DateTimeField(auto_now_add=True, )
+    joindate = models.DateField(null=True)
     reportto = models.CharField(max_length=100, null=True, blank=True)
-
 
     salary = models.DecimalField(
         max_digits=10,
@@ -741,3 +744,146 @@ class SentEmail(models.Model):
 
     def __str__(self):
         return f"Email to {self.recipient_email} by {self.employee} on {self.sent_at.strftime('%Y-%m-%d')}"
+class TodoTask(models.Model):
+    name = models.CharField(max_length=255)
+    badge = models.CharField(max_length=20, choices=[
+        ('success', 'Success'),
+        ('danger', 'Danger'),
+        ('secondary', 'Secondary'),
+    ])
+    datetime = models.DateTimeField()  # Stores full datetime (for filtering)
+
+    def hour(self):
+        return self.datetime.hour
+
+    def date_only(self):
+        return self.datetime.date()
+
+class Payslip(models.Model):
+    pass
+    employee_name = models.CharField(max_length=255)
+    employee_id = models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING)
+    department = models.CharField(max_length=255, blank=True, null=True)
+    month = models.CharField(max_length=50)  # e.g., "June 2025" or "06-2025"
+
+
+    # Earnings
+    SALARY_BASIC = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    SALARY_HRA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    SALARY_DA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    GROSS_BASIC = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    GROSS_HRA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    GROSS_DA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    CONVENCE_ALLOWANCE = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                            blank=True)
+    SPECIAL_ALLOWNCES = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                            blank=True)
+    Project_Incentive = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                            blank=True)
+    Variable_Pay = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    GROSS_TOTAL = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    # Deductions
+    ESI = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    PF = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    Salary_Advance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                         blank=True)
+    Negative_Leave = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                         blank=True)
+    TDS = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    Total_Deductions = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
+                                           blank=True)
+
+
+    # Legacy compatibility
+    basic = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    hra = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    allowance = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    deductions = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+    net_salary = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('employee_id', 'month')
+        verbose_name = "Payslip Record"
+        verbose_name_plural = "Payslip Records"
+
+    def __str__(self):
+        return f"{self.employee_name} ({self.employee_id}) - {self.month} Payslip"
+
+    def save(self, *args, **kwargs):
+        # Total earnings (gross)
+        self.GROSS_TOTAL = (
+                self.GROSS_BASIC + self.GROSS_HRA + self.GROSS_DA +
+                self.CONVENCE_ALLOWANCE + self.SPECIAL_ALLOWNCES +
+                self.Project_Incentive + self.Variable_Pay
+        )
+
+        # Total deductions
+        self.Total_Deductions = (
+                self.ESI + self.PF + self.Salary_Advance +
+                self.Negative_Leave + self.TDS
+        )
+
+        # Net salary = gross - deductions
+        self.NET_SALARY = self.GROSS_TOTAL - self.Total_Deductions
+
+        # Optional: keep legacy fields in sync
+        self.basic = self.SALARY_BASIC
+        self.hra = self.SALARY_HRA
+        self.allowance = self.SPECIAL_ALLOWNCES + self.CONVENCE_ALLOWANCE + self.Variable_Pay
+        self.deductions = self.Total_Deductions
+        self.net_salary = self.NET_SALARY
+
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        salary_fields = [
+            'SALARY_BASIC', 'SALARY_HRA', 'SALARY_DA',
+            'GROSS_BASIC', 'GROSS_HRA', 'GROSS_DA',
+            'CONVENCE_ALLOWANCE', 'SPECIAL_ALLOWNCES',
+            'Project_Incentive', 'Variable_Pay',
+            'ESI', 'PF', 'Salary_Advance', 'Negative_Leave', 'TDS',
+        ]
+
+        for field in salary_fields:
+            value = getattr(self, field)
+            if value < 0:
+                raise ValidationError({field: f"{field.replace('_', ' ')} cannot be negative."})
+
+
+
+class toda_task(models.Model):
+    user = models.ForeignKey('emp_registers', on_delete=models.CASCADE, related_name='tasks')
+    desc = models.TextField()
+    badge = models.CharField(max_length=20, default='success')
+    datetime = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.name} - {self.desc} at {self.datetime}"
+
+
+from django.db import models
+
+# Assuming you have other models in your staff app, add this new one
+class HRPolicy(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "HR Policy"
+        verbose_name_plural = "HR Policies"
+        ordering = ['title'] # Order policies by title by default
+
+    def __str__(self):
+        return self.title
+
+# ... potentially other models you already have ...

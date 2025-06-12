@@ -149,7 +149,7 @@ def dashboard_view(request):
     return render(request, 'staff/dashboard.html', context)
 
 
-@login_required
+
 def resignation_detail_view(request, pk):
     user_audit_name = get_user_audit_identifier(request) # Get name from session
     resignation = get_object_or_404(Resignation, pk=pk)
@@ -164,7 +164,6 @@ def resignation_detail_view(request, pk):
     log_audit_action(user_audit_name, f"viewed resignation details for {resignation.employee.name} (ID: {pk})")
     return render(request, 'staff/resignation_detail.html', context)
 
-@login_required
 def approve_leave_view(request, pk):
     user_audit_name = get_user_audit_identifier(request) # Get name from session
     if not (request.user.position and request.user.position.role == 'HR'):
@@ -1537,7 +1536,7 @@ def apply_leave(request, user_id):
 def update_total_leaves():
 
     current_year = date.today().year
-    employees = emp_registers.objects.all()  # Fetch all employees from emp_registers
+    employees = emp_registers.objects.filter(job_status=1)  # Fetch all employees from emp_registers
 
     if not employees:
         return JsonResponse({"status": "error", "message": "No employee records found."})
@@ -2008,7 +2007,7 @@ def add_leave_type(request):
 
     # GET request - render form
     departments = DepartmentMaster.objects.all()
-    employees = emp_registers.objects.all()
+    employees = emp_registers.objects.filter(job_status=1)
 
     return render(request, 'add_leave_type.html', {
         'departments': departments,
@@ -2796,7 +2795,7 @@ def delete_experience(request, pk):
 
 def handbook_record(request, handbook_id):
     handbook = get_object_or_404(Handbook, id=handbook_id)
-    employees = emp_registers.objects.all()  # All active employees
+    employees = emp_registers.objects.filter(job_status=1)  # All active employees
 
     # Create missing acknowledgment records for this handbook
     for employee in employees:
@@ -2957,7 +2956,7 @@ def handbook_list(request):
         handbook = get_object_or_404(Handbook, id=h.id)
 
         # Get all employees
-        employees = emp_registers.objects.all()
+        employees = emp_registers.objects.filter(job_status=1)
 
         # Ensure acknowledgment exists for all employees
 
@@ -2989,7 +2988,7 @@ def acknowledgments_for_handbook(request, handbook_id):
     handbook = get_object_or_404(Handbook, id=handbook_id)
     data=[]
     # Get all employees
-    employees = emp_registers.objects.all()
+    employees = emp_registers.objects.filter(job_status=1)
 
     # Ensure acknowledgment exists for all employees
 
@@ -3406,19 +3405,27 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import emp_registers, Resignation, ResignationStatusMaster, ResignStatusAction
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import emp_registers, Resignation, ResignationStatusMaster, ResignStatusAction
+from datetime import datetime, timedelta
+from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
+from .models import emp_registers, Resignation, ResignationStatusMaster, ResignStatusAction
+
 def resignation_form(request, user_id):
     employee = get_object_or_404(emp_registers, id=user_id)
 
-    # Get all resignations for this employee
-    resignation_qs = Resignation.objects.filter(employee=employee).order_by('-id')  # latest first
+    # Get all resignations for this employee (latest first)
+    resignation_qs = Resignation.objects.filter(employee=employee).order_by('-id')
 
     if not resignation_qs.exists():
-        # No resignation found, show resignation form
+        # No resignation found, allow to submit new one
         if request.method == 'POST':
             resign_date_str = request.POST.get('resign_date')
             reason = request.POST.get('reason')
 
-            # Helper to convert 'yes'/'no' to True/False
             def to_bool(value):
                 return value == 'yes'
 
@@ -3430,9 +3437,10 @@ def resignation_form(request, user_id):
             resign_date = datetime.strptime(resign_date_str, "%Y-%m-%d").date()
             last_date = resign_date + timedelta(days=90)
 
-            default_status = ResignationStatusMaster.objects.get(id=1)
+            # Status: Apply
+            default_status = ResignationStatusMaster.objects.get(status_name="Apply")
 
-            # Create new resignation
+            # Create Resignation
             resignation = Resignation.objects.create(
                 employee=employee,
                 resign_date=resign_date,
@@ -3445,10 +3453,10 @@ def resignation_form(request, user_id):
                 resign_status=default_status
             )
 
-            # Create initial status action
+            # Log the status in ResignStatusAction
             ResignStatusAction.objects.create(
                 resignation=resignation,
-                action=default_status,
+                action=default_status.status_name,  # Pass the name, not object
                 action_by=employee,
                 action_date=timezone.now()
             )
@@ -3459,12 +3467,75 @@ def resignation_form(request, user_id):
 
     else:
         latest_resignation = resignation_qs.first()
-        if latest_resignation.resign_status.id == 1:  # Pending status
-            return render(request, 'send_exit_email.html', {'employee': employee})
+        current_status_name = latest_resignation.resign_status.status_name
+
+        if current_status_name == "Apply":
+            return redirect('handle_incomplete_resignation',user_id=user_id)
+        elif current_status_name == 'Submit':
+            return redirect('resignation_activity', user_id=user_id)
+        elif current_status_name == 'Withdraw':
+            # Allow employee to reapply if resignation status is 'Withdraw'
+            if request.method == 'POST':
+                # Reapply the resignation process
+                resign_date_str = request.POST.get('resign_date')
+                reason = request.POST.get('reason')
+
+                resign_date = datetime.strptime(resign_date_str, "%Y-%m-%d").date()
+                last_date = resign_date + timedelta(days=90)
+
+                # Status: Apply
+                default_status = ResignationStatusMaster.objects.get(status_name="Apply")
+
+                # Create new Resignation (reapply)
+                resignation = Resignation.objects.create(
+                    employee=employee,
+                    resign_date=resign_date,
+                    last_date=last_date,
+                    reason=reason,
+                    selected_elsewhere=latest_resignation.selected_elsewhere,
+                    bond_over=latest_resignation.bond_over,
+                    advance_salary=latest_resignation.advance_salary,
+                    dues_pending=latest_resignation.dues_pending,
+                    resign_status=default_status
+                )
+
+                # Log the status in ResignStatusAction
+                ResignStatusAction.objects.create(
+                    resignation=resignation,
+                    action=default_status.status_name,
+                    action_by=employee,
+                    action_date=timezone.now()
+                )
+
+                return redirect('handle_incomplete_resignation',user_id=user_id)
+
+            return render(request, 'exit_management.html', {
+                'employee': employee,
+                'resignation': latest_resignation
+            })
         else:
-            return render(request, 'resignation_activity.html', {'employee': employee, 'resignation': latest_resignation})
+            return render(request, 'resignation_activity.html', {
+                'employee': employee,
+                'resignation': latest_resignation
+            })
 
 
+def handle_incomplete_resignation(request,user_id):
+    employee = get_object_or_404(emp_registers, id=user_id)
+    try:
+        resignation = Resignation.objects.filter(employee=employee).latest('id')
+    except Resignation.DoesNotExist:
+        messages.warning(request, "No resignation record found.")
+        return redirect('d2',id=user_id)
+    if request.method == 'POST':
+        if 'complete' in request.POST:
+            # Render the 'send_exit_email.html' page with context
+            return redirect('send_exit_email', user_id=user_id)
+        elif 'delete' in request.POST:
+            ResignStatusAction.objects.filter(resignation=resignation).delete()
+            resignation.delete()
+            return redirect('exit_management', user_id=user_id)
+    return render(request, 'incomplete_warning.html')
 
 def get_tasks(request):
     project_id = request.GET.get('project_id')
@@ -3482,11 +3553,36 @@ from django.core.mail import EmailMultiAlternatives
 from django.contrib import messages
 from django.shortcuts import redirect, render, get_object_or_404
 from .models import SentEmail, emp_registers  # Ensure you import your model
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from .models import emp_registers, Resignation, ResignStatusAction, SentEmail, ResignationStatusMaster
+from django.core.mail import EmailMultiAlternatives
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from datetime import datetime
+from .models import emp_registers, Resignation, ResignationStatusMaster, ResignStatusAction, SentEmail
+# from django.core.mail import EmailMultiAlternatives  # Uncomment to use email sending
 
 def send_exit_email(request, user_id):
+    employee = get_object_or_404(emp_registers, id=user_id)
+
+    # Check if the resignation status is already "Submit"
+    try:
+        resignation = Resignation.objects.filter(employee=employee).latest('id')
+        submit_status = ResignationStatusMaster.objects.get(status_name="Submit")
+
+        if resignation.resign_status == submit_status:
+            return redirect('resignation_activity', user_id=user_id)
+    except Resignation.DoesNotExist:
+        resignation = None  # No resignation found, continue normally
+    except ResignationStatusMaster.DoesNotExist:
+        messages.error(request, "Submit status not found in master table.")
+        return redirect('error_page')  # Use your own error page or message
 
     if request.method == 'POST':
-        print('inside send mail post \n\n\n')
+        print('Inside send mail POST')
+
         from_email = request.POST.get('from')
         to_email = request.POST.get('to')
         cc = request.POST.get('cc', '')
@@ -3499,21 +3595,19 @@ def send_exit_email(request, user_id):
         bcc_list = [email.strip() for email in bcc.split(',') if email.strip()]
 
         try:
-            print(" inside try \n\n")
-            email_msg = EmailMultiAlternatives(
-                subject=subject,
-                body=message,
-                from_email=from_email,
-                to=to_list,
-                cc=cc_list,
-                bcc=bcc_list,
-            )
-            email_msg.attach_alternative(message, "text/html")
-            print(email_msg)
-            email_msg.send()
+            # Optional: Uncomment this to actually send the email
+            # email_msg = EmailMultiAlternatives(
+            #     subject=subject,
+            #     body=message,
+            #     from_email=from_email,
+            #     to=to_list,
+            #     cc=cc_list,
+            #     bcc=bcc_list,
+            # )
+            # email_msg.attach_alternative(message, "text/html")
+            # email_msg.send()
 
-            # Save to DB after successful send
-            employee = get_object_or_404(emp_registers, id=user_id)
+            # Save the email to DB
             SentEmail.objects.create(
                 employee=employee,
                 recipient_email=to_email,
@@ -3521,14 +3615,85 @@ def send_exit_email(request, user_id):
                 message_body=message
             )
 
-            messages.success(request, "Email sent and stored successfully!")
+            # Update status to Submit
+            resignation.resign_status = submit_status
+            resignation.save()
+
+            # Log the status change
+            ResignStatusAction.objects.create(
+                resignation=resignation,
+                action=submit_status,
+                action_by=employee
+            )
+
+            messages.success(request, "Email sent, resignation marked as 'Submit', and status logged.")
+            print('\n\n\n\n vwv')
+            return redirect('resignation_activity', user_id=user_id)
+
         except Exception as e:
-            messages.error(request, f"Failed to send email: {e}")
+            messages.error(request, f"Failed to send email or update status: {e}")
+            return redirect('send_exit_email', user_id=user_id)
 
-        return redirect('send_exit_email', user_id)
+    return render(request, 'send_exit_email.html', {'employee': employee})
 
-    return render(request, 'send_exit_email.html')
-# your_app/views.py
+from django.shortcuts import render
+from .models import Resignation, emp_registers, ResignStatusAction, DepartmentMaster, DesignationMaster
+
+def resignation_list(request):
+    all_resignations = Resignation.objects.select_related('employee', 'resign_status').order_by('-id')
+    resignation_data_section1 = []
+    resignation_data_section2 = []
+
+    user_position = request.session.get('postion')  # e.g., 'manager' or 'hr'
+
+    for resignation in all_resignations:
+        emp = emp_registers.objects.filter(id=resignation.employee.id).first()
+        if not emp:
+            continue
+
+        department = emp.department.name if emp.department else "N/A"
+        designation = emp.designation.designation_name if emp.designation else "N/A"
+        try:
+            latest_action = ResignStatusAction.objects.filter(resignation=resignation).order_by('-id').first()
+        except ResignStatusAction.DoesNotExist:
+            latest_action = None
+        m=[4, 5, 6, 7, 8, 3]
+        h=[3, 4, 5, 7, 8]
+        data = {
+            'emp_id': emp.id,
+            'employee_name': emp.name,
+            'resign_date': resignation.resign_date,
+            'status': resignation.resign_status.status_name,
+            'status_id': resignation.resign_status.id,  # For badge color
+            'department': department,
+            'designation': designation,
+            'latest_action': latest_action.action if latest_action else 'N/A',
+            'reason': resignation.reason,
+            'm': m,
+            'h': h,
+
+
+        }
+
+        # Section 1 filter (single row depending on role and status id)
+        if (user_position == 'Manager' and resignation.resign_status.id == 2) or \
+           (user_position == 'HR' and resignation.resign_status.id == 4):
+            resignation_data_section1.append(data)
+
+        # Section 2 filter (remaining statuses)
+        elif resignation.resign_status.id in [ 3, 4, 5, 6, 7, 8]:
+            resignation_data_section2.append(data)
+
+    departments = DepartmentMaster.objects.all()
+    designations = DesignationMaster.objects.all()
+
+    return render(request, 'resignation_list.html', {
+        'resignation_data_section1': resignation_data_section1,
+        'resignation_data_section2': resignation_data_section2,
+        'departments': departments,
+        'designations': designations
+    })
+
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -3598,122 +3763,151 @@ from django.db.models import Q
 
 # Assuming these are your models
 # from .models import emp_registers, Holiday, LeaveRecord
+import calendar
+from datetime import date
+from calendar import monthrange
+from django.shortcuts import render
+from django.db.models import Q
+from django.utils import timezone  # Make sure to import timezone
+
+
+# Assuming your models are imported like this:
+# from .models import emp_registers, Holiday, LeaveRecord
+from django.shortcuts import render
+from django.utils import timezone
+from datetime import date
+from calendar import monthrange
+from collections import defaultdict
+from django.db.models import Q
+from .models import emp_registers, Holiday, LeaveRecord
+import calendar
+from datetime import date
+from calendar import monthrange
+from collections import defaultdict
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Q
+from .models import LeaveRecord, Holiday, emp_registers
+import calendar
 
 def attendance_view(request):
-    selected_year = int(request.GET.get('year', timezone.localdate().year))
-    selected_month = int(request.GET.get('month', timezone.localdate().month))
+    try:
+        selected_year = int(request.GET.get('year', timezone.localdate().year))
+        selected_month = int(request.GET.get('month', timezone.localdate().month))
+        assert 1 <= selected_month <= 12
+    except (ValueError, AssertionError):
+        selected_year = timezone.localdate().year
+        selected_month = timezone.localdate().month
 
     today = timezone.localdate()
 
-    # --- Employee Search Filter (Optional but good to include) ---
+    # --- Employee Search Filter ---
     search_query = request.GET.get('search')
     if search_query:
         employees_qs = emp_registers.objects.filter(
             Q(name__icontains=search_query) | Q(id__icontains=search_query)
         ).order_by('id')
     else:
-        employees_qs = emp_registers.objects.all().order_by('id')
+        employees_qs = emp_registers.objects.filter(job_status=1).order_by('name')
 
+    # --- Fetch Holidays ---
     holidays_query = Holiday.objects.filter(
         date__year=selected_year,
         date__month=selected_month
     ).values_list('date', 'name')
     holidays_dict = {h_date: h_name for h_date, h_name in holidays_query}
 
-    # Optimize leave record fetching
-    leave_records = LeaveRecord.objects.filter(
-        (Q(start_date__year=selected_year, start_date__month=selected_month) |
-         Q(end_date__year=selected_year, end_date__month=selected_month) |
-         (Q(start_date__lt=date(selected_year, selected_month, 1)) &
-          Q(end_date__gt=date(selected_year, selected_month, monthrange(selected_year, selected_month)[1])))),
+    # --- Fetch Leaves ---
+    start_of_month = date(selected_year, selected_month, 1)
+    end_of_month = date(selected_year, selected_month, monthrange(selected_year, selected_month)[1])
+    leave_records_qs = LeaveRecord.objects.filter(
+        Q(start_date__lte=end_of_month) & Q(end_date__gte=start_of_month),
         approval_status__status='Approved'
     ).select_related('emp_id')
 
+    employee_leaves = defaultdict(list)
+    for leave in leave_records_qs:
+        employee_leaves[leave.emp_id].append(leave)
+
     attendance_data = []
     num_days_in_month = monthrange(selected_year, selected_month)[1]
+    days_in_month_header_range = list(range(1, num_days_in_month + 1))
 
-    # Pre-calculate 2nd and 3rd Saturdays for efficiency
-    second_saturday = None
-    third_saturday = None
+    # --- Calculate 2nd and 3rd Saturdays ---
+    second_saturday = third_saturday = None
     saturday_count = 0
-
     for day_num in range(1, num_days_in_month + 1):
         temp_date = date(selected_year, selected_month, day_num)
-        if temp_date.weekday() == 5:  # 5 corresponds to Saturday
+        if temp_date.weekday() == 5:
             saturday_count += 1
             if saturday_count == 2:
                 second_saturday = temp_date
             elif saturday_count == 3:
                 third_saturday = temp_date
-                # Once we found the 3rd Saturday, we can break early
                 break
 
+    # --- Build Attendance Rows ---
     for employee in employees_qs:
         employee_attendance_row = {
             'id': employee.id,
             'name': employee.name,
+            'employee_id': employee.id,
             'days_data': []
         }
 
-        for day_num in range(1, num_days_in_month + 1):
+        for day_num in days_in_month_header_range:
             current_date_obj = date(selected_year, selected_month, day_num)
-            day_of_week = current_date_obj.weekday()  # Monday is 0, Sunday is 6
+            day_of_week = current_date_obj.weekday()
 
-            status = '-'  # Default status for future dates or unhandled days
+            status = '-'
             reason = ''
             cell_class = ''
 
+            # 1. Future Date
             if current_date_obj > today:
-                # Mark future dates
                 status = '-'
                 reason = 'Future Date'
                 cell_class = 'future-date'
-            elif day_of_week == 6:  # Sunday
-                # Always mark Sunday as 'W'
-                status = 'W'
-                reason = 'Weekend'
-                cell_class = 'weekend-day'
-            elif day_of_week == 5:  # Saturday
-                # Mark 2nd and 3rd Saturdays as 'W'
-                if current_date_obj == second_saturday or current_date_obj == third_saturday:
-                    status = 'W'
-                    reason = 'Weekend'
-                    cell_class = 'weekend-day'
-                else:
-                    # Other Saturdays (1st, 4th, etc.) are treated as regular working days
-                    # and will fall through to check for holidays/leaves/present
-                    pass  # Let the next conditions handle it
 
-            # --- Holiday Check (only if not already marked as a weekend) ---
-            if status != 'W' and current_date_obj in holidays_dict:
-                status = 'H'
-                reason = holidays_dict[current_date_obj]
-                cell_class = 'holiday-day'
-
-            # --- Leave Check (only if not already marked as a weekend or holiday) ---
-            if status not in ['W', 'H']:  # Check if it's not a weekend or holiday
-                employee_leave_found = False
-                for leave in leave_records:
-                    if leave.emp_id == employee and leave.start_date <= current_date_obj <= leave.end_date:
+            else:
+                # 2. Check Leave FIRST (higher priority)
+                leave_found = False
+                for leave in employee_leaves.get(employee, []):
+                    if leave.start_date <= current_date_obj <= leave.end_date:
                         status = 'L'
-                        reason = leave.reason
+                        reason = leave.reason or 'On Leave'
                         cell_class = 'leave-day'
-                        employee_leave_found = True
+                        leave_found = True
                         break
 
-                if not employee_leave_found and status not in ['W', 'H', 'L']:
-                    # If not weekend, holiday, or leave, then assume present
-                    status = 'P'
-                    reason = 'Present'
-                    cell_class = 'present-day'
+                if not leave_found:
+                    # 3. Check Sunday
+                    if day_of_week == 6:
+                        status = 'W'
+                        reason = 'Sunday'
+                        cell_class = 'weekend-day'
 
-            # Handle cases where Saturday was not the 2nd or 3rd, but still needs a default status
-            # This ensures any Saturday that isn't the 2nd or 3rd, and isn't a holiday/leave,
-            # defaults to 'P' if it falls within the current date.
-            if status == '-' and current_date_obj <= today:
-                status = 'P'
-                reason = 'Present'
-                cell_class = 'present-day'
+                    # 4. Check 2nd/3rd Saturday
+                    elif day_of_week == 5 and current_date_obj in [second_saturday, third_saturday]:
+                        status = 'W'
+                        reason = 'Saturday'
+                        cell_class = 'weekend-day'
+
+                    # 5. Check Holiday
+                    elif current_date_obj in holidays_dict:
+                        status = 'H'
+                        reason = holidays_dict[current_date_obj]
+                        cell_class = 'holiday-day'
+
+                    # 6. Present
+                    else:
+                        status = 'P'
+                        reason = 'Present'
+                        cell_class = 'present-day'
+
+            # 7. Today Highlight
+            if current_date_obj == today:
+                cell_class = f"{cell_class} today-date".strip()
 
             employee_attendance_row['days_data'].append({
                 'day_num': day_num,
@@ -3721,16 +3915,14 @@ def attendance_view(request):
                 'reason': reason,
                 'class': cell_class
             })
+
         attendance_data.append(employee_attendance_row)
 
-    month_options = []
-    for m in range(1, 13):
-        month_options.append({
-            'value': m,
-            'name': calendar.month_name[m],
-            'selected': (m == selected_month)
-        })
-
+    # --- Dropdown Context ---
+    month_options = [
+        {'value': m, 'name': calendar.month_name[m], 'selected': (m == selected_month)}
+        for m in range(1, 13)
+    ]
     current_year_py = timezone.localdate().year
     year_options_list = list(range(current_year_py - 2, current_year_py + 3))
 
@@ -3745,6 +3937,707 @@ def attendance_view(request):
         'current_year': today.year,
         'year_options': year_options_list,
         'month_options': month_options,
-        'days_in_month_header_range': list(range(1, num_days_in_month + 1)),
+        'days_in_month_header_range': days_in_month_header_range,
     }
+
     return render(request, 'attendance.html', context)
+
+
+from django.http import Http404
+
+def resignation_activity(request, user_id):
+    employee = get_object_or_404(emp_registers, id=user_id)
+    resignation = Resignation.objects.filter(employee=employee).order_by('-resign_date').first()
+
+    if not resignation:
+        raise Http404("No resignation found for this employee.")
+
+    # Get or create the checklist for this resignation.
+    checklist, created = ActionChecklist.objects.get_or_create(resignation=resignation)
+
+    status_actions = resignation.status_actions.all().order_by('action_date')
+    email = SentEmail.objects.filter(employee_id=user_id).order_by('-sent_at').first()
+
+    # Get the position of the currently logged-in user from the session.
+    position = request.session.get('postion')
+    # Get the emp_registers instance of the user who is logged in and performing actions.
+    current_user_emp = get_object_or_404(emp_registers, id=request.session.get('user_id'))
+
+    action_label = None # This variable will store the description for ResignStatusAction
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # --- Handle Checklist Form Submission ---
+        if 'checklist_action' in request.POST and request.POST['checklist_action'] == 'save_checklist':
+            checklist.status_ongoing_projects = 'ongoing_projects' in request.POST
+            checklist.outstanding_tasks = 'outstanding_tasks' in request.POST
+            checklist.important_contacts = 'important_contacts' in request.POST
+            checklist.update_passwords = 'update_passwords' in request.POST
+            checklist.revoke_access = 'revoke_access' in request.POST
+            checklist.remove_from_payroll = 'remove_from_payroll' in request.POST
+            checklist.update_employee_directory = 'update_employee_directory' in request.POST
+            checklist.official_resignation_letter = 'official_resignation_letter' in request.POST
+            checklist.last_paycheck_arrangements = 'last_paycheck_arrangements' in request.POST
+            checklist.nda = 'nda' in request.POST
+            checklist.laptop_and_charger = 'laptop_and_charger' in request.POST
+            checklist.mouse = 'mouse' in request.POST
+            checklist.exit_interview_conducted = 'exit_interview_conducted' in request.POST
+            checklist.send_announcement = 'send_announcement' in request.POST
+            checklist.give_farewell_party = 'give_farewell_party' in request.POST
+
+            checklist.save()
+            messages.success(request, "Exit Checklist updated successfully!")
+            return redirect('resignation_activity', user_id=user_id)
+
+        # --- Handle Last Working Date Update (HR specific) ---
+        elif action == 'update_last_date' and position == 'HR':
+            new_last_date = request.POST.get('last_date')
+            if new_last_date:
+                resignation.last_date = new_last_date
+                resignation.save()
+                messages.success(request, "Last working date updated.")
+            else:
+                messages.error(request, "Please select a valid date to update.")
+            return redirect('resignation_activity', user_id=user_id)
+
+        # --- Handle Manager Actions ---
+        elif position == 'Manager' and resignation.resign_status.id == 2:
+            if action == 'approve':
+                resignation.resign_status_id = 4
+                messages.success(request, "Resignation approved by Manager.")
+                action_label = 'Manager Approved'
+            elif action == 'reject':
+                resignation.resign_status_id = 5
+                messages.success(request, "Resignation rejected by Manager.")
+                action_label = 'Rejected by Manager'
+
+        # --- Handle Employee Actions ---
+        elif position == 'Employee' and resignation.resign_status.id not in [7, 8, 5]:
+            if action == 'withdraw':
+                resignation.resign_status_id = 3
+                messages.success(request, "Resignation withdrawn successfully.")
+                action_label = 'Withdrawn'
+
+        # --- Handle HR Approval/Rejection Actions ---
+        elif position == 'HR' and resignation.resign_status.id == 4:
+            if action == 'approve_hr':
+                resignation.resign_status_id = 6
+                messages.success(request, "Resignation approved by HR.")
+                action_label = 'HR Approved'
+            elif action == 'reject_hr':
+                resignation.resign_status_id = 8
+                messages.success(request, "Resignation rejected by HR.")
+                action_label = 'Rejected by HR'
+
+        # --- Handle HR Finalize Action ---
+        elif position == 'HR' and action == 'finish':
+            if resignation.resign_status.id == 6:
+                finalized_resignation_status = get_object_or_404(ResignationStatusMaster, id=7)
+                # CHANGE: Set employee's job_status to ID 2 (e.g., 'Resigned' or 'Left')
+                finalized_job_status = get_object_or_404(JobStatusMaster, id=2)
+
+                resignation.resign_status = finalized_resignation_status
+                resignation.save()
+
+                employee.job_status = finalized_job_status # Update employee's job status
+                employee.save()
+
+                ResignStatusAction.objects.create(
+                    resignation=resignation,
+                    action='Finalized',
+                    action_by=current_user_emp,
+                    action_date=timezone.now()
+                )
+                messages.success(request, "Resignation finalized and employee job status updated to 'Left'.")
+                return redirect('resignation_activity', user_id=user_id)
+            else:
+                messages.error(request, "Resignation cannot be finalized in its current status. It must be HR Approved.")
+                return redirect('resignation_activity', user_id=user_id)
+
+        # --- Log Action for Manager/Employee/HR Status Changes ---
+        if action_label:
+            resignation.save()
+
+            ResignStatusAction.objects.create(
+                resignation=resignation,
+                action=action_label,
+                action_by=current_user_emp,
+                action_date=timezone.now()
+            )
+            return redirect('resignation_activity', user_id=user_id)
+
+    # Context to pass to the template
+    context = {
+        'employee': employee,
+        'resignation': resignation,
+        'status_actions': status_actions,
+        'checklist': checklist,
+        'email': email,
+        'position': position,
+    }
+    return render(request, 'resignation_activity.html', context)
+
+
+from .models import TodoTask
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from datetime import datetime
+from .models import toda_task
+ # change yourapp to your app name
+def todo_view(request):
+    # your code to render todo.html
+    return render(request, 'todo.html')
+
+def toda_tasks_api(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+    try:
+        user = emp_registers.objects.get(pk=user_id)
+    except emp_registers.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+    if request.method == 'GET':
+        tasks = toda_task.objects.filter(user=user).order_by('datetime')
+        tasks_list = [{
+            'id': t.id,
+            'desc': t.desc,
+            'badge': t.badge,
+            'datetime': t.datetime.isoformat(),
+        } for t in tasks]
+        return JsonResponse({'tasks': tasks_list})
+
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+        desc = data.get('desc')
+        badge = data.get('badge', 'success')
+        dt_str = data.get('datetime')
+
+        if not desc or not dt_str:
+            return JsonResponse({'error': 'Missing fields'}, status=400)
+
+        dt = parse_datetime(dt_str)
+        if not dt:
+            return JsonResponse({'error': 'Invalid datetime'}, status=400)
+
+        task = toda_task.objects.create(user=user, desc=desc, badge=badge, datetime=dt)
+        return JsonResponse({'id': task.id})
+
+    elif request.method == 'PUT':
+        data = json.loads(request.body)
+        task_id = data.get('id')
+        dt_str = data.get('datetime')
+        badge = data.get('badge')
+        desc = data.get('desc')
+
+        try:
+            task = toda_task.objects.get(id=task_id, user=user)
+        except toda_task.DoesNotExist:
+            return JsonResponse({'error': 'Task not found'}, status=404)
+
+        if dt_str:
+            dt = parse_datetime(dt_str)
+            if not dt:
+                return JsonResponse({'error': 'Invalid datetime'}, status=400)
+            task.datetime = dt
+        if badge:
+            task.badge = badge
+        if desc:
+            task.desc = desc
+
+        task.save()
+        return JsonResponse({'success': True})
+
+    elif request.method == 'DELETE':
+        data = json.loads(request.body)
+        task_id = data.get('id')
+        try:
+            task = toda_task.objects.get(id=task_id, user=user)
+            task.delete()
+            return JsonResponse({'success': True})
+        except toda_task.DoesNotExist:
+            return JsonResponse({'error': 'Task not found'}, status=404)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+def delete_task(request, id):
+    TodoTask.objects.get(id=id).delete()
+    return redirect('todo')
+
+def change_badge(request, id):
+    task = TodoTask.objects.get(id=id)
+    cycle = ['success', 'danger', 'secondary']
+    task.badge = cycle[(cycle.index(task.badge) + 1) % 3]
+    task.save()
+    return redirect('todo')
+
+
+import csv
+from io import TextIOWrapper
+from django.shortcuts import render
+import pandas as pd
+from django.contrib import messages
+
+from django.shortcuts import render
+from django.contrib import messages
+from decimal import Decimal
+# from .models import Payslip
+import pandas as pd
+from io import TextIOWrapper
+from decimal import Decimal
+from io import TextIOWrapper
+import pandas as pd
+from decimal import Decimal
+from django.contrib import messages
+from django.shortcuts import render
+ # Make sure this import matches your project structure
+
+def payslip_from_csv(request):
+    payslip_data = []
+
+    if request.method == 'POST' and request.FILES.get('csv_file'):
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Please upload a valid CSV file.')
+            return render(request, 'payslip_from_csv.html', {'records': payslip_data})
+
+        try:
+            file_data = TextIOWrapper(csv_file.file, encoding='utf-8')
+            lines = file_data.readlines()
+            file_data.seek(0)
+
+            # Detect header
+            headers_line = lines[0].strip()
+            headers = headers_line.split(',')
+
+            # Remove any duplicate header rows
+            data_lines = [line for line in lines if line.strip().split(',') != headers]
+
+            # Convert cleaned data lines back to a file-like object
+            from io import StringIO
+            cleaned_file = StringIO(''.join(data_lines))
+
+            # Read into DataFrame
+            df = pd.read_csv(cleaned_file)
+
+            # Clean column names
+            df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace('\t', '')
+
+            # Numeric columns to ensure proper dtype
+            numeric_columns = [
+                'SALARY_BASIC', 'SALARY_HRA', 'SALARY_DA', 'TOTAL_SALARY',
+                'GROSS_BASIC', 'GROSS_HRA', 'GROSS_DA', 'CONVENCE_ALLOWNCE',
+                'SPECIAL_ALLOWNCES', 'Project_Incentive', 'Variable_Pay',
+                'GROSS_TOTAL', 'ESI', 'PF', 'Salary_Advance', 'Negative_Leave', 'TDS',
+                'Total_Deductions', 'NET_SALARY'
+            ]
+            for col in numeric_columns:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+
+            # Calculate Total_Deductions
+            deduction_components = ['ESI', 'PF', 'Salary_Advance', 'Negative_Leave', 'TDS']
+            if all(col in df.columns for col in deduction_components):
+                df['Total_Deductions'] = df[deduction_components].sum(axis=1)
+            elif 'Total_Deductions' not in df.columns:
+                df['Total_Deductions'] = 0
+
+            # Calculate NET_SALARY
+            if 'SALARY_BASIC' in df.columns and 'SALARY_HRA' in df.columns and 'Allowance' in df.columns:
+                df['NET_SALARY'] = (df['SALARY_BASIC'] + df['SALARY_HRA'] + df['Allowance']) - df['Total_Deductions']
+            else:
+                df['NET_SALARY'] = 0
+
+            # Set defaults
+            if 'Month' not in df.columns:
+                df['Month'] = 'June 2025'
+            if 'Department' not in df.columns:
+                df['Department'] = 'Not Specified'
+            if 'Allowance' not in df.columns:
+                df['Allowance'] = 0
+
+            # Create DataFrame for display and DB insert
+            temp_df = pd.DataFrame()
+            temp_df['Employee_Name'] = df['Employee_Name'] if 'Employee_Name' in df.columns else 'N/A'
+            temp_df['Employee_ID'] = df['Employee_Email'] if 'Employee_Email' in df.columns else 'N/A'
+            temp_df['Month'] = df['Month']
+            temp_df['Department'] = df['Department']
+            temp_df['Basic'] = df['SALARY_BASIC'] if 'SALARY_BASIC' in df.columns else 0
+            temp_df['HRA'] = df['SALARY_HRA'] if 'SALARY_HRA' in df.columns else 0
+            temp_df['Allowance'] = df['Allowance']
+            temp_df['Deductions'] = df['Total_Deductions']
+            temp_df['Net_Salary'] = df['NET_SALARY']
+
+            payslip_data = temp_df.to_dict(orient='records')
+
+            # Save to DB
+            inserted = 0
+            updated = 0
+            for row in payslip_data:
+                try:
+                    obj, created = Payslip.objects.update_or_create(
+                        employee_id=row['Employee_ID'],
+                        month=row['Month'],
+                        defaults={
+                            'employee_name': row['Employee_Name'],
+                            'department': row['Department'],
+                            'basic': Decimal(row['Basic']),
+                            'hra': Decimal(row['HRA']),
+                            'allowance': Decimal(row['Allowance']),
+                            'deductions': Decimal(row['Deductions']),
+                            'net_salary': Decimal(row['Net_Salary']),
+                        }
+                    )
+                    if created:
+                        inserted += 1
+                    else:
+                        updated += 1
+                except Exception as db_error:
+                    messages.warning(request, f"Error saving record for {row.get('Employee_ID', 'Unknown')}: {db_error}")
+
+            messages.success(request, f'Successfully uploaded {inserted} new and updated {updated} payslip records.')
+
+        except Exception as e:
+            messages.error(request, f'An error occurred while processing the CSV file: {e}')
+
+    return render(request, 'payslip_from_csv.html', {'records': payslip_data})
+
+
+
+def employee_salary_history(request, emp_id):
+    # Filter all payslips of the employee by ID
+    payslips = Payslip.objects.filter(employee_id=emp_id).order_by('-uploaded_at')
+
+    context = {
+        'payslips': payslips,
+        'emp_id': emp_id,
+    }
+    return render(request, 'employee_salary_history.html', context)
+
+
+from django.shortcuts import render
+from django.core.paginator import Paginator
+from django.db.models import Q
+# from .models import Payslip
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
+# from .models import Payslip
+
+def payslip_list(request):
+    # Get search query
+    search_query = request.GET.get('search', '')
+    month_filter = request.GET.get('month', '')
+
+    # Filter the payslips based on search query and month
+    payslips = Payslip.objects.all()
+    if search_query:
+        payslips = payslips.filter(employee_name__icontains=search_query)
+    if month_filter:
+        payslips = payslips.filter(month=month_filter)
+
+    # Handle rows per page (10, 20, or 'All')
+    rows_per_page = request.GET.get('rows_per_page', 10)
+    if rows_per_page == 'all':
+        paginator = Paginator(payslips, payslips.count())  # Show all records
+    else:
+        paginator = Paginator(payslips, int(rows_per_page))  # Show 10 or 20 records
+
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Calculate the current page number and total pages
+    total_pages = paginator.num_pages
+    current_page = page_obj.number
+
+    return render(request, 'payslip_list.html', {
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'month_filter': month_filter,
+        'rows_per_page': rows_per_page,
+        'current_page': current_page,
+        'total_pages': total_pages
+    })
+
+
+import csv
+from io import BytesIO
+import pandas as pd
+from django.http import HttpResponse
+# from .models import Payslip
+# import xlsxwriter
+
+def export_payslips_csv(request):
+    # Get payslip data, with optional filters for month and search
+    payslips = Payslip.objects.all()
+    month_filter = request.GET.get('month', None)
+    if month_filter:
+        payslips = payslips.filter(month=month_filter)
+
+    search_query = request.GET.get('search', '')
+    if search_query:
+        payslips = payslips.filter(
+            Q(employee_name__icontains=search_query) |
+            Q(employee_id__icontains=search_query)
+        )
+
+    # Create the CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="payslips.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Employee Name', 'Employee ID', 'Month', 'Department', 'Basic', 'HRA', 'Allowance', 'Deductions',
+                     'Net Salary'])
+
+    for payslip in payslips:
+        writer.writerow([
+            payslip.employee_name,
+            payslip.employee_id,
+            payslip.month,
+            payslip.department,
+            payslip.basic,
+            payslip.hra,
+            payslip.allowance,
+            payslip.deductions,
+            payslip.net_salary
+        ])
+
+    return response
+
+
+def export_payslips_excel(request):
+    # Get payslip data, with optional filters for month and search
+    payslips = Payslip.objects.all()
+    month_filter = request.GET.get('month', None)
+    if month_filter:
+        payslips = payslips.filter(month=month_filter)
+
+    search_query = request.GET.get('search', '')
+    if search_query:
+        payslips = payslips.filter(
+            Q(employee_name__icontains=search_query) |
+            Q(employee_id__icontains=search_query)
+        )
+
+    # Create Excel response using Pandas
+    df = pd.DataFrame(list(payslips.values(
+        'employee_name', 'employee_id', 'month', 'department', 'basic', 'hra',
+        'allowance', 'deductions', 'net_salary'
+    )))
+
+    # Save the dataframe to an Excel file in memory
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Payslips')
+        writer.save()
+
+    output.seek(0)
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="payslips.xlsx"'
+
+    return response
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils import timezone
+from .models import toda_task
+from datetime import datetime
+
+
+@require_http_methods(["GET", "POST"])
+@csrf_exempt
+def toda_tasks_api(request):
+    if request.method == "GET":
+        tasks = toda_task.objects.select_related('user').all()
+        tasks_list = []
+        for t in tasks:
+            tasks_list.append({
+                "id": t.id,
+                "desc": t.desc,
+                "datetime": t.datetime.isoformat(),
+                "badge": t.badge,
+                "user": t.user.name if t.user else None,
+            })
+        return JsonResponse({"tasks": tasks_list})
+
+    elif request.method == "POST":
+        data = json.loads(request.body)
+        desc = data.get("desc")
+        badge = data.get("badge", "success")
+        datetime_str = data.get("datetime")
+        dt = datetime.fromisoformat(datetime_str)
+
+        # For demo, assign a user, or you can get user from request.user if auth enabled
+        # Example: user = request.user.emp_registers
+        # Here, let's assume user id 1 exists (change as per your app)
+
+        user = emp_registers.objects.first()  # Replace this to assign proper user
+
+        task = toda_task.objects.create(user=user, desc=desc, badge=badge, datetime=dt)
+        return JsonResponse({"id": task.id, "desc": desc, "badge": badge, "datetime": datetime_str})
+
+
+@require_http_methods(["PUT"])
+@csrf_exempt
+def update_task_datetime(request):
+    data = json.loads(request.body)
+    task_id = data.get("id")
+    datetime_str = data.get("datetime")
+    dt = datetime.fromisoformat(datetime_str)
+
+    try:
+        task = toda_task.objects.get(id=task_id)
+        task.datetime = dt
+        task.save()
+        return JsonResponse({"success": True})
+    except toda_task.DoesNotExist:
+        return JsonResponse({"error": "Task not found"}, status=404)
+
+
+import json
+import requests
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from .models import HRPolicy # Import the HRPolicy model
+
+# ... (Any existing imports and views you have in staff/views.py) ...
+
+# Replace with your actual Gemini API Key if running locally.
+# If running in a Canvas environment, leave this as an empty string;
+# the key is automatically provided during the fetch call.
+GEMINI_API_KEY = ""
+
+def tokenize_and_clean(text):
+    """
+    Helper function to tokenize and clean a string for keyword extraction.
+    Removes punctuation and converts to lowercase.
+    """
+    if not isinstance(text, str):
+        return []
+    import re
+    return [
+        word for word in re.sub(r'[.,/#!$%^&*;:{}=\-_`~()]', '', text.lower()).split()
+        if len(word) > 2 # Filter out very short words
+    ]
+
+def retrieve_relevant_content(query):
+    """
+    Retrieves relevant HR policies from the database based on the query,
+    using a keyword-based scoring mechanism.
+    """
+    query_keywords = tokenize_and_clean(query)
+    scored_documents = []
+
+    # Fetch all policies from the database
+    policies = HRPolicy.objects.all()
+
+    for policy in policies:
+        score = 0
+        doc_title_keywords = tokenize_and_clean(policy.title)
+        doc_content_keywords = tokenize_and_clean(policy.content)
+
+        # Score based on keyword presence in title (higher weight)
+        for q_keyword in query_keywords:
+            if q_keyword in doc_title_keywords:
+                score += 2
+            if q_keyword in doc_content_keywords:
+                score += 1
+
+        if score > 0: # Only consider documents with at least one match
+            scored_documents.append({'doc': policy, 'score': score})
+
+    # Sort documents by score in descending order
+    scored_documents.sort(key=lambda x: x['score'], reverse=True)
+
+    # Select the top 2 most relevant documents
+    top_relevant_docs = scored_documents[:2]
+
+    relevant_text = ""
+    if top_relevant_docs:
+        for item in top_relevant_docs:
+            relevant_text += f"**From \"{item['doc'].title}\":**\n{item['doc'].content}\n\n"
+    return relevant_text
+
+@csrf_exempt # IMPORTANT: For API endpoints called via POST without Django's template rendering.
+             # NOT RECOMMENDED FOR PRODUCTION. See notes below for CSRF.
+def chatbot_api(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_query = data.get('query', '')
+
+            if not user_query:
+                return JsonResponse({'error': 'Query parameter is missing'}, status=400)
+
+            retrieved_content = retrieve_relevant_content(user_query)
+
+            # Construct the prompt for the LLM
+            if retrieved_content:
+                prompt = f"""
+                You are an HR assistant for a company. Your task is to answer employee questions ONLY based on the provided HR policy context.
+                If the answer is not found in the context, politely state that you cannot provide the information from the given policies and suggest contacting HR directly.
+                Try to interpret the user's intent even if the query is not phrased exactly as in the policy, as long as the answer is derivable from the provided context.
+
+                **HR Policy Context:**
+                {retrieved_content}
+
+                **Employee Question:**
+                {user_query}
+
+                Please provide a concise and helpful answer based on the context.
+                """
+            else:
+                prompt = f"""
+                You are an HR assistant. An employee has asked the following question: "{user_query}".
+                I was unable to find specific relevant policy documents for this query within my knowledge base.
+                Please politely inform the employee that you cannot find the answer in the available policies and suggest they contact the HR department directly for assistance.
+                """
+
+            chat_history_for_api = [{"role": "user", "parts": [{"text": prompt}]}]
+            payload = {"contents": chat_history_for_api}
+
+            headers = {'Content-Type': 'application/json'}
+            api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+            if GEMINI_API_KEY: # Only append key if it's set (for local dev)
+                api_url += f"?key={GEMINI_API_KEY}"
+
+            api_response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+            api_response.raise_for_status() # Raise an exception for HTTP errors (e.g., 4xx or 5xx)
+
+            result = api_response.json()
+
+            bot_text = "Sorry, I could not generate a response."
+            if result.get('candidates') and len(result['candidates']) > 0 and \
+               result['candidates'][0].get('content') and \
+               result['candidates'][0]['content'].get('parts') and \
+               len(result['candidates'][0]['content']['parts']) > 0:
+                bot_text = result['candidates'][0]['content']['parts'][0]['text']
+            else:
+                print(f"Unexpected API response structure: {result}") # For debugging
+
+            return JsonResponse({'response': bot_text})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON in request body'}, status=400)
+        except requests.exceptions.RequestException as e:
+            print(f"API request failed: {e}")
+            return JsonResponse({'error': f'Failed to connect to AI service: {e}'}, status=500)
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return JsonResponse({'error': f'An internal server error occurred: {e}'}, status=500)
+    return JsonResponse({'error': 'Only POST requests are allowed'}, status=405)
+
+def chatbot_page(request):
+    """
+    Renders the main chatbot HTML page.
+    """
+    return render(request, 'chatbot.html') # Note the 'staff/' directory

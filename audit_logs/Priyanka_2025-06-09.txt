@@ -1,0 +1,6 @@
+2025-06-09 16.12.46 - submitted resignation with status 'Apply' (ID: 21)
+2025-06-09 16.12.46 - recorded resignation action 'Apply' for Priyanka (ID: 12)
+2025-06-09 16.14.14 - logged out
+2025-06-09 16.47.04 - logged out
+2025-06-09 16.47.56 - logged out
+2025-06-09 16.51.36 - logged out

@@ -1,0 +1,10 @@
+2025-06-09 16.02.46 - submitted resignation with status 'Apply' (ID: 20)
+2025-06-09 16.02.46 - recorded resignation action 'Apply' for Soniya (ID: 10)
+2025-06-09 16.03.08 - sent email to gauravsinghbhandari7192@gmail.com with subject 'Relocation of family' (ID: 7)
+2025-06-09 16.03.08 - updated resignation with status 'Submit' (ID: 20)
+2025-06-09 16.03.08 - recorded resignation action 'Submit' for Soniya (ID: 11)
+2025-06-09 16.12.14 - logged out
+2025-06-09 18.10.02 - logged out
+2025-06-09 18.11.33 - updated resignation with status 'Withdraw' (ID: 20)
+2025-06-09 18.11.33 - recorded resignation action 'Withdrawn' for Soniya (ID: 13)
+2025-06-09 18.11.43 - logged out

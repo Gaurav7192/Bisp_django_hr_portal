@@ -1,0 +1,6 @@
+2025-06-06 11.01.15 - submitted resignation with status 'Apply' (ID: 17)
+2025-06-06 11.01.15 - recorded resignation action 'Apply' for Kapil (ID: 3)
+2025-06-06 11.01.46 - sent email to gauravsinghbhandari7192@gmail.com with subject 'aS' (ID: 4)
+2025-06-06 11.01.46 - updated resignation with status 'Submit' (ID: 17)
+2025-06-06 11.01.46 - recorded resignation action 'Submit' for Kapil (ID: 4)
+2025-06-06 11.07.13 - logged out

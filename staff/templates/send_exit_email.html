@@ -2,8 +2,8 @@
 {% load static %}
 {% block content %}
 
-<!-- Load CKEditor once -->
-<script src="https://cdn.ckeditor.com/4.25.1-lts/full/ckeditor.js"></script>
+<!-- Load CKEditor -->
+<script src="https://cdn.ckeditor.com/4.22.1/full/ckeditor.js"></script>
 
 <style>
     body {
@@ -74,56 +74,72 @@
     }
 </style>
 
+<div class="panel">
+    <h3>Send Exit Email</h3>
+    <form method="POST" enctype="multipart/form-data" action="{% url 'send_exit_email' request.session.user_id %}">
+        {% csrf_token %}
 
-
-    <div class="panel">
-        <h3>Send Exit Email</h3>
-        <form method="POST" enctype="multipart/form-data" action="{% url 'send_exit_email' request.session.user_id %}">
-            {% csrf_token %}
-
-          <div class="form-group">
+        <div class="form-group">
             <label>From</label>
             <input type="email" name="from" value="{{ employee.email }}">
         </div>
 
-
-            <div class="form-group">
-                <label>To</label>
-                <input type="email" name="to" required>
-            </div>
-
-            <div class="form-group">
-                <label>CC</label>
-                <input type="text" name="cc">
-            </div>
-
-            <div class="form-group">
-                <label>BCC</label>
-                <input type="text" name="bcc">
-            </div>
-
-            <div class="form-group">
-                <label>Subject</label>
-                <input type="text" name="subject" required>
-            </div>
+        <div class="form-group">
+            <label>To</label>
+            <input type="email" name="to" required>
+        </div>
 
         <div class="form-group">
-    <label>Message</label>
-    <textarea name="message" id="editor" rows="10"></textarea>
+            <label>CC</label>
+            <input type="text" name="cc">
+        </div>
+
+        <div class="form-group">
+            <label>BCC</label>
+            <input type="text" name="bcc">
+        </div>
+
+        <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" required>
+        </div>
+
+        <div class="form-group">
+            <label>Message</label>
+            <textarea name="message" id="editor" rows="10"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Attachment</label>
+            <input type="file" name="attachment">
+        </div>
+
+        <button type="submit">Send Email</button>
+    </form>
 </div>
 
-<!-- CKEditor Script -->
-
-
-            <div class="form-group">
-                <label>Attachment</label>
-                <input type="file" name="attachment">
-            </div>
-
-            <button type="submit">Send Email</button>
-        </form>
-    </div>
-
-
+<!-- CKEditor Configuration -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof CKEDITOR !== 'undefined') {
+            CKEDITOR.replace('editor', {
+                extraPlugins: 'colorbutton,font',
+                toolbar: [
+                    { name: 'clipboard', items: ['Cut', 'Copy', 'Paste', 'Undo', 'Redo'] },
+                    { name: 'styles', items: ['Format', 'Font', 'FontSize'] },
+                    { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike'] },
+                    { name: 'colors', items: ['TextColor', 'BGColor'] },
+                    { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'] },
+                    { name: 'insert', items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'] },
+                    { name: 'links', items: ['Link', 'Unlink'] },
+                    { name: 'tools', items: ['Maximize'] }
+                ],
+                height: 300
+            });
+        } else {
+            console.error("CKEditor not loaded!");
+        }
+    });
+</script>
 
 {% endblock %}

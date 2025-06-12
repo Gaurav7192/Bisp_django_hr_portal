@@ -1,0 +1,12 @@
+Module,Test Case ID,Test Case Description,Test Steps,Expected Result,Status
+Project,PM-01,Test Project Model Creation,"1. Create Project instance with valid data","Project instance is created successfully with correct field values",Covered
+Project,PV-01,Test Project List View,"1. Login as user 2. Access project list URL","Project list page loads with status 200 and contains project names",Covered
+Project,PV-02,Test Add Project View GET,"1. Login as user 2. Access add project URL with GET","Add project form page loads with status 200",Error (URL name mismatch)
+Task,TM-01,Test Task Model Creation,"1. Create Task instance with valid data and assigned members","Task instance is created successfully with correct field values and members assigned",Covered
+Task,TV-01,Test Task List View,"1. Login as user 2. Access task list URL","Task list page loads with status 200 and contains task titles",Covered
+Task,TV-02,Test Add Task View GET,"1. Login as user 2. Access add task URL with GET","Add task form page loads with status 200",Error (URL name mismatch)
+Timesheet,TSM-01,Test Timesheet Model Creation,"1. Create Timesheet instance with valid data","Timesheet instance is created successfully with correct field values",Covered
+Timesheet,TSV-01,Test User Timesheet View,"1. Login as user 2. Access user timesheet URL","User timesheet page loads with status 200 and contains timesheet entries",Covered
+Timesheet,TSV-02,Test Update Timesheet View GET,"1. Login as user 2. Access update timesheet URL with GET","Update timesheet form page loads with status 200",Failed (302 redirect)
+API,API-01,Test Get Tasks API,"1. Login as user 2. Call get_tasks API with project_id and user_id","API returns status 200 with tasks list in JSON",Covered
+API,API-02,Test Get Project Members API,"1. Login as user 2. Call get_project_members API with project_id","API returns status 200 with list of members in JSON",Covered

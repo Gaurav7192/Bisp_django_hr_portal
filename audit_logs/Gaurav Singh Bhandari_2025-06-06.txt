@@ -1,0 +1,8 @@
+2025-06-06 11.00.23 - Login  for Gaurav Singh Bhandari (ID: 10)
+2025-06-06 14.47.23 - submitted resignation with status 'Apply' (ID: 19)
+2025-06-06 14.47.23 - recorded resignation action 'Apply' for Gaurav Singh Bhandari (ID: 7)
+2025-06-06 15.31.24 - Login  for Gaurav Singh Bhandari (ID: 10)
+2025-06-06 17.24.03 - logged out
+2025-06-06 17.26.52 - sent email to gauravsinghbhandari7192@gmail.com with subject 'resination ' (ID: 6)
+2025-06-06 17.26.52 - updated resignation with status 'Submit' (ID: 16)
+2025-06-06 17.26.52 - recorded resignation action 'Submit' for Gaurav Singh Bhandari (ID: 8)

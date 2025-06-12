@@ -1,0 +1,8 @@
+2025-06-05 10.56.30 - logged out
+2025-06-05 11.41.51 - sent email to gauravsinghbhandari7192@gmail.com with subject 'resination ' (ID: 2)
+2025-06-05 11.41.51 - updated resignation with status 'Submit' (ID: 15)
+2025-06-05 11.41.51 - recorded resignation action 'Submit' for Sam (ID: 1)
+2025-06-05 11.44.30 - sent email to gauravsinghbhandari7192@gmail.com with subject 'resination ' (ID: 3)
+2025-06-05 11.44.30 - updated resignation with status 'Submit' (ID: 15)
+2025-06-05 11.44.30 - recorded resignation action 'Submit' for Sam (ID: 2)
+2025-06-05 18.10.52 - logged out

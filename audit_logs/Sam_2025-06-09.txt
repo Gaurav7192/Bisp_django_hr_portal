@@ -1,0 +1,10 @@
+2025-06-09 12.03.02 - logged out
+2025-06-09 13.17.09 - logged out
+2025-06-09 13.33.36 - logged out
+2025-06-09 13.49.17 - Login  for Sam (ID: 3)
+2025-06-09 15.09.53 - Login  for Sam (ID: 3)
+2025-06-09 15.10.00 - Login  for Sam (ID: 3)
+2025-06-09 15.16.25 - logged out
+2025-06-09 15.42.29 - updated resignation with status 'Withdraw' (ID: 15)
+2025-06-09 15.42.29 - recorded resignation action 'Withdrawn' for Sam (ID: 9)
+2025-06-09 15.58.55 - logged out

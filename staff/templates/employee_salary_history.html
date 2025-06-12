@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .page-title {
+        font-size: 28px;
+        font-weight: 600;
+        color: #2c3e50;
+        border-left: 5px solid #007bff;
+        padding-left: 15px;
+        margin-bottom: 25px;
+    }
+    .search-filter-row {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .form-control, .form-select {
+        border-radius: 8px;
+        box-shadow: none;
+        border: 1px solid #ced4da;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.15rem rgba(0,123,255,0.25);
+    }
+    .table th {
+        cursor: pointer;
+        background-color: #343a40 !important;
+        color: #fff !important;
+        vertical-align: middle;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+    #pagination button {
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+    }
+    #pagination button.active {
+        background-color: #007bff;
+        color: #fff;
+        font-weight: bold;
+        border: 1px solid #007bff;
+    }
+</style>
+
+<div class="container mt-5">
+    <h2 class="page-title">Salary History for Employee ID: {{ emp_id }}</h2>
+
+    <div class="row mb-4 search-filter-row align-items-end">
+        <div class="col-md-4 mb-2">
+            <label class="form-label">Search</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+        </div>
+        <div class="col-md-4 mb-2">
+            <label class="form-label">Filter by Month</label>
+            <select id="monthFilter" class="form-select">
+                <option value="">-- All Months --</option>
+                {% for month in months %}
+                    <option value="{{ month }}">{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4 mb-2 text-end">
+            <label class="form-label">Rows per Page</label>
+            <select id="rowsPerPage" class="form-select d-inline w-auto">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered text-center" id="salaryTable">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Month</th>
+                    <th onclick="sortTable(1)">Name</th>
+                    <th onclick="sortTable(2)">Department</th>
+                    <th onclick="sortTable(3)">Basic</th>
+                    <th onclick="sortTable(4)">HRA</th>
+                    <th onclick="sortTable(5)">Allowance</th>
+                    <th onclick="sortTable(6)">Deductions</th>
+                    <th onclick="sortTable(7)">Net Salary</th>
+                    <th onclick="sortTable(8)">Generated On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payslip in payslips %}
+                <tr>
+                    <td>{{ payslip.month }}</td>
+                    <td>{{ payslip.employee_name }}</td>
+                    <td>{{ payslip.department }}</td>
+                    <td>₹{{ payslip.basic }}</td>
+                    <td>₹{{ payslip.hra }}</td>
+                    <td>₹{{ payslip.allowance }}</td>
+                    <td>₹{{ payslip.deductions }}</td>
+                    <td><strong>₹{{ payslip.net_salary }}</strong></td>
+                    <td>{{ payslip.uploaded_at|date:"d-m-Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="pagination" class="mt-4 text-center"></div>
+</div>
+
+<script>
+let currentPage = 1;
+let rowsPerPage = 10;
+let table = document.getElementById("salaryTable").getElementsByTagName('tbody')[0];
+
+function displayTablePage(page) {
+    let rows = Array.from(table.rows);
+    let start = (page - 1) * rowsPerPage;
+    let end = start + rowsPerPage;
+    rows.forEach((row, index) => {
+        row.style.display = (index >= start && index < end) ? "" : "none";
+    });
+    renderPagination(rows.length);
+}
+
+function renderPagination(totalRows) {
+    let pagination = document.getElementById("pagination");
+    pagination.innerHTML = '';
+    let pageCount = Math.ceil(totalRows / rowsPerPage);
+    for (let i = 1; i <= pageCount; i++) {
+        pagination.innerHTML += `<button class="btn btn-outline-primary mx-1 ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+    }
+}
+
+function goToPage(page) {
+    currentPage = page;
+    displayTablePage(page);
+}
+
+document.getElementById("searchInput").addEventListener("keyup", filterTable);
+document.getElementById("monthFilter").addEventListener("change", filterTable);
+document.getElementById("rowsPerPage").addEventListener("change", function () {
+    rowsPerPage = parseInt(this.value);
+    filterTable();
+});
+
+function filterTable() {
+    let search = document.getElementById("searchInput").value.toLowerCase();
+    let month = document.getElementById("monthFilter").value.toLowerCase();
+    let rows = Array.from(table.rows);
+    let visibleRows = 0;
+
+    rows.forEach(row => {
+        let match = Array.from(row.cells).some(cell => cell.textContent.toLowerCase().includes(search));
+        let monthMatch = row.cells[0].textContent.toLowerCase().includes(month);
+        if (match && monthMatch) {
+            row.style.display = "";
+            visibleRows++;
+        } else {
+            row.style.display = "none";
+        }
+    });
+
+    currentPage = 1;
+    renderPagination(visibleRows);
+    displayTablePage(currentPage);
+}
+
+function sortTable(colIndex) {
+    let rows = Array.from(table.rows);
+    let asc = table.getAttribute("data-sort") !== "asc";
+    rows.sort((a, b) => {
+        let valA = a.cells[colIndex].innerText.toLowerCase();
+        let valB = b.cells[colIndex].innerText.toLowerCase();
+        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+    rows.forEach(row => table.appendChild(row));
+    table.setAttribute("data-sort", asc ? "asc" : "desc");
+    filterTable();
+}
+
+window.onload = () => {
+    filterTable();
+};
+</script>
+{% endblock %}

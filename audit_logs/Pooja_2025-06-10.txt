@@ -1,0 +1,7 @@
+2025-06-10 16.21.05 - submitted resignation with status 'Apply' (ID: 2)
+2025-06-10 16.21.05 - recorded resignation action 'Apply' for Pooja (ID: 7)
+2025-06-10 16.21.42 - sent email to gauravsinghbhandari7192@gmail.com with subject 'resination ' (ID: 9)
+2025-06-10 16.21.42 - updated resignation with status 'Submit' (ID: 2)
+2025-06-10 16.21.43 - recorded resignation action 'Submit' for Pooja (ID: 8)
+2025-06-10 16.21.48 - logged out
+2025-06-10 16.22.32 - updated resignation with status 'Manager Approved' (ID: 2)

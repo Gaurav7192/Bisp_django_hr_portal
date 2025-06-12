@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %} {# If you use Django's static files for assets like custom CSS or JS #}
+
+{% block title %}HR Chatbot{% endblock %}
+
+{% block head %}
+    {# Any page-specific <head> content like custom CSS not in base.html #}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for chat history */
+        .chat-history-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-history-container::-webkit-scrollbar-track {
+            background: #f0f4f8; /* blue-50 */
+            border-radius: 10px;
+        }
+        .chat-history-container::-webkit-scrollbar-thumb {
+            background: #93c5fd; /* blue-300 */
+            border-radius: 10px;
+        }
+        .chat-history-container::-webkit-scrollbar-thumb:hover {
+            background: #60a5fa; /* blue-400 */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-4xl flex flex-col md:flex-row gap-6 border border-blue-200">
+
+            <!-- HR Content Section (Optional - can be loaded dynamically if needed) -->
+            <div class="md:w-1/2 bg-blue-50 p-5 rounded-lg border border-blue-200 shadow-inner overflow-y-auto max-h-[80vh]">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h6a2 2 0 012 2v12a2 2 0 01-2 2h-6a2 2 0 01-2-2v-2m0-4h.01"></path>
+                    </svg>
+                    Sample HR Portal Policies
+                </h2>
+                <div id="policy-content" class="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">
+                    <p>This section would typically display HR policies, potentially fetched from your Django backend and passed to this template's context. For the chatbot's operation, the policies are retrieved directly from the database by the Python backend.</p>
+                    <p class="mt-4 italic">You can add actual policy summaries here by passing them from the Django view, or simply use this space to explain what the chatbot does.</p>
+                    <div class="mb-4 bg-white p-4 rounded-md shadow-sm border border-blue-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">Company Leave Policy Summary</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Annual leave is 20 days. Sick leave is 10 days. Maternity/Paternity leave details available in handbook. Bereavement leave up to 3 days.</p>
+                    </div>
+                    <div class="mb-4 bg-white p-4 rounded-md shadow-sm border border-blue-100">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">Expense Reimbursement Highlights</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Submit claims within 30 days. Receipts required for claims over $25. Pre-approval needed for some expenses.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chatbot Section -->
+            <div class="md:w-1/2 flex flex-col bg-white rounded-lg border border-blue-200 shadow-md">
+                <div class="p-4 bg-blue-600 text-white rounded-t-lg flex items-center">
+                    <svg class="w-7 h-7 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                    </svg>
+                    <h2 class="text-xl font-bold">HR Assistant Chatbot</h2>
+                </div>
+
+                <!-- Chat History Display -->
+                <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-4 max-h-[60vh] chat-history-container">
+                    <div class="text-center text-gray-500 italic mt-10" id="initial-message">
+                        Type a question to get started.
+                    </div>
+                </div>
+
+                <!-- Chat Input Area -->
+                <div class="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="text"
+                            id="user-input"
+                            class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition duration-200"
+                            placeholder="Ask a question about HR policies..."
+                        />
+                        <button
+                            id="send-button"
+                            class="bg-blue-600 text-white p-3 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {# Place any page-specific JavaScript here, after content is loaded #}
+    <script>
+        const chatHistoryDiv = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const initialMessage = document.getElementById('initial-message');
+        let isLoading = false; // To prevent multiple requests
+
+        function appendMessage(sender, text) {
+            if (initialMessage) {
+                initialMessage.style.display = 'none'; // Hide "Type a question..."
+            }
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+            messageDiv.innerHTML = `
+                <div class="max-w-[70%] p-3 rounded-lg shadow-md ${
+                    sender === 'user'
+                        ? 'bg-blue-500 text-white rounded-br-none'
+                        : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                }">
+                    <p class="whitespace-pre-wrap">${text}</p>
+                </div>
+            `;
+            chatHistoryDiv.appendChild(messageDiv);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight; // Scroll to bottom
+        }
+
+        function showLoadingIndicator() {
+            isLoading = true;
+            sendButton.disabled = true;
+            userInput.disabled = true;
+            sendButton.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>`;
+            appendMessage('bot', `<div class="flex items-center space-x-2">
+                <div class="w-3 h-3 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0s;"></div>
+                <div class="w-3 h-3 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s;"></div>
+                <div class="w-3 h-3 bg-gray-500 rounded-full animate-delay-200"></div>
+            </div>`);
+            chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+        }
+
+        function hideLoadingIndicator() {
+            isLoading = false;
+            sendButton.disabled = false;
+            userInput.disabled = false;
+            sendButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>`;
+            // Remove the loading message if it's the last one and contains the bounce animation
+            if (chatHistoryDiv.lastChild && chatHistoryDiv.lastChild.querySelector('.animate-bounce')) {
+                chatHistoryDiv.removeChild(chatHistoryDiv.lastChild);
+            }
+        }
+
+        async function sendMessage() {
+            const query = userInput.value.trim();
+            if (!query || isLoading) return;
+
+            appendMessage('user', query);
+            userInput.value = '';
+            showLoadingIndicator();
+
+            try {
+                // Adjust this URL if your staff app is mounted under a prefix (e.g., '/staff/api/chatbot/')
+                const response = await fetch('/api/chatbot/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'), // IMPORTANT: Uncomment this for production
+                    },
+                    body: JSON.stringify({ query: query })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                appendMessage('bot', data.response || 'No response from bot.');
+
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('bot', 'Oops! Something went wrong. Please try again.');
+            } finally {
+                hideLoadingIndicator();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Function to get CSRF token (needed for Django POST requests in production)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Add a welcome message from the bot on load
+        window.addEventListener('load', () => {
+            appendMessage('bot', 'Hello! I am your HR Assistant. How can I help you today?');
+        });
+    </script>
+{% endblock %}

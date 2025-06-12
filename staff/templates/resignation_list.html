@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2>Resignation Applications</h2>
+
+    <!-- Filter and Search -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label>Department:</label>
+            <select id="departmentFilter" class="form-control" onchange="applyFilters()">
+                <option value="">All</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.name }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Designation:</label>
+            <select id="designationFilter" class="form-control" onchange="applyFilters()">
+                <option value="">All</option>
+                {% for desig in designations %}
+                    <option value="{{ desig.name }}">{{ desig.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label>Search:</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by name, status..." onkeyup="applyFilters()">
+        </div>
+        <div class="col-md-3">
+            <label>Rows per page:</label>
+            <select id="rowsPerPage" class="form-control" onchange="applyFilters()">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Section 1: Pending Resignations -->
+    {% if request.session.postion == 'Manager' or request.session.postion == 'HR' %}
+    <div class="table-responsive">
+        <h5>Pending Resignations ({{ request.session.postion|title }} View)</h5>
+        <table id="section1Table" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>S. No.</th>
+                    <th onclick="sortTable(1, 'section1')">Name</th>
+                    <th onclick="sortTable(2, 'section1')">Resign Date</th>
+                    <th onclick="sortTable(3, 'section1')">Department</th>
+                    <th onclick="sortTable(4, 'section1')">Designation</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Show</th>
+                </tr>
+            </thead>
+            <tbody id="section1Body">
+                {% for r in resignation_data_section1 %}
+                <tr>
+                    <td></td>
+                    <td>{{ r.employee_name }}</td>
+                    <td>{{ r.resign_date }}</td>
+                    <td>{{ r.department }}</td>
+                    <td>{{ r.designation }}</td>
+                    <td>
+                        {% if r.status_id == 2 and request.session.postion == 'Manager' %}
+                            <span class="badge bg-warning text-dark">{{ r.status }}</span>
+                        {% elif request.session.postion == 'HR'  and  r.status_id == 4  %}
+                            <span class="badge bg-primary">{{ r.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.reason|truncatechars:50 }}</td>
+                    <td>
+                        <a href="{% url 'resignation_activity' r.emp_id %}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Section 2: All Resignations -->
+    {% if request.session.postion == 'Manager' or request.session.postion == 'HR' %}
+    <div class="table-responsive">
+        <h5>All Resignations ({{ request.session.postion|title }} View)</h5>
+        <table id="section2Table" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>S. No.</th>
+                    <th onclick="sortTable(1, 'section2')">Name</th>
+                    <th onclick="sortTable(2, 'section2')">Resign Date</th>
+                    <th onclick="sortTable(3, 'section2')">Department</th>
+                    <th onclick="sortTable(4, 'section2')">Designation</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                    <th>Show</th>
+                </tr>
+            </thead>
+            <tbody id="section2Body">
+                {% for r in resignation_data_section2 %}
+
+                <tr>
+                    <td></td>
+                    <td>{{ r.employee_name }}</td>
+                    <td>{{ r.resign_date }}</td>
+                    <td>{{ r.department }}</td>
+                    <td>{{ r.designation }}</td>
+                    <td>
+                        {% if r.status_id == 3 %}<span class="badge bg-secondary">{{ r.status }}</span>
+                        {% elif r.status_id == 2 %}<span class="badge bg-warning text-dark">{{ r.status }}</span>
+                        {% elif r.status_id == 4 or r.status_id == 6 %}<span class="badge bg-primary">{{ r.status }}</span>
+                        {% elif r.status_id == 7 %}<span class="badge bg-success">{{ r.status }}</span>
+                        {% elif r.status_id == 5 or r.status_id == 8 %}<span class="badge bg-danger">{{ r.status }}</span>
+                        {% else %}<span class="badge bg-light text-dark">{{ r.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.reason|truncatechars:50 }}</td>
+                    <td>
+                        <a href="{% url 'resignation_activity' r.emp_id %}" class="btn btn-sm btn-info">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Pagination -->
+    <div class="text-center mt-3">
+        <button onclick="prevPage()" class="btn btn-primary btn-sm">Previous</button>
+        <span id="pageInfo" class="mx-2"></span>
+        <button onclick="nextPage()" class="btn btn-primary btn-sm">Next</button>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+let currentPage = 1;
+let rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
+
+function applyFilters() {
+    let department = document.getElementById("departmentFilter").value.toLowerCase();
+    let designation = document.getElementById("designationFilter").value.toLowerCase();
+    let searchText = document.getElementById("searchInput").value.toLowerCase();
+    rowsPerPage = parseInt(document.getElementById("rowsPerPage").value);
+    currentPage = 1;
+    filterTable("section1Body");
+    filterTable("section2Body");
+}
+
+function filterTable(bodyId) {
+    let table = document.getElementById(bodyId);
+    let rows = table.getElementsByTagName("tr");
+    let count = 0;
+    for (let i = 0; i < rows.length; i++) {
+        let cols = rows[i].getElementsByTagName("td");
+        if (!cols.length) continue;
+        let show = true;
+        if (department && !cols[3].innerText.toLowerCase().includes(department)) show = false;
+        if (designation && !cols[4].innerText.toLowerCase().includes(designation)) show = false;
+        if (searchText && !rows[i].innerText.toLowerCase().includes(searchText)) show = false;
+        rows[i].style.display = show ? "" : "none";
+        if (show) count++;
+    }
+    paginateTable(bodyId);
+}
+
+function paginateTable(bodyId) {
+    let table = document.getElementById(bodyId);
+    let rows = table.querySelectorAll("tr");
+    let visibleRows = Array.from(rows).filter(r => r.style.display !== "none");
+
+    for (let i = 0; i < visibleRows.length; i++) {
+        visibleRows[i].style.display = (i >= (currentPage - 1) * rowsPerPage && i < currentPage * rowsPerPage) ? "" : "none";
+        visibleRows[i].querySelector("td").innerText = i + 1;
+    }
+
+    document.getElementById("pageInfo").innerText = `Page ${currentPage} of ${Math.ceil(visibleRows.length / rowsPerPage)}`;
+}
+
+function prevPage() {
+    if (currentPage > 1) {
+        currentPage--;
+        paginateTable("section1Body");
+        paginateTable("section2Body");
+    }
+}
+
+function nextPage() {
+    currentPage++;
+    paginateTable("section1Body");
+    paginateTable("section2Body");
+}
+
+function sortTable(n, section) {
+    let table = document.getElementById(section + "Table");
+    let rows = Array.from(table.rows).slice(1);
+    let switching = true;
+    let dir = "asc";
+
+    while (switching) {
+        switching = false;
+        for (let i = 1; i < rows.length - 1; i++) {
+            let x = rows[i].getElementsByTagName("TD")[n];
+            let y = rows[i + 1].getElementsByTagName("TD")[n];
+            let shouldSwitch = false;
+            if (dir == "asc") {
+                shouldSwitch = x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase();
+            } else {
+                shouldSwitch = x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase();
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                break;
+            }
+        }
+        if (!switching && dir == "asc") {
+            dir = "desc";
+            switching = true;
+        }
+    }
+}
+
+window.onload = applyFilters;
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <title>Payslip</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <style>
+        /* CSS Variables */
+        :root {
+            --blue: #007bff;
+            --indigo: #6610f2;
+            --purple: #6f42c1;
+            --pink: #e83e8c;
+            --red: #dc3545;
+            --orange: #fd7e14;
+            --yellow: #ffc107;
+            --green: #28a745;
+            --teal: #20c997;
+            --cyan: #17a2b8;
+            --white: #fff;
+            --gray: #6c757d;
+            --gray-dark: #343a40;
+            --primary: #007bff;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --info: #17a2b8;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --breakpoint-xs: 0;
+            --breakpoint-sm: 576px;
+            --breakpoint-md: 768px;
+            --breakpoint-lg: 992px;
+            --breakpoint-xl: 1200px;
+            --font-family-sans-serif: "Source Sans Pro", -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* Professional Body Styles */
+        body {
+            margin: 0;
+            font-family: var(--font-family-sans-serif); /* Using the defined CSS variable */
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            text-align: left;
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        .upload-form, .payslip {
+            background: #fff;
+            padding: 20px;
+            width: 800px;
+            margin: 20px auto;
+            box-shadow: 0 0 10px #ccc;
+            border: 1px solid #444;
+        }
+        h2, h3 { text-align: center; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .section { margin-top: 20px; }
+        .btn-group { text-align: right; margin-top: 10px; }
+
+        /* Styles for the payslip logo */
+        .payslip-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .payslip-logo {
+            max-width: 100px; /* Adjust size as needed */
+            height: auto;
+            display: block; /* Ensures it takes up full width for centering */
+            margin: 0 auto 10px auto; /* Centers the image and adds bottom margin */
+            border: 1px solid var(--gray); /* Example border */
+            border-radius: 5px; /* Slightly rounded corners */
+            filter: grayscale(20%); /* Example: subtle desaturation */
+            /* You can experiment with other filters for color effects:
+            filter: sepia(50%);
+            filter: brightness(1.1);
+            filter: saturate(1.5);
+            */
+        }
+
+    </style>
+
+
+<div class="upload-form">
+    <h2>Upload CSV Payslip File</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" required>
+        <button type="submit">Upload</button>
+    </form>
+</div>
+<div class="top-buttons">
+    <button onclick="redirectToPayslipList()">Go to Payslips List</button>
+</div>
+
+<script>
+    function redirectToPayslipList() {
+        window.location.href = "{% url 'payslip_list' %}";
+    }
+</script>
+
+{# Individual Payslips #}
+{% for row in records %}
+<div class="payslip" id="payslip-{{ forloop.counter }}">
+    <div class="payslip-header">
+        <img src="{% static 'download.jpeg' %}" alt="Company Logo" class="payslip-logo">
+        <h2>BISP Infonet Pvt. Ltd.</h2>
+    </div>
+    <h3>Payslip for the Month of {{ row.Month }}</h3>
+
+    <div class="section">
+        <table>
+            <tr><th>Employee Name</th><td>{{ row.Employee_Name }}</td><th>Employee Email_ID</th><td>{{ row.Employee_ID }}</td></tr>
+            <tr><th>Department</th><td>{{ row.Department }}</td><th>Month</th><td>{{ row.Month }}</td></tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h4>Salary Breakup</h4>
+        <table>
+            <tr>
+                <th>Earnings</th><th>Amount (₹)</th>
+                <th>Deductions</th><th>Amount (₹)</th>
+            </tr>
+            <tr><td>Basic</td><td>{{ row.Basic }}</td><td>Deductions</td><td>{{ row.Deductions }}</td></tr>
+            <tr><td>HRA</td><td>{{ row.HRA }}</td><td colspan="2"></td></tr>
+            <tr><td>Allowance</td><td>{{ row.Allowance }}</td><td colspan="2"></td></tr>
+            <tr>
+                <td colspan="2"><strong>Net Salary</strong></td>
+                <td colspan="2"><strong>₹{{ row.Net_Salary }}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <p style="margin-top: 20px;"><strong>Note:</strong> This is a system-generated payslip and does not require a signature.</p>
+
+    <div class="btn-group">
+        <button onclick="downloadPDF('payslip-{{ forloop.counter }}', '{{ row.Employee_Name|slugify }}_{{ row.Month }}.pdf')">Download PDF</button>
+        <button onclick="printPayslip('payslip-{{ forloop.counter }}')">Print</button>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    function downloadPDF(elementId, filename) {
+        const element = document.getElementById(elementId);
+        html2pdf().from(element).save(filename);
+    }
+
+    function printPayslip(elementId) {
+        const content = document.getElementById(elementId).innerHTML;
+        const win = window.open('', '', 'height=700,width=900');
+        win.document.write('<html><head><title>Payslip</title><style>' + document.querySelector('style').innerHTML + '</style></head><body>'); // Include CSS for printing
+        win.document.write(content);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.print();
+    }
+</script>
+
+{# IMPORTANT: Embed your Django context data safely for JavaScript access #}
+{# Place this script tag after your main script but before closing block content #}
+<script id="payslip-records-data" type="application/json">
+    {{ records|json_script:"payslip_records_data" }}
+</script>
+
+{% endblock %}

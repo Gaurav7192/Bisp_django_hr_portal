@@ -1,0 +1,6 @@
+2025-06-06 11.09.38 - submitted resignation with status 'Apply' (ID: 18)
+2025-06-06 11.09.38 - recorded resignation action 'Apply' for Ram (ID: 5)
+2025-06-06 11.09.46 - sent email to gauravsinghbhandari7192@gmail.com with subject 'S' (ID: 5)
+2025-06-06 11.09.46 - updated resignation with status 'Submit' (ID: 18)
+2025-06-06 11.09.46 - recorded resignation action 'Submit' for Ram (ID: 6)
+2025-06-06 14.46.22 - logged out

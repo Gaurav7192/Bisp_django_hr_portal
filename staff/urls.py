@@ -24,7 +24,7 @@ path('employee-lock-status/', employee_lock_status_view, name='employee_lock_sta
     path('login/',login_view, name='login'),
     path('d1/<int:id>/', d1, name='d1'),
     path('d2/<int:id>/', d2, name='d2'),
-
+    path('payslip_from_csv/', payslip_from_csv, name='payslip_from_csv'),
 path('team_task_report/<int:user_id>/', team_task_report, name='team_task_report'),
     #path('create_project/',create_project, name='create_project'),
     path('apply_leave/',apply_leave,name='apply_leave'),
@@ -32,10 +32,24 @@ path('add_task/<int:user_id>/', add_task_view, name='add_task'),
     path('task_list_view/<int:user_id>/',task_list_view, name='task_list_view'),
 path('logout/',auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('',login_view, name='login'),
-# urls.py
+path('employee_salary_history/<str:emp_id>/',employee_salary_history, name='employee_salary_history'),
 
-path('videos/delete/<int:video_id>/',delete_video, name='delete_video'),
+#     path('api/toda_tasks/',toda_tasks_api, name='toda_tasks_api'),
+#     path('update-task-datetime/', update_task_datetime, name='update_task_datetime'),
+# # urls.py
+#     path('toda/', toda_tasks_api, name='todo'),
+#     path('todo/delete/<int:id>/',delete_task, name='delete_task'),
+#     path('todo/change/<int:id>/',change_badge, name='change_badge'),
+    path('toda_tasks/', toda_tasks_api, name='toda_tasks_api'),  # API to GET/POST tasks
+    path('update_task_datetime/', update_task_datetime, name='update_task_datetime'),
+    path('todo/',todo_view, name='todo'),
+    path('incomplete_resignation/<int:user_id>', handle_incomplete_resignation, name='handle_incomplete_resignation'),
+    path('resignation_list',resignation_list,name='resignation_list'),
+
+    path('videos/delete/<int:video_id>/',delete_video, name='delete_video'),
     path('leave-type/<int:leave_type_id>/details/', leave_type_detail_view, name='leave_type_detail'),
+    path('hr-chatbot/', chatbot_page, name='hr_chatbot_page'),
+    path('api/chatbot/',chatbot_api, name='chatbot_api'),
 
     path('employee_registration/<int:id>',employee_registration, name='employee_registration'),
  #   path('employee_registration/<int:id>/',employee_registration,name='employee_registration'),
@@ -79,6 +93,10 @@ path('delete_education/<int:pk>/',delete_education, name='delete_education'),
      path('resignation_form/<int:user_id>',resignation_form,name='resignation_form'),
     path('send_exit_email/<int:user_id>',send_exit_email, name='send_exit_email'),
     path('forget-password/',Forget_passord, name='Forget_password'),
+    path('resignation/activity/<int:user_id>/', resignation_activity, name='resignation_activity'),
+    path('payslips/',payslip_list, name='payslip_list'),
+    path('payslips/export/csv/',export_payslips_csv, name='export_payslips_csv'),
+    path('payslips/export/excel/',export_payslips_excel, name='export_payslips_excel'),
 
     path('reset_password/', auth_views.PasswordResetView.as_view(), name='reset_password'),
     path('reset_password_sent/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
