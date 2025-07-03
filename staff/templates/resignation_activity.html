@@ -264,6 +264,9 @@
 
         {% if request.session.postion == 'Employee' and resignation.resign_status != 'Finalized' and resignation.resign_status != 'Reject by HR' %}
             <button type="submit" name="action" value="withdraw" class="btn btn-warning">Withdraw</button>
+
+         {% elif request.session.user_id == user and resignation.resign_status != 'Finalized' and resignation.resign_status != 'Reject by HR' %}
+            <button type="submit" name="action" value="withdraw" class="btn btn-warning">Withdraw</button>
         {% endif %}
 
         {% if request.session.postion == 'HR' and resignation.resign_status.id  == 4 %}

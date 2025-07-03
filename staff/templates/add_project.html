@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<style>
+<style xmlns:priority.id>
     .card {
         margin-top: 10px !important;
         background-color: #ffffff;
@@ -48,12 +48,16 @@
 <div class="container mt-2">
     <div class="card shadow p-4 rounded-4">
         <h4 class="mb-4">Create a New Project</h4>
-
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-danger" role="alert">{{ message }}</div>
+                {% if 'add_project' in message.tags %}
+                    <div class="alert alert-{{ message.tags|cut:'add_project'|default:'info' }} mt-2" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
             {% endfor %}
         {% endif %}
+
 
         <form method="post" action="{% url 'add_project' request.session.user_id %}" id="projectForm">
             {% csrf_token %}
@@ -62,85 +66,106 @@
                 <!-- Project Name -->
                 <div class="col-md-6 form-group">
                     <label for="pname" class="form-label">Project Name</label>
-                    <input type="text" class="form-control" id="pname" name="pname" value="{{ request.POST.pname }}" required>
+                    <input type="text" class="form-control" id="pname" name="pname" value="{{ request.POST.pname }}"
+                           required>
                 </div>
 
                 <!-- Client Name -->
                 <div class="col-md-6 form-group">
                     <label for="client" class="form-label">Client Name</label>
-                    <input type="text" class="form-control" id="client" name="client" value="{{ request.POST.client }}" required>
+                    <input type="text" class="form-control" id="client" name="client" value="{{ request.POST.client }}"
+                           required>
                 </div>
 
                 <!-- Start Date -->
                 <div class="col-md-6 form-group">
                     <label for="start_date" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.POST.start_date }}" required>
+                    <input type="date" class="form-control" id="start_date" name="start_date"
+                           value="{{ request.POST.start_date }}" required>
                 </div>
 
                 <!-- End Date -->
                 <div class="col-md-6 form-group">
                     <label for="end_date" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.POST.end_date }}">
+                    <input type="date" class="form-control" id="end_date" name="end_date"
+                           value="{{ request.POST.end_date }}">
                 </div>
 
                 <!-- Rate Status -->
-                <div class="col-md-6 form-group">
-                    <label for="rate_status" class="form-label">Rate Status</label>
-                    <select class="form-select" id="rate_status" name="rate_status" required>
-                        <option value="">Select Status</option>
-                        {% for rate_status in rate_status_list %}
-                            <option value="{{ rate_status.id }}" {% if request.POST.rate_status == rate_status.id|stringformat:"s" %}selected{% endif %}>
-                                {{ rate_status.status }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="col-md-6 form-group">
+    <label for="rate_status" class="form-label">Rate Status</label>
+    <select class="form-select" id="rate_status" name="rate_status" required>
+        <option value="">Select Status</option>
+        {% for rate_status in rate_status_list %}
+            <option value="{{ rate_status.id }}" {% if request.POST.rate_status == rate_status.id|stringformat:"s" %}selected{% endif %}>
+                {{ rate_status.status }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
 
                 <!-- Rate -->
                 <div class="col-md-6 form-group">
-                    <label for="rate" class="form-label">Rs  Rate  </label>
-           <input type="text" class="form-control" id="rate" name="rate" inputmode="numeric" pattern="[0-9]*" placeholder="Enter Rate" value="{{ request.POST.rate }}">
+                    <label for="rate" class="form-label">Rs Rate </label>
+                    <input type="text" class="form-control" id="rate" name="rate" inputmode="numeric" pattern="[0-9]*"
+                           placeholder="Enter Rate" value="{{ request.POST.rate }}">
 
 
                 </div>
 
-                <!-- Project Leader -->
-                <div class="col-md-6 form-group">
-                    <label for="manager" class="form-label">Project Leader</label>
-                    <select class="form-select" id="manager" name="manager" required>
-                        <option value="">Select Manager</option>
-                        {% for manager in managers %}
-                            <option value="{{ manager.id }}" {% if request.POST.manager == manager.id|stringformat:"s" %}selected{% endif %}>{{ manager.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+               <!-- Project Leader -->
+{% if request.session.position != "Manager" %}
+    <div class="col-md-6 form-group">
+        <label for="manager" class="form-label">Project Leader</label>
+        <select class="form-select" id="manager" name="manager">
+            <option value="">Select Manager</option>
+            {% for manager in managers %}
+                <option value="{{ manager.id }}" {% if request.POST.manager == manager.id|stringformat:"s" %}selected{% endif %}>
+                    {{ manager.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+<div class="row">
+{% endif %}
 
                 <!-- Priority -->
-                <div class="col-md-6 form-group">
-                    <label for="priority" class="form-label">Priority</label>
-                    <select class="form-select" id="priority" name="priority" required>
-                        <option value="">Select Priority</option>
-                        {% for priority in priority_list %}
-                            <option value="{{ priority.id }}" {% if request.POST.priority == priority.id|stringformat:"s" %}selected{% endif %}>{{ priority.label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+              <div class="col-md-6 form-group">
+    <label for="priority" class="form-label">Priority</label>
+    <select class="form-select" id="priority" name="priority" required>
+        <option value="">Select Priority</option>
+        {% for priority in priority_list %}
+            <option value="{{ priority.id }}" {% if request.POST.priority == priority.id|stringformat:"s" %}selected{% endif %}>
+                {{ priority.label }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
 
                 <!-- Team Members (No prefill) -->
+
                 <div class="col-md-12 form-group">
                     <label class="form-label">Team Members</label>
-                   <select class="form-select team-select w-100" name="team_members" multiple required>
 
+
+                    <select class="form-select team-select w-100" name="team_members" multiple required>
                         {% for employee in employee_members %}
-                            <option value="{{ employee.id }}">{{ employee.name }}</option>
+                        <option value="{{ employee.id }}">{{ employee.name }}</option>
                         {% endfor %}
                     </select>
+
+
                 </div>
+
 
                 <!-- Project Description -->
                 <div class="col-md-12 form-group">
                     <label for="description" class="form-label">Project Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter a brief description">{{ request.POST.description }}</textarea>
+                    <textarea class="form-control" id="description" name="description" rows="4"
+                              placeholder="Enter a brief description">{{ request.POST.description }}</textarea>
                 </div>
             </div>
 

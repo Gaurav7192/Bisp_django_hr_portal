@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from .models import *
 from datetime import datetime,date
-
+from staff.utils import *
 from django.shortcuts import get_object_or_404
 import re
 from django.utils.dateparse import parse_date
@@ -22,6 +22,7 @@ import random
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
 from .form import *
+from django.db.models import F, Q
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -30,6 +31,12 @@ from .models import LeaveTypeMaster, LeaveRecord
 import json
 from django.db import transaction
 from .utils.audit import log_user_action
+from staff import utils
+from . import vector_store, query_engine, document_processor
+
+# Load the FAISS index on startup
+index = vector_store.load_or_create_index()
+chunks = []
 
 def d1(request,id):
     user = get_object_or_404(emp_registers, id=id)
@@ -38,20 +45,204 @@ def d1(request,id):
 
 def d2(request,id):
     user = get_object_or_404(emp_registers, id=id)
+    user_id=request.session.get('user_id')
+    if user :
+       return   redirect('dashboard',user_id=user_id)
 
     return render(request, '2.html', {'user': user})
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import now
+from datetime import timedelta, date
 
 
+# views.py
+from django.shortcuts import render
+from .models import Project, Task, LeaveRecord, Resignation, emp_registers, Handbook
+# Add this to the top
 
 
+def dashboard(request, user_id):
+    emp = get_object_or_404(emp_registers, id=user_id)
+    today = date.today()
+    print(today)
+    last_7_days = today - timedelta(days=7)
+    end_alert_date = today + timedelta(days=3)
 
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 
-from .models import (
-    emp_registers, EmployeeDetail, LeaveRecord, LeaveStatusMaster, Holiday,
-    Project, Resignation, Handbook, Acknowledgment, RoleMaster, ResignationStatusMaster # Ensure all models are imported
-)
+    if emp.position and emp.position.role.lower() == 'hr':
+        new_projects = Project.objects.filter(start_date__gte=last_7_days)
+    else:
+
+
+        new_projects = Project.objects.filter(team_members__emp_id=emp.id, start_date__gte=last_7_days).distinct()
+    if emp.position and emp.position.role.lower() == 'hr':
+        new_task = Task.objects.filter(start_date__gte=last_7_days)
+    else:
+        new_task = Task.objects.filter(assigned_to__emp_id=emp.id, start_date__gte=last_7_days).distinct()
+
+  # Recent Tasks
+    recent_tasks = Task.objects.filter(assigned_to__id=emp.id, start_date__gte=last_7_days).distinct()
+
+    #  Pending Handbook
+    pending_handbook = Acknowledgment.objects.filter(
+        employee=emp,
+        acknowledgment='Not Acknowladge',
+        status='active',
+        handbook__active_status=True
+    ).first()
+
+    # Project Alerts (varied by role)
+    if emp.position and emp.position.role.lower() == 'hr':
+        project_alerts = Project.objects.filter(
+            end_date__lte=end_alert_date
+        ).exclude(status__status__in=['complete'])
+    elif emp.email in emp_registers.objects.values_list('reportto', flat=True):  # Manager
+        project_alerts = Project.objects.filter(
+            end_date__lte=end_alert_date,
+            team_members__id=emp.id
+        ).exclude(status__status__in=['complete']).distinct()
+    elif Project.objects.filter(admin=emp).exists():  # Admin of project
+        project_alerts = Project.objects.filter(
+            end_date__lte=end_alert_date,
+            admin=emp
+        ).exclude(status__status__in=['complete'])
+    else:  # Regular employee (team member)
+        project_alerts = Project.objects.filter(
+            end_date__lte=end_alert_date,
+            team_members__id=emp.id
+        ).exclude(status__status__in=['complete']).distinct()
+
+    #  Task Alerts (user-specific)
+    task_alerts = Task.objects.filter(
+        assigned_to__id=emp.id,
+        due_date__lte=end_alert_date,
+        status__status__in=['pending', 'claim_completed','hold','inprocess']
+    ).distinct()
+
+    # Pending Leaves
+    if emp.position and emp.position.role.lower() == 'hr':
+        pending_leaves = LeaveRecord.objects.filter(start_date__gte=today, approval_status__status='Pending')
+    elif emp.email in emp_registers.objects.values_list('reportto', flat=True):
+        pending_leaves = LeaveRecord.objects.filter(
+            start_date__gte=today,
+            emp_id__reportto=emp.email,
+            status__status='Pending'
+        )
+    else:
+        pending_leaves = LeaveRecord.objects.filter(emp_id=emp, start_date__gte=today)
+    print('\n\n\n',pending_leaves,'\n\n\n\n\n\n')
+
+    #  Resignation Info
+    if emp.position and emp.position.role.lower() == 'hr':
+        activity_resignations = Resignation.objects.filter(resign_status__id=4)
+        latest_user_resignation = None
+    elif emp.email in emp_registers.objects.values_list('reportto', flat=True):
+        activity_resignations = Resignation.objects.filter(resign_status__status_name='Submitted')
+        latest_user_resignation = None
+    else:
+        activity_resignations = None
+        latest_user_resignation = Resignation.objects.filter(employee=emp).order_by('-id').first()
+
+    #  Team Members
+    team_members = emp_registers.objects.filter(
+        Q(reportto=emp.email) | Q(reportto=emp.reportto)
+    ).exclude(id=emp.id).filter(job_status=1)
+
+    # Leave Summary — Dynamic Calculation from JSON
+    emp_detail = EmployeeDetail.objects.filter(emp_id=emp).first()
+    total_leaves = used_leaves = balance_leaves = 0
+    if emp_detail:
+        latest_leave_detail = EmployeeDetail.objects.get(emp_id=emp)
+        if latest_leave_detail and latest_leave_detail.leave_details:
+            leave_json = latest_leave_detail.leave_details
+            for leave_type_name, leave_data in leave_json.items():  # Corrected: Iterate using .items()
+                try:
+                    # Use leave_type_name (the key) to query LeaveTypeMaster
+                    l = LeaveTypeMaster.objects.get(leavecode=leave_type_name)
+
+                    if l.leave_status == True:  # Check if the leave type is active/enabled
+                        # Access 'total', 'used', 'balance' from the leave_data dictionary (the value)
+                        total_leaves += int(leave_data.get('total', 0))
+                        used_leaves += int(leave_data.get('used', 0))
+                        balance_leaves += int(leave_data.get('balance', 0))
+                except LeaveTypeMaster.DoesNotExist:
+                    # Handle cases where a leave type name from leave_json does not exist in LeaveTypeMaster
+                    print(f"Warning: LeaveTypeMaster with name '{leave_type_name}' not found.")
+                except Exception as e:
+                    # Catch other potential errors during processing
+                    print(f"An error occurred while processing leave type '{leave_type_name}': {e}")
+
+
+    is_hr = emp.position and emp.position.role.lower() == 'hr'
+    total_employees = emp_registers.objects.filter(job_status=1).count() if is_hr else None
+    total_projects = Project.objects.count() if is_hr else Project.objects.filter(emp_id=emp).count()
+    ongoing_tasks = Task.objects.filter(emp_id=emp, status__status__iexact='Ongoing').count()
+    total_holidays = Holiday.objects.all().count()
+    today_leaves = LeaveRecord.objects.filter(start_date=today).count()
+    ongoing_tasks=Task.objects.filter(assigned_to=emp.id,
+                                             status__status__in=["pending", "hold", "inprocess"]).count()
+    Leave=LeaveRecord.objects.filter(emp_id=emp.id,start_date__gte=today, approval_status__status='Approved')
+    total_holidays=Holiday.objects.all().count()
+
+    tasks = Task.objects.filter(assigned_to=user_id, status=1)
+
+    # Total pending tasks
+    total = tasks.count()
+
+    # Completed tasks
+    completed = tasks.filter(status__status='completed').count()
+
+    # Pending (not completed)
+    pending = tasks.exclude(status__status='completed').count()
+
+    # On-time: completed and completed on/before due date
+    on_time = tasks.filter(
+        status__status='completed',
+        complete_date__isnull=False,
+        complete_date__date__lte=F('due_date')
+    ).count()
+
+    # Overdue: not completed and due date has passed
+    overdue = tasks.filter(
+        ~Q(status__status='completed'),
+        due_date__lt=date.today()
+    ).count()
+
+    context = {
+        'emp': emp,
+        'is_hr': is_hr,
+        'today':today,
+        'new_projects': new_projects,
+        'recent_tasks': recent_tasks,
+        'new_task':new_task,
+        'handbook_alert': pending_handbook,
+        'Approve_leave':Leave,
+        'project_alerts': project_alerts,
+        'task_alerts': task_alerts,
+        'pending_leaves': pending_leaves,
+        'activity_resignations': activity_resignations,
+        'latest_user_resignation': latest_user_resignation,
+        'team_members': team_members,
+        'total_leaves': total_leaves,
+        'used_leaves': used_leaves,
+        'balance_leaves': balance_leaves,
+        'total_employees': total_employees,
+        'total_task':total,
+        'total_projects': total_projects,
+        'ongoing_tasks': ongoing_tasks,
+        'total_holidays': total_holidays,
+        'today_leaves': today_leaves,
+        'ongoing_tasks':ongoing_tasks,
+        'total_holidays': total_holidays,
+    'completed': completed,
+    'pending': pending,
+    'on_time': on_time,
+    'overdue': overdue,
+    }
+
+    return render(request, 'dashboard.html', context)
+
+
 from .audit_logger import log_audit_action
 
 # Helper function to get the user identifier from session
@@ -59,94 +250,94 @@ def get_user_audit_identifier(request):
     # Prioritize request.session.name if set, otherwise use request.user.name as fallback
     # If neither, fall back to a generic 'Unknown'
     return request.session.get('name', request.user.name if request.user.is_authenticated else 'Unknown/Anonymous')
-
-
-
-def dashboard_view(request):
-    user = request.user
-    user_audit_name = get_user_audit_identifier(request) # Get name from session
-
-    employee_detail = None
-    user_total_holidays = 0
-    is_hr = False
-    pending_leaves = []
-    recent_projects = []
-    ending_projects = []
-    pending_resignations = []
-    show_handbook_notice = False
-
-    # ... (rest of your dashboard_view logic) ...
-
-    try:
-        employee_detail = EmployeeDetail.objects.get(emp_id=user)
-    except EmployeeDetail.DoesNotExist:
-        employee_detail = None
-        log_audit_action(user_audit_name, "attempted to view dashboard but EmployeeDetail missing")
-
-
-    user_total_holidays = Holiday.objects.count()
-
-    hr_role = RoleMaster.objects.filter(role='HR').first()
-    if hr_role and user.position == hr_role:
-        is_hr = True
-
-        pending_status = get_object_or_404(LeaveStatusMaster, status='Pending')
-        pending_leaves = LeaveRecord.objects.filter(approval_status=pending_status).select_related('emp_id', 'leave_type')
-
-        today = date.today()
-        three_days_ago = today - timedelta(days=3)
-        three_days_later = today + timedelta(days=3)
-
-        recent_projects = Project.objects.filter(start_date__gte=three_days_ago, start_date__lte=today).order_by('-start_date')
-
-        ending_projects = Project.objects.filter(
-            Q(end_date__gte=today) & Q(end_date__lte=three_days_later)
-        ).exclude(status__status='Completed').order_by('end_date')
-
-        pending_resignation_status = ResignationStatusMaster.objects.filter(
-            status_name__in=['Submitted', 'Pending']
-        ).first()
-
-        if pending_resignation_status:
-            pending_resignations = Resignation.objects.filter(
-                resign_status=pending_resignation_status
-            ).select_related('employee')
-
-    if not request.session.get('handbook_notice_shown', False):
-        active_handbooks = Handbook.objects.filter(
-            active_status=True,
-            start_date__lte=date.today()
-        ).exclude(end_date__lt=date.today())
-        latest_active_handbook = active_handbooks.order_by('-start_date').first()
-
-        if latest_active_handbook:
-            acknowledged = Acknowledgment.objects.filter(
-                employee=user,
-                handbook=latest_active_handbook,
-                acknowledgment='agree'
-            ).exists()
-
-            if not acknowledged:
-                show_handbook_notice = True
-                request.session['handbook_notice_shown'] = True
-                log_audit_action(user_audit_name, f"Handbook acknowledgment notice displayed for '{latest_active_handbook.document_name}'")
-
-
-    context = {
-        'user': user,
-        'employee_detail': employee_detail,
-        'user_total_holidays': user_total_holidays,
-        'is_hr': is_hr,
-        'pending_leaves': pending_leaves,
-        'recent_projects': recent_projects,
-        'ending_projects': ending_projects,
-        'pending_resignations': pending_resignations,
-        'show_handbook_notice': show_handbook_notice,
-        'latest_active_handbook': latest_active_handbook if show_handbook_notice else None,
-    }
-
-    log_audit_action(user_audit_name, "viewed dashboard") # Use the session name here
-    return render(request, 'staff/dashboard.html', context)
+#
+#
+#
+# def dashboard_view(request):
+#     user = request.user
+#     user_audit_name = get_user_audit_identifier(request) # Get name from session
+#
+#     employee_detail = None
+#     user_total_holidays = 0
+#     is_hr = False
+#     pending_leaves = []
+#     recent_projects = []
+#     ending_projects = []
+#     pending_resignations = []
+#     show_handbook_notice = False
+#
+#     # ... (rest of your dashboard_view logic) ...
+#
+#     try:
+#         employee_detail = EmployeeDetail.objects.get(emp_id=user)
+#     except EmployeeDetail.DoesNotExist:
+#         employee_detail = None
+#         log_audit_action(user_audit_name, "attempted to view dashboard but EmployeeDetail missing")
+#
+#
+#     user_total_holidays = Holiday.objects.count()
+#
+#     hr_role = RoleMaster.objects.filter(role='HR').first()
+#     if hr_role and user.position == hr_role:
+#         is_hr = True
+#
+#         pending_status = get_object_or_404(LeaveStatusMaster, status='Pending')
+#         pending_leaves = LeaveRecord.objects.filter(approval_status=pending_status).select_related('emp_id', 'leave_type')
+#
+#         today = date.today()
+#         three_days_ago = today - timedelta(days=3)
+#         three_days_later = today + timedelta(days=3)
+#
+#         recent_projects = Project.objects.filter(start_date__gte=three_days_ago, start_date__lte=today).order_by('-start_date')
+#
+#         ending_projects = Project.objects.filter(
+#             Q(end_date__gte=today) & Q(end_date__lte=three_days_later)
+#         ).exclude(status__status='Completed').order_by('end_date')
+#
+#         pending_resignation_status = ResignationStatusMaster.objects.filter(
+#             status_name__in=['Submitted', 'Pending']
+#         ).first()
+#
+#         if pending_resignation_status:
+#             pending_resignations = Resignation.objects.filter(
+#                 resign_status=pending_resignation_status
+#             ).select_related('employee')
+#
+#     if not request.session.get('handbook_notice_shown', False):
+#         active_handbooks = Handbook.objects.filter(
+#             active_status=True,
+#             start_date__lte=date.today()
+#         ).exclude(end_date__lt=date.today())
+#         latest_active_handbook = active_handbooks.order_by('-start_date').first()
+#
+#         if latest_active_handbook:
+#             acknowledged = Acknowledgment.objects.filter(
+#                 employee=user,
+#                 handbook=latest_active_handbook,
+#                 acknowledgment='agree'
+#             ).exists()
+#
+#             if not acknowledged:
+#                 show_handbook_notice = True
+#                 request.session['handbook_notice_shown'] = True
+#                 log_audit_action(user_audit_name, f"Handbook acknowledgment notice displayed for '{latest_active_handbook.document_name}'")
+#
+#
+#     context = {
+#         'user': user,
+#         'employee_detail': employee_detail,
+#         'user_total_holidays': user_total_holidays,
+#         'is_hr': is_hr,
+#         'pending_leaves': pending_leaves,
+#         'recent_projects': recent_projects,
+#         'ending_projects': ending_projects,
+#         'pending_resignations': pending_resignations,
+#         'show_handbook_notice': show_handbook_notice,
+#         'latest_active_handbook': latest_active_handbook if show_handbook_notice else None,
+#     }
+#
+#     log_audit_action(user_audit_name, "viewed dashboard") # Use the session name here
+#     return render(request, 'staff/dashboard.html', context)
 
 
 
@@ -181,7 +372,7 @@ def approve_leave_view(request, pk):
     context = {'leave_record': leave_record}
     return render(request, 'staff/confirm_leave_action.html', context)
 
-@login_required
+
 def reject_leave_view(request, pk):
     user_audit_name = get_user_audit_identifier(request) # Get name from session
     if not (request.user.position and request.user.position.role == 'HR'):
@@ -351,6 +542,226 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth.hashers import check_password # Make sure this is imported
+def is_last_day_of_month():
+    """Check if today is the last day of the month."""
+    today = date.today()
+    tomorrow = today + timedelta(days=1)
+    return tomorrow.day == 1
+
+from datetime import date
+from calendar import monthrange
+import csv
+from io import StringIO
+from decimal import Decimal
+from django.core.mail import EmailMessage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from staff.models import emp_registers, LeaveRecord, Holiday, LatestPayslip, Payslip
+
+
+def generate_salary_csv_and_send():
+    today = date.today()
+    year, month = today.year, today.month
+    month_name = today.strftime('%B')
+    month_year = f"{month_name} {year}"
+    filename = f"{month_name}_{year}.csv"
+
+    csv_buffer = StringIO()
+    writer = csv.writer(csv_buffer)
+    writer.writerow([
+        "emp_id", "Employee_Name", "Employee_Email", "SALARY BASIC", "SALARY_HRA", "SALARY_DA", "TOTAL_SALARY",
+        "Present Days", "Paid Leaves", "Weekly Off", "Unpaid Leaves", "Festivals", "Total Paid Days",
+        "GROSS BASIC", "GROSS HRA", "GROSS DA", "CONVENCE ALLOWNCES", "SPECIAL ALLOWNCES",
+        "Project Incentive", "Variable Pay", "GROSS TOTAL", "ESI", "PF", "Salary Advance", "Negative Leave",
+        "TDS", "Total Deductions", "NET SALARY", "Month"
+    ])
+
+    holidays = Holiday.objects.filter(date__year=year, date__month=month).values_list('date', flat=True)
+    total_days = monthrange(year, month)[1]
+
+    for emp in emp_registers.objects.all():
+        annual_ctc = float(emp.salary or 0)
+        monthly_ctc = annual_ctc / 12
+
+        basic = round(monthly_ctc * 0.40, 2)
+        hra = round(monthly_ctc * 0.20, 2)
+        da = round(monthly_ctc * 0.10, 2)
+        conveyance = 1600.00
+        special = round(monthly_ctc - (basic + hra + da + conveyance), 2)
+        gross_monthly = basic + hra + da + conveyance + special
+
+        leaves = LeaveRecord.objects.filter(
+            emp_id=emp,
+            approval_status__id=1,
+            start_date__year=year,
+            start_date__month=month
+        )
+        paid_leave_days = sum(l.no_of_days for l in leaves if l.leave_type and l.leave_type.payable)
+        unpaid_leave_days = sum(l.no_of_days for l in leaves if l.leave_type and not l.leave_type.payable)
+        weekly_offs = 4
+        holidays_count = len(holidays)
+
+        present_days = total_days - (weekly_offs + paid_leave_days + unpaid_leave_days)
+        total_paid_days = present_days + paid_leave_days + holidays_count
+
+        per_day_salary = gross_monthly / total_days
+        adjusted_salary = round(per_day_salary * total_paid_days, 2)
+
+        gross_basic = round(basic / total_days * total_paid_days, 2)
+        gross_hra = round(hra / total_days * total_paid_days, 2)
+        gross_da = round(da / total_days * total_paid_days, 2)
+
+        gross_total = round(adjusted_salary, 2)
+        esi = round(gross_total * 0.0075, 2)
+        pf = round(gross_total * 0.12, 2)
+        tds = round(gross_total * 0.05, 2)
+        total_deductions = round(esi + pf + tds, 2)
+        net_salary = round(gross_total - total_deductions, 2)
+
+        # Write to CSV
+        writer.writerow([
+            emp.id, emp.name, emp.email, basic, hra, da, round(basic + hra + da, 2),
+            present_days, paid_leave_days, weekly_offs, unpaid_leave_days, holidays_count, total_paid_days,
+            gross_basic, gross_hra, gross_da, conveyance, special,
+            0, 0, gross_total, esi, pf, 0, 0, tds, total_deductions, net_salary, month_year
+        ])
+
+        # Save per-employee payslip
+        Payslip.objects.update_or_create(
+            employee_id=emp,
+            month=month_year,
+            defaults={
+                'employee_name': emp.name,
+                'department': emp.department.name if emp.department else '',
+                'SALARY_BASIC': Decimal(basic),
+                'SALARY_HRA': Decimal(hra),
+                'SALARY_DA': Decimal(da),
+                'GROSS_BASIC': Decimal(gross_basic),
+                'GROSS_HRA': Decimal(gross_hra),
+                'GROSS_DA': Decimal(gross_da),
+                'CONVENCE_ALLOWANCE': Decimal(conveyance),
+                'SPECIAL_ALLOWNCES': Decimal(special),
+                'Project_Incentive': Decimal('0.00'),
+                'Variable_Pay': Decimal('0.00'),
+                'GROSS_TOTAL': Decimal(gross_total),
+                'ESI': Decimal(esi),
+                'PF': Decimal(pf),
+                'Salary_Advance': Decimal('0.00'),
+                'Negative_Leave': Decimal('0.00'),
+                'TDS': Decimal(tds),
+                'Total_Deductions': Decimal(total_deductions),
+                'basic': Decimal(basic),
+                'hra': Decimal(hra),
+                'allowance': Decimal(special + conveyance),
+                'deductions': Decimal(total_deductions),
+                'net_salary': Decimal(net_salary),
+                'PRESENT_DAYS': present_days,
+                'PAID_LEAVE': paid_leave_days,
+                'WEEK_OFF': weekly_offs,
+                'UNPAID_LEAVE': unpaid_leave_days,
+                'WORKING_DAYS': total_paid_days,
+                'TOTAL_SALARY': Decimal(basic + hra + da),
+            }
+        )
+
+    # Save file in LatestPayslip with FileField
+    latest = LatestPayslip(file_name=filename)
+    latest.file.save(f"payslip/{filename}", ContentFile(csv_buffer.getvalue().encode()), save=True)
+
+    # Email the file
+    # email = EmailMessage(
+    #     subject=f"Payslip Generated - {month_name} {year}",
+    #     body="Attached is the auto-generated salary slip for the current month.",
+    #     from_email=settings.DEFAULT_FROM_EMAIL,
+    #     to=["gauravsinghbhandari7@gmail.com"]
+    # )
+    # email.attach(filename, csv_buffer.getvalue(), 'text/csv')
+    # email.send()
+
+    return "Payslip CSV generated, stored, and emailed."
+
+
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Payslip
+from datetime import datetime
+
+# staff/views.py
+import csv
+from django.http import HttpResponse
+from .models import Payslip
+
+def export_payslip_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="payslips.csv"'
+
+    writer = csv.writer(response)
+    headers = [
+        'Emp ID', 'Employee Name', 'Email',
+        'SALARY_BASIC', 'SALARY_HRA', 'SALARY_DA', 'TOTAL_SALARY',
+        'PRESENT_DAYS', 'PAID_LEAVE', 'WEEK_OFF', 'UNPAID_LEAVE', 'WORKING_DAYS',
+        'GROSS_BASIC', 'GROSS_HRA', 'GROSS_DA', 'CONVENCE_ALLOWANCE',
+        'SPECIAL_ALLOWNCES', 'Project_Incentive', 'Variable_Pay',
+        'GROSS_TOTAL', 'ESI', 'PF', 'Salary_Advance',
+        'Negative_Leave', 'TDS', 'Total_Deductions', 'NET_SALARY', 'Month'
+    ]
+    writer.writerow(headers)
+
+    for payslip in Payslip.objects.all():
+        writer.writerow([
+            payslip.employee_id,
+            payslip.employee_name,
+            payslip.employee_id.email,
+            payslip.SALARY_BASIC,
+            payslip.SALARY_HRA,
+            payslip.SALARY_DA,
+            payslip.TOTAL_SALARY,
+            payslip.PRESENT_DAYS,
+            payslip.PAID_LEAVE,
+            payslip.WEEK_OFF,
+            payslip.UNPAID_LEAVE,
+            payslip.WORKING_DAYS,
+            payslip.GROSS_BASIC,
+            payslip.GROSS_HRA,
+            payslip.GROSS_DA,
+            payslip.CONVENCE_ALLOWANCE,
+            payslip.SPECIAL_ALLOWNCES,
+            payslip.Project_Incentive,
+            payslip.Variable_Pay,
+            payslip.GROSS_TOTAL,
+            payslip.ESI,
+            payslip.PF,
+            payslip.Salary_Advance,
+            payslip.Negative_Leave,
+            payslip.TDS,
+            payslip.Total_Deductions,
+            payslip.net_salary,
+            payslip.month
+        ])
+    return response
+
+def user_payslip_list(request , user_id):
+    payslips = Payslip.objects.filter(employee_id=user_id)
+
+    # Only show payslips from year 2025 or later
+    filtered_payslips = []
+
+    months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+
+    for p in payslips:
+        try:
+            year = int(p.month[-4:])
+            if year >= 2025:
+                filtered_payslips.append(p)
+        except:
+            continue  # skip malformed month values
+
+    return render(request, 'user_payslip.html', {'payslips': filtered_payslips,'months':months})
 
 # Assuming emp_registers is your emp_registers_transition_ model with the lockout logic
 from .models import emp_registers # Adjust this import based on your app's name
@@ -408,7 +819,10 @@ def login_view(request):
                 request.session['user_id'] = user.id
                 request.session['name'] = user.name
                 request.session['postion'] = user.position.role
+                request.session['email'] = user.email
                 request.session.set_expiry(604800 if remember_me else 0)
+                if is_last_day_of_month():
+                    generate_salary_csv_and_send()
 
                 return redirect('d2', id=user.id)
 
@@ -906,11 +1320,23 @@ def add_project_view(request, user_id):
         emp = emp_registers.objects.get(id=user_id)
         admin_name = emp.name
     except emp_registers.DoesNotExist:
-        messages.error(request, "Employee not found.")
+        messages.error(request, "Employee not found.",extra_tags='add_project')
         return redirect('login')
 
 
-    employee_members = emp_registers.objects.filter(position__role__iexact='Employee')
+    employee_members = emp_registers.objects.filter(position__role__iexact='Employee',job_status=1)
+    # 8️⃣ Team Members
+    team_members = emp_registers.objects.filter(
+        reportto=emp
+    ) | emp_registers.objects.filter(
+        reportto=emp.reportto
+    ).exclude(id=emp.id)
+    final_members = employee_members & team_members
+
+
+
+    print("\n\n\n",team_members,"\n\n\n",final_members)
+
     rate_status_list = RateStatusMaster.objects.all()
     priority_list = PriorityMaster.objects.all()
     status_list = StatusMaster.objects.all()
@@ -925,26 +1351,27 @@ def add_project_view(request, user_id):
         priority = request.POST.get('priority')
         description = request.POST.get('description')
         client = request.POST.get('client')
-        manager = request.POST.get('manager')
+        # manager = request.POST.get('manager') or request.session.user_id
         team_member_ids = request.POST.getlist('team_members')
 
         form_data = request.POST.copy()
 
         if not rate:
-            messages.error(request, "Rate is required.")
+            messages.error(request, "Rate is required.",extra_tags='add_project')
             return render(request, 'add_project.html', {
                 'status_list': status_list,
                 'rate_status_list': rate_status_list,
                 'priority_list': priority_list,
                 'managers': managers,
                 'employee_members': employee_members,
+                'final_members':final_members,
                 'form_data': form_data
             })
 
         try:
             rate_val = float(rate)
             if rate_val < 0:
-                messages.error(request, "Rate cannot be negative.")
+                messages.error(request, "Rate cannot be negative.",extra_tags='add_project')
                 return render(request, 'add_project.html', {
                     'status_list': status_list,
                     'rate_status_list': rate_status_list,
@@ -954,12 +1381,12 @@ def add_project_view(request, user_id):
                     'form_data': form_data
                 })
         except ValueError:
-            messages.error(request, "Invalid rate value.")
+            messages.error(request, "Invalid rate value.",extra_tags='add_project')
             return render(request, 'add_project.html', {
                 'status_list': status_list,
                 'rate_status_list': rate_status_list,
                 'priority_list': priority_list,
-                'managers': managers,
+
                 'employee_members': employee_members,
                 'form_data': form_data
             })
@@ -970,7 +1397,7 @@ def add_project_view(request, user_id):
                 sd = parse_date(start_date)
                 today = date.today()
                 if sd < today:
-                    messages.error(request, "Start date cannot be before today.")
+                    messages.error(request, "Start date cannot be before today.",extra_tags='add_project')
                     return render(request, 'add_project.html', {
                         'status_list': status_list,
                         'rate_status_list': rate_status_list,
@@ -980,7 +1407,7 @@ def add_project_view(request, user_id):
                         'form_data': form_data
                     })
             except Exception:
-                messages.error(request, "Invalid start date format.")
+                messages.error(request, "Invalid start date format.",extra_tags='add_project')
                 return render(request, 'add_project.html', {
                     'status_list': status_list,
                     'rate_status_list': rate_status_list,
@@ -996,7 +1423,7 @@ def add_project_view(request, user_id):
                 sd = parse_date(start_date)
                 ed = parse_date(end_date)
                 if ed < sd:
-                    messages.error(request, "End date cannot be before start date.")
+                    messages.error(request, "End date cannot be before start date.",extra_tags='add_project')
                     return render(request, 'add_project.html', {
                         'status_list': status_list,
                         'rate_status_list': rate_status_list,
@@ -1006,7 +1433,7 @@ def add_project_view(request, user_id):
                         'form_data': form_data
                     })
             except Exception:
-                messages.error(request, "Invalid date format.")
+                messages.error(request, "Invalid date format.",extra_tags='add_project')
                 return render(request, 'add_project.html', {
                     'status_list': status_list,
                     'rate_status_list': rate_status_list,
@@ -1017,27 +1444,27 @@ def add_project_view(request, user_id):
                 })
 
         # Validate manager
-
-        if manager:
-            try:
-                manager = emp_registers.objects.get(id=manager)
-            except emp_registers.DoesNotExist:
-                messages.error(request, "Invalid Manager selected.")
-                return render(request, 'add_project.html', {
-                    'status_list': status_list,
-                    'rate_status_list': rate_status_list,
-                    'priority_list': priority_list,
-                    'managers': managers,
-                    'employee_members': employee_members,
-                    'form_data': form_data
-                })
+        #
+        # if manager:
+        #     try:
+        #         manager = emp_registers.objects.get(id=manager)
+        #     except emp_registers.DoesNotExist:
+        #         messages.error(request, "Invalid Manager selected.",extra_tags='add_project')
+        #         return render(request, 'add_project.html', {
+        #             'status_list': status_list,
+        #             'rate_status_list': rate_status_list,
+        #             'priority_list': priority_list,
+        #             'managers': managers,
+        #             'employee_members': employee_members,
+        #             'form_data': form_data
+        #         })
 
         rate_status_obj = None
         if rate_status:
             try:
                 rate_status_obj = RateStatusMaster.objects.get(id=rate_status)
             except RateStatusMaster.DoesNotExist:
-                messages.error(request, "Invalid rate status selected.")
+                messages.error(request, "Invalid rate status selected.",extra_tags='add_project')
                 return render(request, 'add_project.html', {
                     'status_list': status_list,
                     'rate_status_list': rate_status_list,
@@ -1050,7 +1477,7 @@ def add_project_view(request, user_id):
         try:
             priority_obj = PriorityMaster.objects.get(id=priority)
         except PriorityMaster.DoesNotExist:
-            messages.error(request, "Invalid priority selected.")
+            messages.error(request, "Invalid priority selected.",extra_tags='add_project')
             return render(request, 'add_project.html', {
                 'status_list': status_list,
                 'rate_status_list': rate_status_list,
@@ -1071,7 +1498,8 @@ def add_project_view(request, user_id):
             priority=priority_obj,
             description=description,
             admin=admin_name,
-            manager=manager,
+
+
             client=client,
             status=StatusMaster.objects.get(id=1)
         )
@@ -1097,7 +1525,7 @@ def add_project_view(request, user_id):
         project.team_members.set(team_members)
 
 
-        messages.success(request, "Project created successfully!")
+        messages.success(request, "Project created successfully!",extra_tags='add_project')
         return redirect('project', user_id=user_id)
 
     return render(request, 'add_project.html', {
@@ -1372,7 +1800,7 @@ def add_learning_video(request):
         category = request.POST.get('category')
         video_file = request.FILES.get('file')
 
-        video = LearningVideo(title=title, category=category, video=video_file)
+        video = Video(title=title, category=category, video=video_file)
         video.save()
 
         # Generate thumbnail
@@ -2841,64 +3269,77 @@ from django.shortcuts import render, get_object_or_404
 from django.utils.timezone import localtime
 from .models import EmployeeDetail
 
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import localtime
+from .models import EmployeeDetail, emp_registers
+
+from django.shortcuts import render, get_object_or_404
+from django.utils.timezone import localtime
+from .models import EmployeeDetail, emp_registers
+
 def view_profile_history(request, emp_id):
-    # Get the current employee object
-    employee = get_object_or_404(EmployeeDetail, emp_id=emp_id)
+    employee_detail = get_object_or_404(EmployeeDetail, emp_id=emp_id)
+    emp = employee_detail.emp_id  # ForeignKey to emp_registers
 
-    # Get historical records in ascending order of history date
-    history_records = EmployeeDetail.history.filter(emp_id=emp_id).order_by('history_date')
+    # Get historical records of EmployeeDetail (ascending for timeline)
+    history_records = list(EmployeeDetail.history.filter(emp_id=emp_id).order_by('history_date'))
 
-    field_history_map = {}  # Track change history for each field
+    snapshots = []
 
-    # Go through each historical record
-    for i, record in enumerate(history_records):
-        current_data = record.__dict__
+    for i in range(len(history_records)):
+        current = history_records[i]
+        next_record = history_records[i + 1] if i + 1 < len(history_records) else None
 
-        for field, new_value in current_data.items():
-            if field.startswith('_') or field in ['id', 'history_id', 'history_user_id',
-                                                  'history_type', 'history_change_reason',
-                                                  'history_date', 'emp_id_id']:
-                continue
+        # Get latest related data from emp_registers
+        current_emp = emp_registers.objects.get(id=current.emp_id_id)
+        designation = current_emp.designation.designation_name if current_emp.designation else ''
+        department = current_emp.department.name if current_emp.department else ''
+        salary = current_emp.salary
 
-            # Get previous value for the field
-            last_record = field_history_map.get(field, [])
+        snapshots.append({
+            'phone': current.phone_number,
+            'guidance_phone': current.guidance_phone_number,
+            'address': current.address,
+            'permanent_address': current.permanent_address,
+            'designation': designation,
+            'department': department,
+            'salary': salary,
+            'start_date': localtime(current.history_date).strftime('%Y-%m-%d'),
+            'end_date': localtime(next_record.history_date).strftime('%Y-%m-%d') if next_record else 'Current Data'
+        })
 
-            if last_record:
-                prev_value = last_record[-1]['new']
-                if prev_value != new_value:
-                    # Value changed, so append new history entry
-                    last_record.append({
-                        'field': field,
-                        'old': prev_value,
-                        'new': new_value,
-                        'created_date': last_record[-1]['created_date'],  # same as last change date
-                        'change_date': localtime(record.history_date).strftime('%Y-%m-%d %H:%M:%S')
-                    })
-                    field_history_map[field] = last_record
-            else:
-                # First time value seen → create initial record
-                field_history_map[field] = [{
-                    'field': field,
-                    'old': '',
-                    'new': new_value,
-                    'created_date': localtime(record.history_date).strftime('%Y-%m-%d %H:%M:%S'),
-                    'change_date': 'Not changed'
-                }]
-
-    # Flatten the dict into a list
-    changes = []
-    for field, field_changes in field_history_map.items():
-        for i in range(len(field_changes)):
-            if i < len(field_changes) - 1:
-                # Set created_date as the current, and change_date as the next's created_date
-                field_changes[i]['change_date'] = field_changes[i + 1]['created_date']
-            changes.append(field_changes[i])
+    snapshots.reverse()  # Show latest first
 
     return render(request, 'view_profile_history.html', {
-        'employee': employee,
-        'changes': sorted(changes, key=lambda x: x['created_date']),  # sort by created date
+        'employee': employee_detail,
+        'history_data': snapshots
     })
+def chatbot_view(request):
+    query = request.GET.get("query")
+    emp_id_val = request.session.get("user_id")
 
+    if not query or not emp_id_val:
+        return JsonResponse({"answer": "Please log in to continue."})
+
+    emp = emp_registers.objects.filter(id=emp_id_val).first()
+    if not emp:
+        return JsonResponse({"answer": "Employee not found."})
+
+    try:
+        answer = query_engine.answer_query(index, query, chunks)
+    except Exception as e:
+        print(f"[Chatbot ERROR] {e}")  # ✅ logs exact issue to console
+        return JsonResponse({"answer": "❌ Internal chatbot error."})
+
+    ChatLog.objects.create(emp_id=emp, message=query, sender='user')
+    ChatLog.objects.create(emp_id=emp, message=answer, sender='bot')
+
+    return JsonResponse({"answer": answer})
+
+def chatbot_page(request):
+    emp_id_val = request.session.get("user_id")
+    history = ChatLog.get_recent_chats(emp_id_val) if emp_id_val else []
+    return render(request, "chatbot.html", {"chat_history": history})
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -2908,80 +3349,62 @@ from django.utils import timezone
 from django.shortcuts import render
 from .models import Handbook, Acknowledgment
 
+from . import document_processor, vector_store, query_engine
+
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.utils.timezone import now
+from .models import Handbook, Acknowledgment
+from staff.models import emp_registers
 
 def handbook_list(request):
     if request.method == 'POST':
-        # Handle file upload for a new handbook
         document = request.FILES.get('document')
-        document_name=request.POST.get('document_name')
+        document_name = request.POST.get('document_name') # This variable is not used in your provided code
 
         if document:
-            # Calculate logical start date based on the current date or any other logic
             start_date = now().date()
-
-            # Deactivate all old handbooks
             Handbook.objects.all().update(active_status=False)
-            current_handbook= Handbook.objects.get().order_by('-id').first()
-            current_handbook.end_date=start_date
 
-            # Get the last active handbook and set its end_date to the start_date of the new one
-            last_handbook = Handbook.objects.filter(active_status=True).order_by('-start_date').first()
+            last_active_handbook_before_new = Handbook.objects.filter(active_status=True).order_by('-start_date').first()
+            if last_active_handbook_before_new:
+                last_active_handbook_before_new.end_date = start_date
+                last_active_handbook_before_new.save()
 
-            if last_handbook:
-                # Set the end date of the last active handbook to the start date of the new one
-                last_handbook.end_date = start_date
-                last_handbook.save()
-
-            # Create a new handbook entry
-            # Example logic for the end date (30 days later)
-
-            # Create the new handbook and set it as active
             new_handbook = Handbook.objects.create(
                 document=document,
                 start_date=start_date,
-
-                active_status=True  # New handbook is active
+                active_status=True
             )
 
-            return JsonResponse({'success': True, 'message': 'Handbook added successfully'})
+            # Check if these global variables exist before trying to use them
+            if 'document_processor' in globals() and 'vector_store' in globals() and 'index' in globals():
+                try:
+                    path = new_handbook.document.path
+                    global chunks # It's generally not good practice to use global in views like this
+                                  # If `chunks` needs to be shared, consider passing it or storing it differently.
+                    # The following two lines seem redundant; you're extracting and adding chunks twice.
+                    chunks = document_processor.extract_chunks(path)
+                    vector_store.add_text_chunks(index, chunks)
 
-        return JsonResponse({'success': False, 'message': 'Failed to add handbook'}, status=400)
+                    # chunks = document_processor.extract_chunks(path) # This line is a duplicate
+                    # vector_store.add_text_chunks(index, chunks) # This line is a duplicate
+                    print("Extracted chunks:", len(chunks))
+                    for c in chunks:
+                        print(c,end=" ")
 
-    # GET request to display handbooks
-    handbooks = Handbook.objects.all().order_by('-id')
 
+                except Exception as e:
+                    print(f"Error processing document: {e}")
+                    return JsonResponse({'success': False, 'message': 'Handbook added, but document processing failed.'}, status=500)
 
-    data = []
-    for h in handbooks:
-        handbook = get_object_or_404(Handbook, id=h.id)
+            return redirect('handbook_list')  # Redirect after successful upload
 
-        # Get all employees
-        employees = emp_registers.objects.filter(job_status=1)
-
-        # Ensure acknowledgment exists for all employees
-
-        for emp in employees:
-            ack, created = Acknowledgment.objects.get_or_create(
-                handbook=handbook,
-                employee=emp,
-                defaults={
-                    'acknowledgment_date': None,
-                    'acknowledgment': 'Not Acknowledge',
-                    'status': 'active'
-                }
-            )
-
-            data.append({
-                'employee': str(emp),
-                'acknowledgment_date': ack.acknowledgment_date.strftime(
-                    '%Y-%m-%d') if ack.acknowledgment_date else 'Not yet',
-                'agreement': ack.acknowledgment
-            })
-            context = {
-                'handbooks': handbooks,'acknowledgments':data
-            }
-
-    return render(request, 'handbook_list.html', context)
+        return JsonResponse({'success': False, 'message': 'Failed to add handbook (no document provided)'}, status=400)
+    else:
+        # Handle GET request: Display the form to upload a handbook or list existing handbooks
+        handbooks = Handbook.objects.all().order_by('-start_date')
+        return render(request, 'handbook_list.html', {'handbooks': handbooks})
 from django.http import JsonResponse
 
 def acknowledgments_for_handbook(request, handbook_id):
@@ -3530,7 +3953,7 @@ def handle_incomplete_resignation(request,user_id):
     if request.method == 'POST':
         if 'complete' in request.POST:
             # Render the 'send_exit_email.html' page with context
-            return redirect('send_exit_email', user_id=user_id)
+            return redirect('resignation_activity', user_id=user_id)
         elif 'delete' in request.POST:
             ResignStatusAction.objects.filter(resignation=resignation).delete()
             resignation.delete()
@@ -3742,53 +4165,17 @@ def sample_view(request):
         log_user_action(request.user.id, "Accessed sample view")
     return HttpResponse("Audit logged.")
 # your_app/views.py
-
-
-from datetime import date, timedelta
-from django.shortcuts import render
-from django.db.models import Q
-from calendar import monthrange
 import calendar
-from django.utils import timezone
-# No Paginator import needed for client-side pagination here
-
-# Import your models
-from .models import Holiday, LeaveRecord, emp_registers, LeaveStatusMaster
-import calendar
-from datetime import date, timedelta
-from django.utils import timezone
-from calendar import monthrange
-from django.db.models import Q
-
-
-# Assuming these are your models
-# from .models import emp_registers, Holiday, LeaveRecord
-import calendar
-from datetime import date
-from calendar import monthrange
-from django.shortcuts import render
-from django.db.models import Q
-from django.utils import timezone  # Make sure to import timezone
-
-
-# Assuming your models are imported like this:
-# from .models import emp_registers, Holiday, LeaveRecord
-from django.shortcuts import render
-from django.utils import timezone
-from datetime import date
-from calendar import monthrange
 from collections import defaultdict
-from django.db.models import Q
-from .models import emp_registers, Holiday, LeaveRecord
-import calendar
 from datetime import date
 from calendar import monthrange
-from collections import defaultdict
+
 from django.shortcuts import render
+from django.db.models import Q # Make sure Q is imported
 from django.utils import timezone
-from django.db.models import Q
-from .models import LeaveRecord, Holiday, emp_registers
-import calendar
+
+# Assuming these are your actual Django models
+from .models import emp_registers, Holiday, LeaveRecord # Make sure to import your models correctly
 
 def attendance_view(request):
     try:
@@ -3804,10 +4191,12 @@ def attendance_view(request):
     # --- Employee Search Filter ---
     search_query = request.GET.get('search')
     if search_query:
+        # Corrected: Use .filter() to get a QuerySet
         employees_qs = emp_registers.objects.filter(
             Q(name__icontains=search_query) | Q(id__icontains=search_query)
         ).order_by('id')
     else:
+        # Corrected: Use .filter() to get a QuerySet
         employees_qs = emp_registers.objects.filter(job_status=1).order_by('name')
 
     # --- Fetch Holidays ---
@@ -3823,7 +4212,7 @@ def attendance_view(request):
     leave_records_qs = LeaveRecord.objects.filter(
         Q(start_date__lte=end_of_month) & Q(end_date__gte=start_of_month),
         approval_status__status='Approved'
-    ).select_related('emp_id')
+    ).select_related('emp_id') # Ensure emp_id is a ForeignKey and select_related is applicable
 
     employee_leaves = defaultdict(list)
     for leave in leave_records_qs:
@@ -3847,7 +4236,7 @@ def attendance_view(request):
                 break
 
     # --- Build Attendance Rows ---
-    for employee in employees_qs:
+    for employee in employees_qs: # This loop is now correct as employees_qs is a QuerySet
         employee_attendance_row = {
             'id': employee.id,
             'name': employee.name,
@@ -3967,6 +4356,7 @@ def resignation_activity(request, user_id):
 
     if request.method == 'POST':
         action = request.POST.get('action')
+        user_id = request.session.get('user_id')
 
         # --- Handle Checklist Form Submission ---
         if 'checklist_action' in request.POST and request.POST['checklist_action'] == 'save_checklist':
@@ -4013,11 +4403,20 @@ def resignation_activity(request, user_id):
                 action_label = 'Rejected by Manager'
 
         # --- Handle Employee Actions ---
+
         elif position == 'Employee' and resignation.resign_status.id not in [7, 8, 5]:
             if action == 'withdraw':
                 resignation.resign_status_id = 3
                 messages.success(request, "Resignation withdrawn successfully.")
-                action_label = 'Withdrawn'
+                action_label = 'Withdraw'
+        elif user_id == resignation.employee :
+            if action == 'withdraw':
+                resignation.resign_status_id = 3
+                messages.success(request, "Resignation withdrawn successfully.")
+                action_label = 'Withdraw'
+
+
+
 
         # --- Handle HR Approval/Rejection Actions ---
         elif position == 'HR' and resignation.resign_status.id == 4:
@@ -4050,7 +4449,7 @@ def resignation_activity(request, user_id):
                     action_date=timezone.now()
                 )
                 messages.success(request, "Resignation finalized and employee job status updated to 'Left'.")
-                return redirect('resignation_activity', user_id=user_id)
+                return redirect('resignation_list')
             else:
                 messages.error(request, "Resignation cannot be finalized in its current status. It must be HR Approved.")
                 return redirect('resignation_activity', user_id=user_id)
@@ -4068,7 +4467,9 @@ def resignation_activity(request, user_id):
             return redirect('resignation_activity', user_id=user_id)
 
     # Context to pass to the template
+    user=resignation.employee
     context = {
+        'user':user,
         'employee': employee,
         'resignation': resignation,
         'status_actions': status_actions,
@@ -4175,193 +4576,285 @@ def change_badge(request, id):
     task.save()
     return redirect('todo')
 
-
+import io
+from datetime import datetime
+from django.shortcuts import render, redirect
+from django.contrib import messages
 import csv
-from io import TextIOWrapper
-from django.shortcuts import render
-import pandas as pd
-from django.contrib import messages
-
-from django.shortcuts import render
 from django.contrib import messages
 from decimal import Decimal
-# from .models import Payslip
-import pandas as pd
-from io import TextIOWrapper
-from decimal import Decimal
-from io import TextIOWrapper
-import pandas as pd
-from decimal import Decimal
-from django.contrib import messages
-from django.shortcuts import render
- # Make sure this import matches your project structure
+import csv, io
 
 def payslip_from_csv(request):
-    payslip_data = []
+    payslips = Payslip.objects.all().order_by('-uploaded_at')  # fallback display
 
-    if request.method == 'POST' and request.FILES.get('csv_file'):
-        csv_file = request.FILES['csv_file']
+    newly_created = []
+    row_errors = []  # List to collect row-specific errors
 
+    if request.method == "POST" and request.FILES.get("csv_file"):
+        csv_file = request.FILES["csv_file"]
         if not csv_file.name.endswith('.csv'):
-            messages.error(request, 'Please upload a valid CSV file.')
-            return render(request, 'payslip_from_csv.html', {'records': payslip_data})
+            messages.error(request, 'Only CSV files are supported.')
+            return render(request, 'payslip_from_csv.html', {
+                'payslips': payslips,
+                'row_errors': row_errors
+            })
 
         try:
-            file_data = TextIOWrapper(csv_file.file, encoding='utf-8')
-            lines = file_data.readlines()
-            file_data.seek(0)
+            data_set = csv_file.read().decode('UTF-8')
+            io_string = io.StringIO(data_set)
+            reader = csv.reader(io_string, delimiter=',')
 
-            # Detect header
-            headers_line = lines[0].strip()
-            headers = headers_line.split(',')
+            next(reader)  # Skip header
 
-            # Remove any duplicate header rows
-            data_lines = [line for line in lines if line.strip().split(',') != headers]
+            for idx, row in enumerate(reader, start=2):  # Start at 2 to match row numbers in CSV
+                if not row or len(row) < 29:
+                    row_errors.append(f"Row {idx} skipped: Incomplete row with only {len(row)} columns.")
+                    continue
 
-            # Convert cleaned data lines back to a file-like object
-            from io import StringIO
-            cleaned_file = StringIO(''.join(data_lines))
+                emp_id_str = row[0].strip()
+                employee_obj = emp_registers.objects.filter(id=emp_id_str).first()
 
-            # Read into DataFrame
-            df = pd.read_csv(cleaned_file)
+                if not employee_obj:
+                    row_errors.append(f"Row {idx} error: Employee ID '{emp_id_str}' not found.")
+                    continue
 
-            # Clean column names
-            df.columns = df.columns.str.strip().str.replace(' ', '_').str.replace('\t', '')
-
-            # Numeric columns to ensure proper dtype
-            numeric_columns = [
-                'SALARY_BASIC', 'SALARY_HRA', 'SALARY_DA', 'TOTAL_SALARY',
-                'GROSS_BASIC', 'GROSS_HRA', 'GROSS_DA', 'CONVENCE_ALLOWNCE',
-                'SPECIAL_ALLOWNCES', 'Project_Incentive', 'Variable_Pay',
-                'GROSS_TOTAL', 'ESI', 'PF', 'Salary_Advance', 'Negative_Leave', 'TDS',
-                'Total_Deductions', 'NET_SALARY'
-            ]
-            for col in numeric_columns:
-                if col in df.columns:
-                    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
-
-            # Calculate Total_Deductions
-            deduction_components = ['ESI', 'PF', 'Salary_Advance', 'Negative_Leave', 'TDS']
-            if all(col in df.columns for col in deduction_components):
-                df['Total_Deductions'] = df[deduction_components].sum(axis=1)
-            elif 'Total_Deductions' not in df.columns:
-                df['Total_Deductions'] = 0
-
-            # Calculate NET_SALARY
-            if 'SALARY_BASIC' in df.columns and 'SALARY_HRA' in df.columns and 'Allowance' in df.columns:
-                df['NET_SALARY'] = (df['SALARY_BASIC'] + df['SALARY_HRA'] + df['Allowance']) - df['Total_Deductions']
-            else:
-                df['NET_SALARY'] = 0
-
-            # Set defaults
-            if 'Month' not in df.columns:
-                df['Month'] = 'June 2025'
-            if 'Department' not in df.columns:
-                df['Department'] = 'Not Specified'
-            if 'Allowance' not in df.columns:
-                df['Allowance'] = 0
-
-            # Create DataFrame for display and DB insert
-            temp_df = pd.DataFrame()
-            temp_df['Employee_Name'] = df['Employee_Name'] if 'Employee_Name' in df.columns else 'N/A'
-            temp_df['Employee_ID'] = df['Employee_Email'] if 'Employee_Email' in df.columns else 'N/A'
-            temp_df['Month'] = df['Month']
-            temp_df['Department'] = df['Department']
-            temp_df['Basic'] = df['SALARY_BASIC'] if 'SALARY_BASIC' in df.columns else 0
-            temp_df['HRA'] = df['SALARY_HRA'] if 'SALARY_HRA' in df.columns else 0
-            temp_df['Allowance'] = df['Allowance']
-            temp_df['Deductions'] = df['Total_Deductions']
-            temp_df['Net_Salary'] = df['NET_SALARY']
-
-            payslip_data = temp_df.to_dict(orient='records')
-
-            # Save to DB
-            inserted = 0
-            updated = 0
-            for row in payslip_data:
                 try:
-                    obj, created = Payslip.objects.update_or_create(
-                        employee_id=row['Employee_ID'],
-                        month=row['Month'],
-                        defaults={
-                            'employee_name': row['Employee_Name'],
-                            'department': row['Department'],
-                            'basic': Decimal(row['Basic']),
-                            'hra': Decimal(row['HRA']),
-                            'allowance': Decimal(row['Allowance']),
-                            'deductions': Decimal(row['Deductions']),
-                            'net_salary': Decimal(row['Net_Salary']),
-                        }
+                    payslip = Payslip.objects.create(
+                        employee_id=employee_obj,
+                        employee_name=row[1].strip(),
+                        department=employee_obj.department.name if employee_obj.department else "",
+                        month=row[28].strip(),
+                        SALARY_BASIC=Decimal(row[3]),
+                        SALARY_HRA=Decimal(row[4]),
+                        SALARY_DA=Decimal(row[5]),
+                        GROSS_BASIC=Decimal(row[13]),
+                        GROSS_HRA=Decimal(row[14]),
+                        GROSS_DA=Decimal(row[15]),
+                        CONVENCE_ALLOWANCE=Decimal(row[16]),
+                        SPECIAL_ALLOWNCES=Decimal(row[17]),
+                        Project_Incentive=Decimal(row[18]),
+                        Variable_Pay=Decimal(row[19]),
+                        GROSS_TOTAL=Decimal(row[20]),
+                        ESI=Decimal(row[21]),
+                        PF=Decimal(row[22]),
+                        Salary_Advance=Decimal(row[23]),
+                        Negative_Leave=Decimal(row[24]),
+                        TDS=Decimal(row[25]),
+                        PRESENT_DAYS=int(row[7]),
+                        WEEK_OFF=int(row[8]),
+                        UNPAID_LEAVE=int(row[10]),
+                        PAID_LEAVE=int(row[11]),
+                        WORKING_DAYS=int(row[12]),
                     )
-                    if created:
-                        inserted += 1
-                    else:
-                        updated += 1
-                except Exception as db_error:
-                    messages.warning(request, f"Error saving record for {row.get('Employee_ID', 'Unknown')}: {db_error}")
 
-            messages.success(request, f'Successfully uploaded {inserted} new and updated {updated} payslip records.')
+                    newly_created.append({
+                        "Employee_Name": payslip.employee_name,
+                        "Employee_ID": payslip.employee_id.emp_id,
+                        "Department": payslip.department,
+                        "Month": payslip.month,
+                        "Basic": payslip.SALARY_BASIC,
+                        "HRA": payslip.SALARY_HRA,
+                        "Allowance": payslip.CONVENCE_ALLOWANCE + payslip.SPECIAL_ALLOWNCES +
+                                     payslip.Project_Incentive + payslip.Variable_Pay,
+                        "Deductions": payslip.ESI + payslip.PF + payslip.Salary_Advance +
+                                      payslip.Negative_Leave + payslip.TDS,
+                        "Net_Salary": payslip.GROSS_TOTAL,
+                    })
+
+                except Exception as inner_error:
+                    row_errors.append(f"Row {idx} error: {inner_error}")
+                    continue
+
+
 
         except Exception as e:
-            messages.error(request, f'An error occurred while processing the CSV file: {e}')
+            messages.error(request, f"Error processing file: {e}")
 
-    return render(request, 'payslip_from_csv.html', {'records': payslip_data})
+    return render(request, 'payslip_from_csv.html', {
+        'records': newly_created ,
+        'row_errors': row_errors
+    })
 
+from django.core.mail import EmailMessage
+from django.http import HttpResponse
+import csv
+from io import StringIO
+from .models import Payslip
 
+def send_payslips_to_hr(request):
+    if request.method == 'POST':
+        month = request.POST.get('month')
+        search = request.POST.get('search', '')
 
-def employee_salary_history(request, emp_id):
-    # Filter all payslips of the employee by ID
-    payslips = Payslip.objects.filter(employee_id=emp_id).order_by('-uploaded_at')
+        # Filter payslips
+        payslips = Payslip.objects.all()
+        if month:
+            payslips = payslips.filter(month=month)
+        if search:
+            payslips = payslips.filter(employee_name__icontains=search)  # Customize field
 
-    context = {
-        'payslips': payslips,
-        'emp_id': emp_id,
-    }
-    return render(request, 'employee_salary_history.html', context)
+        # Generate CSV in memory
+        csv_buffer = StringIO()
+        writer = csv.writer(csv_buffer)
+        writer.writerow(['Employee Name', 'Employee ID', 'Month', 'Basic', 'HRA', 'Allowance', 'Deductions', 'Net Salary'])
 
+        for p in payslips:
+            writer.writerow([p.employee_name, p.employee_id, p.month, p.basic, p.hra, p.allowance, p.deductions, p.net_salary])
+
+        csv_content = csv_buffer.getvalue()
+        email = EmailMessage(
+            'Payslip Report',
+            'Attached is the consolidated payslip report.',
+            to=['hr@example.com']  # Replace with actual HR email
+        )
+        email.attach('payslip_report.csv', csv_content, 'text/csv')
+        email.send()
+        return HttpResponse("Sent to HR successfully.")
+from django.template.loader import render_to_string
+from django.core.mail import EmailMessage
+
+def send_payslips_to_employees(request):
+    if request.method == 'POST':
+        month = request.POST.get('month')
+        search = request.POST.get('search', '')
+
+        payslips = Payslip.objects.all()
+        if month:
+            payslips = payslips.filter(month=month)
+        if search:
+            payslips = payslips.filter(employee_name__icontains=search)
+
+        for slip in payslips:
+            e=emp_registers.objects.get(id=slip.employee_id.id)
+            html_content = render_to_string('payslip_email_template.html', {'row': slip})
+            email = EmailMessage(
+                subject=f"Your Payslip for {slip.month}",
+                body=html_content,
+                from_email='hr@example.com',
+                to=[e.email],  # Assume model has `email` field
+            )
+            email.content_subtype = 'html'
+            email.send()
+        return HttpResponse("Payslips sent to employees successfully.")
+
+def task_handler(request):
+    if request.method == 'GET':
+        return render(request, 'todo.html')
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            mode = data.get('mode')
+            base_date = data.get('base_date')
+            view_mode = data.get('view')
+            emp_id = request.session.get('user_id')  # use session
+
+            if not emp_id or not emp_registers.objects.filter(id=emp_id).exists():
+                return JsonResponse({'error': 'Valid session user_id not found'}, status=400)
+
+            emp = emp_registers.objects.get(id=emp_id)
+
+            if mode == 'create':
+                TodoTask.objects.create(
+                    name=data['name'],
+                    badge=data['badge'],
+                    datetime=datetime.fromisoformat(data['datetime']),
+                    emp_id=emp
+                )
+
+            elif mode == 'update':
+                task = TodoTask.objects.get(id=data['id'], emp_id=emp)
+                task.datetime = datetime.fromisoformat(data['datetime'])
+                if 'badge' in data:
+                    task.badge = data['badge']
+                task.save()
+
+            if mode in ['fetch', 'create', 'update']:
+                base = datetime.fromisoformat(base_date)
+                if view_mode == 'day':
+                    tasks = TodoTask.objects.filter(datetime__date=base.date(), emp_id=emp)
+                elif view_mode == 'week':
+                    start = base - timedelta(days=base.weekday())
+                    end = start + timedelta(days=6)
+                    tasks = TodoTask.objects.filter(datetime__date__range=(start.date(), end.date()), emp_id=emp)
+                else:  # month
+                    tasks = TodoTask.objects.filter(datetime__year=base.year, datetime__month=base.month, emp_id=emp)
+
+                return JsonResponse([
+                    {
+                        'id': t.id,
+                        'name': t.name,
+                        'badge': t.badge,
+                        'datetime': t.datetime.isoformat(),
+                        'emp_id': t.emp_id_id
+                    } for t in tasks
+                ], safe=False)
+
+            return JsonResponse({'error': 'Invalid mode'}, status=400)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 from django.shortcuts import render
-from django.core.paginator import Paginator
-from django.db.models import Q
-# from .models import Payslip
+from staff.models import LatestPayslip
 
-from django.core.paginator import Paginator
-from django.shortcuts import render
-# from .models import Payslip
+def manual_generate_payslip(request):
+    if request.method == 'POST':
+        result = generate_salary_csv_and_send()
+        messages.success(request, result)
+        return redirect('view_latest_payslip')
+    else:
+        return redirect('view_latest_payslip')
+
+
+def view_latest_payslip(request):
+    latest = LatestPayslip.objects.first()
+    if not latest:
+        return render(request, "payslip_view.html", {'headers': [], 'rows': [], 'month': ''})
+
+    filepath = f"media/{latest.file_name}"
+    with open(filepath, newline='') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        headers = data[0]
+        rows = data[1:]
+
+    month = latest.file_name.replace("payslip_", "").replace(".csv", "").replace("_", "-")
+    return render(request, "payslip_view.html", {
+        'headers': headers,
+        'rows': rows,
+        'month': month
+    })
 
 def payslip_list(request):
-    # Get search query
-    search_query = request.GET.get('search', '')
-    month_filter = request.GET.get('month', '')
+    # Get filters from GET parameters
+    search_query = request.GET.get('search', '').strip()
+    month_filter = request.GET.get('month', '').strip()
 
-    # Filter the payslips based on search query and month
+    # Base queryset
     payslips = Payslip.objects.all()
+
+    # Apply search
     if search_query:
-        payslips = payslips.filter(employee_name__icontains=search_query)
+        payslips = payslips.filter(
+            employee_name__icontains=search_query
+        )
+
+    # Apply month filter
     if month_filter:
         payslips = payslips.filter(month=month_filter)
 
-    # Handle rows per page (10, 20, or 'All')
-    rows_per_page = request.GET.get('rows_per_page', 10)
-    if rows_per_page == 'all':
-        paginator = Paginator(payslips, payslips.count())  # Show all records
-    else:
-        paginator = Paginator(payslips, int(rows_per_page))  # Show 10 or 20 records
-
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    # Calculate the current page number and total pages
-    total_pages = paginator.num_pages
-    current_page = page_obj.number
+    # Get distinct month list
+    available_months = Payslip.objects.values_list('month', flat=True).distinct().order_by('-month')
 
     return render(request, 'payslip_list.html', {
-        'page_obj': page_obj,
+        'all_payslips': payslips,
         'search_query': search_query,
         'month_filter': month_filter,
-        'rows_per_page': rows_per_page,
-        'current_page': current_page,
-        'total_pages': total_pages
+        'available_months': available_months,
     })
 
 
@@ -4369,8 +4862,8 @@ import csv
 from io import BytesIO
 import pandas as pd
 from django.http import HttpResponse
-# from .models import Payslip
-# import xlsxwriter
+from .models import Payslip
+import xlsxwriter
 
 def export_payslips_csv(request):
     # Get payslip data, with optional filters for month and search
@@ -4641,3 +5134,107 @@ def chatbot_page(request):
     Renders the main chatbot HTML page.
     """
     return render(request, 'chatbot.html') # Note the 'staff/' directory
+
+
+
+# profiles/views.py
+
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from .models import UserProfile# Import emp_registers
+
+
+def profile_form_view(request):
+    # You might want to pre-populate some emp_registers entries for testing
+    # For example, create a few via Django Admin before running the form.
+    # Or, implement a way to create emp_registers entries directly from this form
+    # which would make the view more complex (e.g., nested forms or AJAX).
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('profile_form'))
+    else:
+        form = UserProfileForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'profile_form.html', context)
+
+def profile_thank_you_view(request):
+    return render(request, 'profile_form.html')
+
+
+# staff/views.py
+
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse, HttpResponseRedirect
+from django.urls import reverse
+from django.views.decorators.http import require_POST
+import json  # For handling JSON responses
+
+# Import the functions from your skill_recommender.py
+from staff.skill_recommender import run_recommendation_process, record_feedback, CONFIG, load_employee_data_from_db
+from .models import UserProfile  # Import your UserProfile model
+
+
+def get_skill_recommendations(request):
+    """
+    Displays skill recommendations for all users.
+    This view triggers the recommendation process.
+    """
+    # This is a simplified approach. In a real application, you'd likely:
+    # 1. Run run_recommendation_process as a periodic task (e.g., Django management command, Celery beat).
+    # 2. Store the recommendations in a dedicated Recommendation model in your DB.
+    # 3. Have this view retrieve pre-calculated recommendations.
+
+    # For demonstration, we run the process directly here.
+    # Be aware: This will run the SBERT model encoding on every page load, which is resource-intensive.
+    # It's better suited for a batch process.
+
+    employee_recommendations_df = run_recommendation_process()
+
+    # Convert DataFrame to a list of dictionaries for easier templating
+    # Ensure 'Recommended Skills' is handled correctly if it's a list of lists
+    recommendations_list = []
+    if not employee_recommendations_df.empty:
+        for _, row in employee_recommendations_df.iterrows():
+            recommendations_list.append({
+                'id': row['ID'],
+                'name': row['Name'],
+                'current_skills': row['Skills'].split(', ') if row['Skills'] else [],
+                'recommended_skills': row['Recommended Skills'],  # This is already a list of strings
+                'top_peer_ids': row['Top Peer IDs'].split(', ') if row['Top Peer IDs'] != 'N/A' else []
+            })
+
+    context = {
+        'recommendations': recommendations_list,
+        'config': CONFIG  # Pass config for potential client-side use (e.g., trend data)
+    }
+    return render(request, 'skill_recommendations.html', context)
+
+
+@require_POST
+def submit_skill_feedback(request):
+    """
+    Handles AJAX POST request when a user clicks on a recommended skill.
+    Records feedback.
+    """
+    user_profile_id = request.POST.get('user_profile_id')
+    recommended_skill = request.POST.get('recommended_skill')
+    feedback_type = request.POST.get('feedback_type')  # e.g., 'accepted', 'rejected', 'already_known'
+
+    if user_profile_id and recommended_skill and feedback_type:
+        try:
+            user_profile = get_object_or_404(UserProfile, pk=user_profile_id)
+            record_feedback(user_profile.id, recommended_skill, feedback_type)
+            return JsonResponse({'status': 'success', 'message': 'Feedback recorded.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': f'Failed to record feedback: {str(e)}'}, status=500)
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Missing data for feedback.'}, status=400)
+    
+    
+#

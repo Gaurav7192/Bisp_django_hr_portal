@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}<div class="payslip">
+    <div class="payslip-header" style="text-align:center;">
+        <img src="{{ STATIC_URL }}download.jpeg" alt="Company Logo" width="100">
+        <h2>BISP Infonet Pvt. Ltd.</h2>
+    </div>
+
+    <h3>Payslip for the Month of {{ row.month }}</h3>
+
+    <table>
+        <tr><th>Employee Name</th><td>{{ row.employee_name }}</td><th>Email</th><td>{{ row.email }}</td></tr>
+        <tr><th>Department</th><td>{{ row.department }}</td><th>Month</th><td>{{ row.month }}</td></tr>
+    </table>
+
+    <h4>Salary Details</h4>
+    <table>
+        <tr>
+            <th>Earnings</th><th>Amount</th><th>Deductions</th><th>Amount</th>
+        </tr>
+        <tr><td>Basic</td><td>{{ row.basic }}</td><td>Deductions</td><td>{{ row.deductions }}</td></tr>
+        <tr><td>HRA</td><td>{{ row.hra }}</td><td colspan="2"></td></tr>
+        <tr><td>Allowance</td><td>{{ row.allowance }}</td><td colspan="2"></td></tr>
+        <tr><td colspan="2"><strong>Net Salary</strong></td><td colspan="2"><strong>{{ row.net_salary }}</strong></td></tr>
+    </table>
+
+    <p><strong>Note:</strong> This is a system-generated payslip and does not require a signature.</p>
+</div>
+{% endblock %}

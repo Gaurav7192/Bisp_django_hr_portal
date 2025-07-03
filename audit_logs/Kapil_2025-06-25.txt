@@ -1,0 +1,6 @@
+2025-06-25 14.21.24 - updated leave application of type 'Casual Leave' with status 'Approved' (ID: 179)
+2025-06-25 14.21.37 - updated leave application of type 'Casual Leave' with status 'Rejected' (ID: 179)
+2025-06-25 14.44.07 - Login  for Kapil (ID: 2)
+2025-06-25 14.44.55 - applied for leave of type 'Casual Leave' with status 'Pending' (ID: 180)
+2025-06-25 14.45.00 - logged out
+2025-06-25 14.48.01 - updated leave application of type 'Casual Leave' with status 'Approved' (ID: 180)

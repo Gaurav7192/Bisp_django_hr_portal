@@ -212,3 +212,65 @@ class ExitEmailForm(forms.Form):
     subject = forms.CharField(label='Subject', required=True)
     message = forms.CharField(widget=forms.Textarea, required=True)
     attachment = forms.FileField(required=False)
+
+# profiles/forms.py
+
+from django import forms
+
+
+class UserProfileForm(forms.ModelForm):
+    # Field for the ForeignKey to EmpRegister
+    # This will render as a dropdown of existing EmpRegister entries
+    emp_register = forms.ModelChoiceField(
+        queryset=emp_registers.objects.filter(job_status=1).order_by('id'),
+        empty_label="Select an Employee Registration",
+        help_text="Select the employee registration this profile belongs to."
+    )
+
+    # Hidden fields for JSON data, populated by JavaScript
+    skills = forms.CharField(widget=forms.HiddenInput, required=False)
+    projects = forms.CharField(widget=forms.HiddenInput, required=False)
+    experiences = forms.CharField(widget=forms.HiddenInput, required=False)
+    ratings = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    class Meta:
+        model = UserProfile
+        # Include the new emp_register field
+        fields = ['emp_register', 'name', 'skills', 'projects', 'experiences', 'ratings']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Parse the JSON strings from the hidden fields
+        for field_name in ['skills', 'projects', 'experiences', 'ratings']:
+            json_data = cleaned_data.get(field_name)
+            if json_data:
+                try:
+                    cleaned_data[field_name] = json.loads(json_data)
+                except json.JSONDecodeError:
+                    self.add_error(field_name, "Invalid JSON data.")
+            else:
+                cleaned_data[field_name] = [] # Ensure it's an empty list if no data
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        user_profile = super().save(commit=False)
+
+        # Serialize the cleaned data back to JSON strings for storage
+        user_profile.set_skills(self.cleaned_data.get('skills', []))
+        user_profile.set_projects(self.cleaned_data.get('projects', []))
+        user_profile.set_experiences(self.cleaned_data.get('experiences', []))
+        user_profile.set_ratings(self.cleaned_data.get('ratings', []))
+
+        if commit:
+            user_profile.save()
+        return user_profile
+
+from django import forms
+class ProjectRecommendationForm(forms.Form):
+    project_title = forms.CharField(max_length=200, help_text="A title for the new project")
+    required_skills = forms.CharField(
+        widget=forms.Textarea,
+        help_text="Enter comma-separated required skills (e.g., Python, Django, AWS, Machine Learning)",
+        required=True
+    )

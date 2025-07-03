@@ -1,0 +1,2 @@
+2025-06-20 13.00.04 - applied for leave of type 'Sick Leave' with status 'Pending' (ID: 175)
+2025-06-20 13.00.18 - updated leave application of type 'Sick Leave' with status 'Withdrawn' (ID: 175)

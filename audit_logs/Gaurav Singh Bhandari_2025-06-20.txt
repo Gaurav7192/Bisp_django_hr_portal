@@ -1,0 +1,7 @@
+2025-06-20 22.16.08 - submitted resignation with status 'Apply' (ID: 3)
+2025-06-20 22.16.08 - recorded resignation action 'Apply' for Gaurav Singh Bhandari (ID: 11)
+2025-06-20 22.16.23 - sent email to gauravsinghbhandari7192@gmail.com with subject 'q' (ID: 10)
+2025-06-20 22.16.23 - updated resignation with status 'Submit' (ID: 3)
+2025-06-20 22.16.23 - recorded resignation action 'Submit' for Gaurav Singh Bhandari (ID: 12)
+2025-06-20 22.50.42 - recorded resignation action 'HR Approved' for Pooja (ID: 15)
+2025-06-20 22.56.15 - recorded resignation action 'Finalized' for Pooja (ID: 16)

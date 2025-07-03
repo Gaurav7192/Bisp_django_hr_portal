@@ -32,11 +32,19 @@ ARCHIVED_LOG_DIR = os.path.join(BASE_DIR, 'archived_logs')
 # ... (rest of your settings) ...
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-@vdlq9$q7b)56bd*-kn_@uoh=h9x(tjar+4$d_s=fdb_21p!w7'
+#
+# # SECURITY
+DEBUG =True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = False
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = ['GAURAV7192.pythonanywhere.com','127.0.0.1']
+ALLOWED_HOSTS = ['*']
+
 
 # settings.py
 import os
@@ -65,11 +73,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
+    'chatbot',
     'staff',
-=======
-   'staff',
->>>>>>> 42d7668bcb48967ff0541abffa23e1d2e9004495
     'simple_history',
 
 # 'django.contrib.messages',
@@ -122,6 +127,9 @@ TEMPLATES = [
         },
     },
 ]
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
 
 
 WSGI_APPLICATION = 'newproject.wsgi.application'
@@ -241,17 +249,19 @@ LOGGING = {
 AUDIT_LOG_FILE = os.path.join(BASE_DIR, 'audit.log')
 # Email Backend Configuration for SMTP (Gmail)
 # EMAIL_BACKEND = 'staff.email_backends.BypassSSLVerificationEmailBackend'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT =465
-EMAIL_USE_TLS = True  # Crucial for TLS (port 587)
-EMAIL_USE_SSL = False # Ensure this is False if EMAIL_USE_TLS is True
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
 
-# Your Gmail account for sending emails
 EMAIL_HOST_USER = 'gauravsinghbhandari77@gmail.com'
+EMAIL_HOST_PASSWORD = 'rdzs lpza yels nhbl'  # App Password only!
 
-EMAIL_HOST_PASSWORD = 'rdzs lpza yels nhbl'
 DEFAULT_FROM_EMAIL = 'gauravsinghbhandari77@gmail.com'
 SERVER_EMAIL = 'gauravsinghbhandari77@gmail.com'
+
 import smtplib
 from django.core.mail.backends.smtp import EmailBackend
 #

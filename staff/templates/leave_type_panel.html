@@ -21,98 +21,97 @@
       <button>Add Leave</button>
     </a>
   </div>
-      <form method="get" class="d-flex align-items-center">
-        <label for="page_size" class="me-2">Show</label>
-        <select name="page_size" id="page_size" class="form-control form-select me-2" onchange="this.form.submit()"  style="width: 80px;"
-        class="form-control form-select me-2"
-        onchange="this.form.submit()">
-        <option value="5" {% if request.GET.page_size == "5" %}>selected{% endif %}>5</option>
-<option value="10" {% if request.GET.page_size == "10" or not request.GET.page_size %}selected{% endif %}>10</option>
-<option value="15" {% if request.GET.page_size == "15" %}>selected{% endif %}>15</option>
 
-        </select>
-        <input type="hidden" name="position" value="{{ request.GET.position }}">
-        <input type="hidden" name="department" value="{{ request.GET.department }}">
-      </form>
+  <form method="get" class="d-flex align-items-center mb-3">
+    <label for="page_size" class="me-2">Show</label>
+    <select name="page_size" id="page_size" class="form-control form-select me-2" style="width: 80px;">
+      <option value="5">5</option>
+      <option value="10" selected>10</option>
+      <option value="15">15</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+    <input type="hidden" name="position" value="{{ request.GET.position }}">
+    <input type="hidden" name="department" value="{{ request.GET.department }}">
+  </form>
 
-<div class="leave-type-container">
-  <table class="leave-table">
-    <thead>
-      <tr>
-        <th>S.No</th>
-        <th>Leave Type</th>
-        <th>Leave Code</th>
-        <th>Payable</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for leave in leave_masters %}
-      <tr>
-        <td>{{ forloop.counter }}</td>
-        <td><a href="{% url 'leave_type_detail' leave.id %}">{{ leave.name }}
-        </a>
-        </td>
-        <td>{{ leave.leavecode }}</td>
-        <td>{{ leave.payable|yesno:"Yes,No" }}</td>
-        <td>
-          <button class="active-btn {% if not leave.leave_status %}deactive-btn{% endif %}"
-                  data-leave-id="{{ leave.id }}"
-                  onclick="toggleStatus(this)">
-            {% if leave.leave_status %}Active{% else %}Inactive{% endif %}
-          </button>
-        </td>
-        <td>
-          <button onclick="toggleRecords({{ forloop.counter0 }})">+</button>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6">
-
-         <div class="record-details" id="records-{{ forloop.counter0 }}">
-  <strong>Leave Type Details:</strong>
-             <table class="leave-details-table">
-  <tr>
-    <th>Description</th><td>{{ leave.description|default:"N/A" }}</td>
-    <th>Gender</th><td>{{ leave.applicable_gender }}</td>
-    <th>Marital Status</th><td>{{ leave.applicable_marital_status }}</td>
-  </tr>
-  <tr>
-    <th>Department</th><td>{{ leave.applicable_department.name|default:"All" }}</td>
-    <th>Holidays Counted</th><td>{{ leave.count_holidays|yesno:"Yes,No" }}</td>
-    <th>Weekends Counted</th><td>{{ leave.count_weekends|yesno:"Yes,No" }}</td>
-  </tr>
-  <tr>
-    <th>Max Days Allowed</th><td>{{ leave.max_days_allowed|default:"No Limit" }}</td>
-    <th>Carry Forward</th><td>{{ leave.carry_forward|yesno:"Yes,No" }}</td>
-    <th>Valid From - To</th>
-    <td>{{ leave.start_from|date:"Y-m-d" }} – {{ leave.end_from|date:"Y-m-d" }}</td>
-  </tr>
-  <tr>
-    <th>Apply on</th>
-    <td colspan="5">
-      {% if leave.specific_employees.all %}
-        {% for emp in leave.specific_employees.all %}
-          {{ emp.name }}{% if not forloop.last %}, {% endif %}
+  <div class="leave-type-container">
+    <table class="leave-table">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Leave Type</th>
+          <th>Leave Code</th>
+          <th>Payable</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="leaveTableBody">
+        {% for leave in leave_masters %}
+        <tr class="leave-row" data-index="{{ forloop.counter0 }}">
+          <td>{{ forloop.counter }}</td>
+          <td><a href="{% url 'leave_type_detail' leave.id %}">{{ leave.name }}</a></td>
+          <td>{{ leave.leavecode }}</td>
+          <td>{{ leave.payable|yesno:"Yes,No" }}</td>
+          <td>
+            <button class="active-btn {% if not leave.leave_status %}deactive-btn{% endif %}"
+                    data-leave-id="{{ leave.id }}"
+                    onclick="toggleStatus(this)">
+              {% if leave.leave_status %}Active{% else %}Inactive{% endif %}
+            </button>
+          </td>
+          <td>
+            <button class="plus-btn" onclick="toggleRecords({{ forloop.counter0 }})">+</button>
+          </td>
+        </tr>
+        <tr class="record-details-row" id="records-row-{{ forloop.counter0 }}" style="display: none;">
+          <td colspan="6">
+            <div class="record-details">
+              <strong>Leave Type Details:</strong>
+              <table class="leave-details-table">
+                <tr>
+                  <th>Description</th><td>{{ leave.description|default:"N/A" }}</td>
+                  <th>Gender</th><td>{{ leave.applicable_gender }}</td>
+                  <th>Marital Status</th><td>{{ leave.applicable_marital_status }}</td>
+                </tr>
+                <tr>
+                  <th>Department</th><td>{{ leave.applicable_department.name|default:"All" }}</td>
+                  <th>Holidays Counted</th><td>{{ leave.count_holidays|yesno:"Yes,No" }}</td>
+                  <th>Weekends Counted</th><td>{{ leave.count_weekends|yesno:"Yes,No" }}</td>
+                </tr>
+                <tr>
+                  <th>Max Days Allowed</th><td>{{ leave.max_days_allowed|default:"No Limit" }}</td>
+                  <th>Carry Forward</th><td>{{ leave.carry_forward|yesno:"Yes,No" }}</td>
+                  <th>Valid From - To</th>
+                  <td>{{ leave.start_from|date:"Y-m-d" }} – {{ leave.end_from|date:"Y-m-d" }}</td>
+                </tr>
+                <tr>
+                  <th>Apply on</th>
+                  <td colspan="5">
+                    {% if leave.specific_employees.all %}
+                      {% for emp in leave.specific_employees.all %}
+                        {{ emp.name }}{% if not forloop.last %}, {% endif %}
+                      {% endfor %}
+                    {% else %}
+                      All
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
-      {% else %}
-        All
-      {% endif %}
-    </td>
-  </tr>
-</table>
-
+      </tbody>
+    </table>
+    <div id="pagination-controls" class="d-flex justify-content-center mt-3"></div>
+  </div>
 </div>
 
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-          </tbody>
-  </table>
-</div>
 <style>
+/* Existing styles */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 20px;
@@ -166,7 +165,7 @@ body {
 }
 
 .record-details {
-  display: none;
+  /* display: none;  // This will be controlled by JS now */
   padding: 15px;
   background-color: #f9f9f9;
   border: 1px solid #ccc;
@@ -211,9 +210,7 @@ body {
   background-color: #5a6268;
 }
 
-
-
-  .leave-details-table {
+.leave-details-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
@@ -233,20 +230,139 @@ body {
   width: 18%;
 }
 
+/* Pagination specific styles */
+.pagination-link {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #007BFF;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.pagination-link:hover {
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+}
+
+.pagination-link.active {
+    background-color: #007BFF;
+    color: white;
+    border-color: #007BFF;
+    pointer-events: none; /* Disable click on active page */
+}
+
+.pagination-link.disabled {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
 </style>
 
 <script>
-function toggleRecords(index) {
-  const el = document.getElementById('records-' + index);
-  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+let currentPage = 1;
+let rowsPerPage = 10; // Default rows per page
+
+const leaveRows = document.querySelectorAll('.leave-row');
+const recordDetailsRows = document.querySelectorAll('.record-details-row');
+const totalRows = leaveRows.length;
+const pageSelect = document.getElementById('page_size');
+const paginationControls = document.getElementById('pagination-controls');
+
+function showPage(page) {
+    currentPage = page;
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+
+    leaveRows.forEach((row, index) => {
+        const detailsRow = recordDetailsRows[index]; // Get corresponding details row
+        if (index >= startIndex && index < endIndex) {
+            row.style.display = ''; // Show main row
+            // Keep details row hidden unless specifically expanded by '+' button
+        } else {
+            row.style.display = 'none'; // Hide main row
+            detailsRow.style.display = 'none'; // Hide details row if main row is hidden
+        }
+    });
+
+    updatePaginationControls();
 }
 
+function updatePaginationControls() {
+    const totalPages = Math.ceil(totalRows / rowsPerPage);
+    paginationControls.innerHTML = ''; // Clear previous controls
+
+    // Previous Button
+    const prevButton = document.createElement('a');
+    prevButton.href = '#';
+    prevButton.classList.add('pagination-link');
+    prevButton.textContent = 'Previous';
+    if (currentPage === 1) {
+        prevButton.classList.add('disabled');
+    } else {
+        prevButton.onclick = (e) => { e.preventDefault(); showPage(currentPage - 1); };
+    }
+    paginationControls.appendChild(prevButton);
+
+    // Page Numbers
+    for (let i = 1; i <= totalPages; i++) {
+        const pageLink = document.createElement('a');
+        pageLink.href = '#';
+        pageLink.classList.add('pagination-link');
+        pageLink.textContent = i;
+        if (i === currentPage) {
+            pageLink.classList.add('active');
+        } else {
+            pageLink.onclick = (e) => { e.preventDefault(); showPage(i); };
+        }
+        paginationControls.appendChild(pageLink);
+    }
+
+    // Next Button
+    const nextButton = document.createElement('a');
+    nextButton.href = '#';
+    nextButton.classList.add('pagination-link');
+    nextButton.textContent = 'Next';
+    if (currentPage === totalPages) {
+        nextButton.classList.add('disabled');
+    } else {
+        nextButton.onclick = (e) => { e.preventDefault(); showPage(currentPage + 1); };
+    }
+    paginationControls.appendChild(nextButton);
+}
+
+// Event Listener for Rows Per Page dropdown
+pageSelect.addEventListener('change', (event) => {
+    rowsPerPage = parseInt(event.target.value);
+    currentPage = 1; // Reset to first page
+    showPage(currentPage);
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    // Set initial rowsPerPage from select element if a default is set, otherwise use 10
+    rowsPerPage = parseInt(pageSelect.value);
+    showPage(currentPage);
+});
+
+// Original toggleRecords function (remains the same)
+function toggleRecords(index) {
+  const el = document.getElementById('records-row-' + index);
+  el.style.display = el.style.display === 'table-row' ? 'none' : 'table-row';
+}
+
+// Original toggleStatus function (remains the same as it's an AJAX call)
 function toggleStatus(button) {
   const leaveId = button.getAttribute('data-leave-id');
   const isCurrentlyActive = !button.classList.contains('deactive-btn');
   const newStatus = !isCurrentlyActive;
 
-  fetch("{% url 'leave_type_panel' %}", {
+  fetch("{% url 'leave_type_panel' %}", { // Ensure this URL points to your view that handles POST
     method: 'POST',
     headers: {
       'X-CSRFToken': '{{ csrf_token }}',
@@ -269,7 +385,7 @@ function toggleStatus(button) {
         button.innerText = 'Inactive';
       }
     } else {
-      alert('Status change failed');
+      alert('Status change failed: ' + (data.message || 'Unknown error'));
     }
   })
   .catch(err => {
@@ -277,7 +393,5 @@ function toggleStatus(button) {
     alert('Error changing status');
   });
 }
-
-
 </script>
 {% endblock %}

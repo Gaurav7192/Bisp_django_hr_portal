@@ -132,11 +132,11 @@
     <!-- Tabs Navigation -->
     <div class="tabs">
         <button onclick="showTab('profile')" class="active">Profile</button>
-        <button onclick="showTab('document')">Document</button>
-        <button onclick="showTab('assets')">Assets</button>
-        <button onclick="showTab('timesheet')">Timesheet</button>
-        <button onclick="showTab('leave')">Leave</button>
-        <button onclick="showTab('projects')">Projects</button>
+<!--        <button onclick="showTab('document')">Document</button>-->
+<!--        <button onclick="showTab('assets')">Assets</button>-->
+<!--        <button onclick="showTab('timesheet')">Timesheet</button>-->
+<!--        <button onclick="showTab('leave')">Leave</button>-->
+<!--        <button onclick="showTab('projects')">Projects</button>-->
     </div>
 
     <!-- Profile Tab Content -->
@@ -343,39 +343,39 @@
             </div>
         </div>
 
-        <!-- Experience -->
-        <div class="col-md-6 col-sm-12 mb-4">
-            <div class="card">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <span>Experience Information</span>
-                    <button type="button" class="btn btn-light btn-sm" onclick="addExperience()">+</button>
-                </div>
-                <div class="card-body" id="experience-container">
-                    {% if experiences %}
-                        {% for experience in experiences %}
-                            <div class="border p-2 mb-2 position-relative experience-entry">
-                                <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>
-                                <input type="text" name="title_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.title }}" placeholder="Job Title">
-                                <input type="text" name="company_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.company }}" placeholder="Company">
-                                <input type="number" name="start_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.start_year }}" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">
-                                <input type="number" name="end_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.end_year }}" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">
-                                <textarea name="description_{{ forloop.counter }}" class="form-control mb-1" placeholder="Description">{{ experience.description }}</textarea>
-                            </div>
-                        {% endfor %}
-                        <input type="hidden" id="experience_count" name="experience_count" value="{{ experiences|length }}">
-                    {% else %}
-                        <div class="border p-2 mb-2 experience-entry">
-                            <input type="text" name="title_1" class="form-control mb-1" placeholder="Job Title">
-                            <input type="text" name="company_1" class="form-control mb-1" placeholder="Company">
-                            <input type="number" name="start_year_1" class="form-control mb-1" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">
-                            <input type="number" name="end_year_1" class="form-control mb-1" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">
-                            <textarea name="description_1" class="form-control mb-1" placeholder="Description"></textarea>
-                        </div>
-                        <input type="hidden" id="experience_count" name="experience_count" value="1">
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+<!--        &lt;!&ndash; Experience &ndash;&gt;-->
+<!--        <div class="col-md-6 col-sm-12 mb-4">-->
+<!--            <div class="card">-->
+<!--                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">-->
+<!--                    <span>Experience Information</span>-->
+<!--                    <button type="button" class="btn btn-light btn-sm" onclick="addExperience()">+</button>-->
+<!--                </div>-->
+<!--                <div class="card-body" id="experience-container">-->
+<!--                    {% if experiences %}-->
+<!--                        {% for experience in experiences %}-->
+<!--                            <div class="border p-2 mb-2 position-relative experience-entry">-->
+<!--                                <button type="button" class="btn btn-danger btn-sm position-absolute" style="top: 0.5rem; right: 0.5rem;" onclick="removeEntry(this)">−</button>-->
+<!--                                <input type="text" name="title_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.title }}" placeholder="Job Title">-->
+<!--                                <input type="text" name="company_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.company }}" placeholder="Company">-->
+<!--                                <input type="number" name="start_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.start_year }}" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">-->
+<!--                                <input type="number" name="end_year_{{ forloop.counter }}" class="form-control mb-1" value="{{ experience.end_year }}" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">-->
+<!--                                <textarea name="description_{{ forloop.counter }}" class="form-control mb-1" placeholder="Description">{{ experience.description }}</textarea>-->
+<!--                            </div>-->
+<!--                        {% endfor %}-->
+<!--                        <input type="hidden" id="experience_count" name="experience_count" value="{{ experiences|length }}">-->
+<!--                    {% else %}-->
+<!--                        <div class="border p-2 mb-2 experience-entry">-->
+<!--                            <input type="text" name="title_1" class="form-control mb-1" placeholder="Job Title">-->
+<!--                            <input type="text" name="company_1" class="form-control mb-1" placeholder="Company">-->
+<!--                            <input type="number" name="start_year_1" class="form-control mb-1" placeholder="Start Year" min="1900" max="{{ now|date:'Y' }}">-->
+<!--                            <input type="number" name="end_year_1" class="form-control mb-1" placeholder="End Year" min="1900" max="{{ now|date:'Y' }}">-->
+<!--                            <textarea name="description_1" class="form-control mb-1" placeholder="Description"></textarea>-->
+<!--                        </div>-->
+<!--                        <input type="hidden" id="experience_count" name="experience_count" value="1">-->
+<!--                    {% endif %}-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
     </div>
 
     <!-- Submit -->

@@ -3,7 +3,8 @@
 
 {% block content %}
 <div class="container">
-    <h2>Resignation Applications</h2>
+    <h2><b>Resignation Applications</b>
+    </h2>
 
     <!-- Filter and Search -->
     <div class="row mb-3">
@@ -42,7 +43,7 @@
     <!-- Section 1: Pending Resignations -->
     {% if request.session.postion == 'Manager' or request.session.postion == 'HR' %}
     <div class="table-responsive">
-        <h5>Pending Resignations ({{ request.session.postion|title }} View)</h5>
+        <h4>  <b>Pending Resignations ({{ request.session.postion|title }} View)</b> </h4>
         <table id="section1Table" class="table table-bordered table-striped">
             <thead>
                 <tr>
@@ -81,11 +82,15 @@
         </table>
     </div>
     {% endif %}
+<br>
+    <br>
+    <br>
+    <br>
 
     <!-- Section 2: All Resignations -->
     {% if request.session.postion == 'Manager' or request.session.postion == 'HR' %}
     <div class="table-responsive">
-        <h5>All Resignations ({{ request.session.postion|title }} View)</h5>
+        <h4><b>All Resignations ({{ request.session.postion|title }} View)</b></h4>
         <table id="section2Table" class="table table-bordered table-striped">
             <thead>
                 <tr>

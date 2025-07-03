@@ -4,326 +4,557 @@
 
 {% block content %}
 <style>
-.video-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-top: 15px;
+/* IMPORTANT: All styles below are strictly scoped within #learning-videos-page
+  to prevent affecting elements defined in base.html, such as the sidebar,
+  header, footer, or global layout/typography.
+
+  Global styles for 'body', 'html', or direct children of 'body' (like your sidebar)
+  should be managed in your base.html's CSS or a separate site-wide CSS file.
+*/
+
+/* Container for this specific page's content */
+#learning-videos-page {
+  /* No background-color, font-family, or general body styling here.
+     These should be defined in your base.html or a global CSS file. */
+  padding: 20px 0; /* Vertical padding, horizontal handled by .container below */
+  line-height: 1.6;
+  margin: 0 auto; /* Ensure the content within this block is centered */
+  max-width: 1200px; /* Limit content width */
+  padding-left: 15px; /* Consistent padding on sides */
+  padding-right: 15px;
 }
 
-.video-item {
-  background: #fff;
-  border-radius: 8px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: transform 0.2s ease;
+#learning-videos-page h2 {
+    font-size: 2.2em;
+    color: #1e293b;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
 }
 
-.video-item:hover {
-  transform: scale(1.02);
-}
-
-.video-thumb {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 8px;
-}
-
-.delete-button {
-  background: transparent;
-  border: none;
-  color: red;
-  cursor: pointer;
-  font-size: 18px;
-  margin-top: 5px;
-}
-</style>
-<style>
-body {
-  background-color: #f5faff;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #002e5d;
-  padding: 20px;
-}
-
-.category-section {
+/* Category Section */
+#learning-videos-page .category-section {
   margin-bottom: 40px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 25px;
 }
 
-.category-title {
-  font-size: 24px;
-  margin-bottom: 15px;
-  border-left: 5px solid #0077cc;
-  padding-left: 10px;
-  color: #003366;
+#learning-videos-page .category-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-bottom: 25px;
+  border-left: 6px solid #007bff;
+  padding-left: 15px;
+  color: #1e293b;
+  text-transform: capitalize;
 }
 
-.video-grid {
+/* Video Grid */
+#learning-videos-page .video-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin-top: 15px;
+  /* NEW: Auto-placement for centering single items */
+  justify-content: center; /* Centers grid items horizontally */
 }
 
-.video-item {
+/* Specific styling for video items when there's only one in a grid */
+/* This is tricky with pure CSS if the grid-template-columns is 1fr.
+   A more robust approach is to restrict the max-width of the items directly. */
+#learning-videos-page .video-item {
   background: #ffffff;
-  border: 1px solid #d9e9f8;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  padding: 10px;
+  padding: 15px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0, 119, 204, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  /* NEW: Max width for individual video items */
+  max-width: 350px; /* Adjust this value as needed. Makes items not too wide. */
+  width: 100%; /* Ensures it takes up full width up to max-width */
 }
 
-.video-item:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 12px rgba(0, 119, 204, 0.15);
+#learning-videos-page .video-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.15);
+  border-color: #007bff;
 }
 
-.video-thumb {
+#learning-videos-page .video-thumb {
   width: 100%;
-  height: 140px;
+  height: 160px;
   object-fit: cover;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  border: 1px solid #cce5ff;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #cbd5e1;
 }
 
-.video-title {
+#learning-videos-page .video-title {
   font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 5px;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  color: #334155;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.delete-button {
-  background: transparent;
+/* Delete Button */
+#learning-videos-page .delete-button {
+  background: none;
   border: none;
-  color: #cc0000;
-  cursor: pointer;
-  font-size: 18px;
+  color: #ef4444;
+  cursor: pointer; /* Ensure the button itself has a pointer cursor */
+  font-size: 0.9em;
+  margin-top: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
-    /* Toggle Switch */
-.switch {
+
+#learning-videos-page .delete-button:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+/* Form Elements */
+#learning-videos-page form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 30px;
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  align-items: flex-end;
+}
+
+#learning-videos-page form input[type="text"],
+#learning-videos-page form input[type="file"],
+#learning-videos-page form select {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1em;
+  color: #334155;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#learning-videos-page form input[type="file"] {
+    padding: 8px 15px;
+}
+
+#learning-videos-page form input[type="text"]:focus,
+#learning-videos-page form select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+  outline: none;
+}
+
+#learning-videos-page form button[type="submit"] {
+  padding: 12px 25px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0;
+}
+
+#learning-videos-page form button[type="submit"]:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+/* Toggle Switch - Scoped to the page content */
+#learning-videos-page .switch {
   position: relative;
   display: inline-block;
-  width: 60px;
-  height: 28px;
-  margin-right: 10px;
+  width: 50px;
+  height: 26px;
+  margin-right: 15px;
+  vertical-align: middle;
 }
-.switch input { display: none; }
-.slider {
+#learning-videos-page .switch input { display: none; }
+#learning-videos-page .slider {
   position: absolute;
   cursor: pointer;
   top: 0; left: 0;
   right: 0; bottom: 0;
   background-color: #ccc;
-  border-radius: 28px;
+  border-radius: 26px;
   transition: .4s;
 }
-.slider:before {
+#learning-videos-page .slider:before {
   position: absolute;
   content: "";
-  height: 22px; width: 22px;
+  height: 20px;
+  width: 20px;
   left: 3px; bottom: 3px;
   background-color: white;
   border-radius: 50%;
   transition: .4s;
 }
-input:checked + .slider {
-  background-color: #2196F3;
+#learning-videos-page input:checked + .slider {
+  background-color: #28a745;
 }
-input:checked + .slider:before {
-  transform: translateX(32px);
+#learning-videos-page input:checked + .slider:before {
+  transform: translateX(24px);
 }
 
-/* Dark Mode Classes */
-.dark-mode body {
-  background-color: #1e1e2f;
-  color: #f1f1f1;
+/* Dark Mode Classes - These need careful application.
+   body.dark-mode is a global class, it targets the <body> tag.
+   We then nest our scoped styles within it. */
+body.dark-mode #learning-videos-page {
+    /* No direct background/color changes here, they are inherited from body.dark-mode */
+    /* Ensure text colors within this section adapt */
+    color: #e2e8f0;
 }
-.dark-mode .category-title {
-  color: #aad8ff;
-  border-color: #3399ff;
+
+body.dark-mode #learning-videos-page .category-title {
+  color: #90cdf4;
+  border-color: #4299e1;
 }
-.dark-mode .video-item {
-  background: #2a2a40;
-  border: 1px solid #4d4d70;
+body.dark-mode #learning-videos-page .category-section {
+  background-color: #2d3748;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
-.dark-mode .video-thumb {
-  border-color: #555;
+body.dark-mode #learning-videos-page .video-item {
+  background: #2d3748;
+  border: 1px solid #4a5568;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+body.dark-mode #learning-videos-page .video-item:hover {
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.25);
+  border-color: #007bff;
+}
+body.dark-mode #learning-videos-page .video-thumb {
+  border-color: #4a5568;
+}
+body.dark-mode #learning-videos-page .video-title {
+  color: #e2e8f0;
+}
+body.dark-mode #learning-videos-page .delete-button {
+  color: #fc8181;
+}
+body.dark-mode #learning-videos-page .delete-button:hover {
+  background-color: #fed7d7;
+  color: #c53030;
+}
+body.dark-mode #learning-videos-page form {
+    background-color: #2d3748;
+}
+body.dark-mode #learning-videos-page form input[type="text"],
+body.dark-mode #learning-videos-page form input[type="file"],
+body.dark-mode #learning-videos-page form select {
+    background-color: #4a5568;
+    border-color: #616e7f;
+    color: #e2e8f0;
+}
+body.dark-mode #learning-videos-page form input[type="text"]::placeholder,
+body.dark-mode #learning-videos-page form select option {
+    color: #cbd5e1;
+}
+body.dark-mode #learning-videos-page form input[type="text"]:focus,
+body.dark-mode #learning-videos-page form select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3);
+}
+body.dark-mode #learning-videos-page h2 {
+    color: #e2e8f0;
+    border-color: #4a5568;
+}
+
+/* Modal styling - These are overlays and typically *not* scoped to a specific page ID.
+   They should ideally be defined in your base.html's CSS to be available site-wide.
+   However, if you must keep them here, ensure their z-index is very high.
+   They will be affected by body.dark-mode if that class is on the body. */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000; /* Very high z-index to appear above everything */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.8);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.modal-content {
+  background-color: #ffffff;
+  margin: 5% auto;
+  padding: 30px;
+  width: 90%;
+  max-width: 800px;
+  border-radius: 12px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  animation: fadeInModal 0.3s ease-out;
+}
+body.dark-mode .modal-content {
+    background-color: #2d3748;
+    color: #e2e8f0;
+}
+.close {
+  color: #9ca3af;
+  position: absolute;
+  top: 15px;
+  right: 25px;
+  font-size: 32px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.close:hover {
+  color: #6b7280;
+}
+body.dark-mode .close {
+    color: #cbd5e1;
+}
+body.dark-mode .close:hover {
+    color: #a0aec0;
+}
+
+#modalTitle {
+    font-size: 1.6em;
+    color: #1e293b; /* Default light mode color */
+    margin-bottom: 20px;
+}
+body.dark-mode #modalTitle {
+    color: #e2e8f0; /* Dark mode color */
+}
+
+#modalVideo {
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+    background-color: black;
+}
+
+/* Animations */
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Adjustments - Scoped to the page content */
+@media (max-width: 1024px) {
+  #learning-videos-page .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+  }
+  #learning-videos-page .video-item {
+      max-width: 320px; /* Adjust max-width for smaller screens if needed */
+  }
+}
+
+@media (max-width: 768px) {
+  #learning-videos-page h2 {
+    font-size: 1.8em;
+  }
+  #learning-videos-page .category-title {
+    font-size: 1.5em;
+  }
+  #learning-videos-page .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+  }
+  #learning-videos-page form {
+      flex-direction: column;
+      align-items: stretch;
+  }
+  #learning-videos-page form input[type="text"],
+  #learning-videos-page form input[type="file"],
+  #learning-videos-page form select,
+  #learning-videos-page form button[type="submit"] {
+      width: 100%;
+      min-width: unset;
+  }
+  /* Modal responsive styles - remain global if modal itself is global */
+  .modal-content {
+      width: 95%;
+      margin: 10% auto;
+      padding: 20px;
+  }
+  #learning-videos-page .video-item {
+      max-width: 100%; /* Allow it to stretch on very small screens if it's the only item */
+  }
+}
+
+@media (max-width: 480px) {
+  #learning-videos-page {
+    padding: 15px 0;
+  }
+  #learning-videos-page h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+  #learning-videos-page .category-title {
+    font-size: 1.3em;
+    padding-left: 10px;
+    border-left-width: 4px;
+  }
+  #learning-videos-page .video-grid {
+    /* For small screens, a single column is often best regardless of item count */
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  #learning-videos-page .video-thumb {
+    height: 180px;
+  }
+  #learning-videos-page .video-item {
+      padding: 10px;
+      max-width: 100%; /* On mobile, let it take full width */
+  }
 }
 
 </style>
 
+<div id="learning-videos-page">
+    <div style="text-align: right; margin-bottom: 20px;">
+      <label class="switch">
+        <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
+        <span class="slider round"></span>
+      </label> <span style="vertical-align: middle;">Dark Mode</span>
+    </div>
 
+    <h2>Learning Videos</h2>
 
-
-<div style="text-align: right; margin-bottom: 20px;">
-  <label class="switch">
-    <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-    <span class="slider round"></span> <br>Dark Mode
-  </label>
-</div>
-
-<h2>Learning Videos</h2>
-
-<!-- Video Upload Form -->
-<form method="POST" enctype="multipart/form-data" style="margin-bottom: 20px;">
-  {% csrf_token %}
-  <input type="text" name="title" placeholder="Video Title" required>
-  <input type="file" name="file" accept="video/*" required>
-  <select name="category" required>
-    <option value="">Select Category</option>
-    {% for cat in categories %}
-      <option value="{{ cat }}">{{ cat }}</option>
-    {% endfor %}
-  </select>
-  <button type="submit">Upload Video</button>
-</form>
-
-<!-- Video Cards Grouped by Category -->
-<div>
-  {% for category, videos in videos_by_category.items %}
-    <div class="card">
-      <h3>{{ category }}</h3>
-
-      <div class="video-grid">
-        {% for video in videos %}
-          <div class="video-item" onclick="playVideo('{{ video.video.url }}', '{{ video.title }}')">
-            {% if video.thumbnail %}
-              <img src="{{ video.thumbnail.url }}" alt="Thumbnail" class="video-thumb">
-            {% endif %}
-            <p>🎬 {{ video.title }}</p>
-
-            {% if request.session.postion == "HR" %}
-              <form method="POST" action="{% url 'delete_video' video.id %}" onsubmit="return confirm('Are you sure you want to delete this video?');">
-                {% csrf_token %}
-                <button type="submit" class="delete-button">delete 🗑️</button>
-              </form>
-            {% endif %}
-          </div>
-        {% empty %}
-          <p>No videos uploaded.</p>
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="text" name="title" placeholder="Video Title" required>
+      <input type="file" name="file" accept="video/*" required>
+      <select name="category" required>
+        <option value="">Select Category</option>
+        {% for cat in categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
         {% endfor %}
+      </select>
+      <button type="submit">Upload Video</button>
+    </form>
+
+    <div>
+      {% for category, videos in videos_by_category.items %}
+        <div class="category-section">
+          <h3 class="category-title">{{ category }}</h3>
+
+          <div class="video-grid">
+            {% for video in videos %}
+              <div class="video-item" onclick="playVideo('{{ video.video.url }}', '{{ video.title }}', event)"> {# Pass the event object here #}
+                {% if video.thumbnail %}
+                  <img src="{{ video.thumbnail.url }}" alt="Thumbnail" class="video-thumb">
+                {% endif %}
+                <p class="video-title">{{ video.title }}</p>
+
+                {% if request.session.postion == "HR" %}
+                  <form method="POST" action="{% url 'delete_video' video.id %}" onsubmit="return confirm('Are you sure you want to delete this video?');">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-button" onclick="event.stopPropagation()"> {# Stop propagation on button click #}
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p>No videos uploaded in this category yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+
+    <div id="videoModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3 id="modalTitle">Now Playing</h3>
+      <video id="modalVideo" controls>
+      <source id="modalSource" src="" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+
       </div>
     </div>
-  {% endfor %}
 </div>
-
-
-<!-- Video Popup Modal -->
-<div id="videoModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h3 id="modalTitle">Now Playing</h3>
-  <video id="modalVideo" controls style="width:100%; max-height:400px;">
-  <source id="modalSource" src="" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
-
-  </div>
-</div>
-
-<style>
-  .card {
-    border: 1px solid #ccc;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 6px;
-    background: white;
-  }
-  .video-item {
-    cursor: pointer;
-    color: #007bff;
-    text-decoration: underline;
-    margin: 6px 0;
-  }
-
-  /* Modal styling */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.7);
-  }
-  .modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    width: 70%;
-    border-radius: 10px;
-    position: relative;
-  }
-  .close {
-    color: #aaa;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-</style>
 
 <script>
-  function playVideo(url, title) {
+  // Modify playVideo to accept an event object
+  function playVideo(url, title, event) {
+    // Check if an event object was passed and if its target is the delete button or its icon.
+    // This prevents playing when the delete button is clicked.
+    if (event && (event.target.closest('.delete-button') || event.target.tagName === 'FORM')) {
+      return; // Do nothing if the click originated from the delete button or its form
+    }
+
     const modal = document.getElementById('videoModal');
     const video = document.getElementById('modalVideo');
+    const source = document.getElementById('modalSource');
     const titleElem = document.getElementById('modalTitle');
 
-    video.src = url;
+    source.src = url;
+    video.load(); // Load the new video source
+    video.play();
+
     titleElem.textContent = 'Now Playing: ' + title;
     modal.style.display = 'block';
-    video.play();
   }
 
   function closeModal() {
     const modal = document.getElementById('videoModal');
     const video = document.getElementById('modalVideo');
     video.pause();
+    video.removeAttribute('src'); // Clear the video source to prevent holding file handle
+    video.load(); // Reload to apply the cleared source
     modal.style.display = 'none';
   }
 
-  // Optional: close modal if user clicks outside of modal content
   window.onclick = function(event) {
     const modal = document.getElementById('videoModal');
-    if (event.target == modal) {
+    if (event.target === modal) { // Use strict equality
       closeModal();
     }
   }
-</script>
-<script>
-  function playVideo(url, title) {
-    const modal = document.getElementById('videoModal');
-    const video = document.getElementById('modalVideo');
-    const source = document.getElementById('modalSource');
-    const titleElem = document.getElementById('modalTitle');
 
-    // Set new source
-    source.src = url;
-
-    // Load and play
-    video.load();
-    video.play();
-
-    // Show modal
-    titleElem.textContent = 'Now Playing: ' + title;
-    modal.style.display = 'block';
+  function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+    // Save user's preference to local storage
+    if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('theme', 'dark');
+    } else {
+        localStorage.setItem('theme', 'light');
+    }
   }
-</script>
-<script>
-function toggleTheme() {
-  document.body.classList.toggle('dark-mode');
-}
-</script>
 
+  // Apply saved theme on page load
+  document.addEventListener('DOMContentLoaded', (event) => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.getElementById('themeToggle').checked = true;
+    }
+  });
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 {% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between mb-3 align-items-center">
+        <h3>Latest Payslip - {{ month }}</h3>
+        <div>
+            <form method="post" action="{% url 'manual_generate_payslip' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Generate Payslip (Manual)</button>
+            </form>
+            <a href="{% url 'export_payslip_csv' %}" class="btn btn-primary">Download  CSV</a>
+        </div>
+    </div>
+
+    {% if headers %}
+        <div class="table-responsive">
+            <table id="payslipTable" class="table table-bordered table-striped" style="min-width: 2000px;">
+                <thead>
+                    <tr>
+                        {% for header in headers %}
+                            <th>{{ header }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>{{ cell }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>No payslip has been generated yet.</p>
+    {% endif %}
+</div>
+
+<!-- DataTables for search, sort, pagination -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#payslipTable').DataTable({
+            scrollX: true,
+            pageLength: 10,
+            lengthMenu: [[10, 20, 30, -1], [10, 20, 30, "All"]]
+        });
+    });
+</script>
+{% endblock %}

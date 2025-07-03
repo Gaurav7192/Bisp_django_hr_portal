@@ -1,0 +1,817 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .form-container {
+            /* Changed max-width to a Tailwind-like larger size */
+            max-width: 1024px; /* Equivalent to Tailwind's max-w-5xl for demonstration */
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        @media (min-width: 1024px) { /* Apply even wider on large screens */
+            .form-container {
+                max-width: 1280px; /* Equivalent to Tailwind's max-w-7xl */
+            }
+        }
+        @media (min-width: 1536px) { /* Apply max width on very large screens */
+            .form-container {
+                max-width: 1400px; /* Custom large width */
+            }
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            position: relative; /* Added for positioning suggestions */
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group textarea,
+        .input-group select { /* Added select for the foreign key dropdown */
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            border-color: #3b82f6; /* Blue focus ring */
+        }
+        .add-button, .remove-button, .test-button, .check-button {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            white-space: nowrap; /* Prevent button text from wrapping */
+        }
+        .add-button {
+            background-color: #22c55e; /* Green */
+            color: white;
+            border: none;
+        }
+        .add-button:hover {
+            background-color: #16a34a;
+            transform: translateY(-1px);
+        }
+        .remove-button {
+            background-color: #ef4444; /* Red */
+            color: white;
+            border: none;
+        }
+        .remove-button:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+        .test-button {
+            background-color: #3b82f6; /* Blue */
+            color: white;
+            border: none;
+            display: none; /* Initially hidden */
+        }
+        .test-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        .check-button {
+            background-color: #f97316; /* Orange */
+            color: white;
+            border: none;
+        }
+        .check-button:hover {
+            background-color: #ea580c;
+            transform: translateY(-1px);
+        }
+        .submit-button {
+            background-color: #10b981; /* Teal */
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+        .submit-button:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+        .skill-test-area {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+        .skill-test-area.active {
+            display: block;
+        }
+        .skill-test-area input {
+            width: calc(100% - 100px); /* Adjust width for button */
+            margin-right: 0.5rem;
+        }
+        .skill-test-feedback {
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        .feedback-correct {
+            color: #16a34a; /* Green */
+        }
+        .feedback-incorrect {
+            color: #dc2626; /* Red */
+        }
+        .errorlist {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            list-style: none;
+            padding-left: 0;
+        }
+        /* Styles for skill suggestions */
+        .skill-suggestions {
+            position: absolute;
+            top: 100%; /* Position below the input */
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10; /* Ensure it appears above other elements */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .skill-suggestions div {
+            padding: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between; /* To place the label on the right */
+            align-items: center;
+        }
+        .skill-suggestions div:hover {
+            background-color: #e5e7eb;
+        }
+        .skill-recommendation-label {
+            font-size: 0.75rem; /* Smaller font for the label */
+            color: #6b7280; /* Gray color */
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background-color: #e0e7ff; /* Light blue background for label */
+            margin-left: 0.5rem;
+        }
+
+        /* Drag over effect for inputs */
+        .skill-input.drag-over {
+            border-color: #f97316; /* Orange border when dragging over */
+            box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.5);
+        }
+    </style>
+
+    <div class="form-container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">User Profile Form</h1>
+
+        <form id="profileForm" class="space-y-6" method="post">
+            {% csrf_token %} {# Django requires this for POST requests #}
+
+            <div>
+                <label for="{{ form.emp_register.id_for_label }}" class="block text-gray-700 text-sm font-medium mb-2">Associated Employee Registration:</label>
+                <div class="input-group">
+                    {{ form.emp_register }}
+                </div>
+                {% if form.emp_register.errors %}
+                    <ul class="errorlist">{% for error in form.emp_register.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">{{ form.emp_register.help_text }}</p>
+            </div>
+
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-gray-700 text-sm font-medium mb-2">Your Name:</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <ul class="errorlist">{% for error in form.name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+
+            {{ form.skills }}
+            {{ form.projects }}
+            {{ form.experiences }}
+            {{ form.ratings }}
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="section-title">Skill Set:</label>
+                    <button type="button" onclick="addSkillField()" class="add-button">Add Skill</button>
+                </div>
+                <div id="skillsContainer" class="space-y-3">
+                    <div class="input-group">
+                        <input type="text" class="skill-input" placeholder="e.g., JavaScript" required
+                            oninput="handleSkillInput(this)"
+                            ondragover="allowDrop(event)" ondrop="dropSkill(event)" ondragleave="clearDragOver(event)">
+                        <button type="button" onclick="generateSkillTest(this)" class="test-button">Test Skill</button>
+                        <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+                        <div class="skill-suggestions hidden"></div> </div>
+                    <div id="skillTestAreaTemplate" class="skill-test-area" style="display: none;">
+                        <p class="skill-question font-semibold text-gray-700"></p>
+                        <div class="flex items-center mt-2">
+                            <input type="text" class="skill-answer-input" placeholder="Your answer">
+                            <button type="button" onclick="checkSkillAnswer(this)" class="check-button">Check</button>
+                        </div>
+                        <p class="skill-test-feedback"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="section-title">Projects:</label>
+                    <button type="button" onclick="addProjectField()" class="add-button">Add Project</button>
+                </div>
+                <div id="projectsContainer" class="space-y-3">
+                    <div class="input-group">
+                        <textarea class="project-input" rows="2" placeholder="Project Name - Description (e.g., E-commerce site - Built with React and Node.js)"></textarea>
+                        <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="section-title">Experience:</label>
+                    <button type="button" onclick="addExperienceField()" class="add-button">Add Experience</button>
+                </div>
+                <div id="experienceContainer" class="space-y-3">
+                    <div class="input-group">
+                        <textarea class="experience-input" rows="2" placeholder="Company Name, Role, Duration, Key Responsibilities"></textarea>
+                        <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="section-title">Rating (1-5):</label>
+                    <button type="button" onclick="addRatingField()" class="add-button">Add Rating</button>
+                </div>
+                <div id="ratingsContainer" class="space-y-3">
+                    <div class="input-group">
+                        <input type="text" class="rating-skill-input" placeholder="Skill for rating">
+                        <input type="number" class="rating-value-input" min="1" max="5" placeholder="Rating (1-5)" required>
+                        <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Submit Profile</button>
+        </form>
+    </div>
+
+    <script>
+        // --- EXPANDED SKILL TESTS ---
+        const skillTests = {
+            "javascript": [
+                {
+                    question: "What is the purpose of the 'use strict' directive in JavaScript?",
+                    answers: ["enables strict mode", "prevents common coding mistakes", "improves security", "helps with debugging"],
+                    correct: ["enables strict mode", "strict mode", "to enable strict mode", "to prevent common coding mistakes"]
+                },
+                {
+                    question: "Explain event bubbling in the DOM.",
+                    answers: ["events propagate from target to root", "event handling strategy", "parent elements receive events after children"],
+                    correct: ["events propagate from target to root", "event goes from child to parent", "event bubbles up the DOM tree"]
+                },
+                {
+                    question: "What is a closure in JavaScript?",
+                    answers: ["a function bundled with its lexical environment", "allows inner function to access outer scope variables", "data privacy mechanism"],
+                    correct: ["a function bundled with its lexical environment", "inner function remembers outer variables", "function remembers its scope"]
+                },
+                {
+                    question: "Describe the 'this' keyword in JavaScript.",
+                    answers: ["refers to the object that executed the current function", "context dependent", "can be explicitly bound"],
+                    correct: ["refers to the object that executed the current function", "context of execution", "object calling the method"]
+                },
+                 {
+                    question: "What is the difference between `let`, `const`, and `var`?",
+                    answers: ["var is function-scoped, let/const are block-scoped", "const is immutable after assignment", "let can be reassigned"],
+                    correct: ["var is function-scoped, let and const are block-scoped", "const cannot be reassigned", "let can be reassigned but not redeclared", "var can be redeclared"]
+                },
+            ],
+            "html": [
+                {
+                    question: "What is the semantic meaning of the `<article>` tag?",
+                    answers: ["standalone content", "self-contained content", "blog post", "news article"],
+                    correct: ["standalone content", "self-contained content", "independent content"]
+                },
+                {
+                    question: "How do you embed external CSS in an HTML document?",
+                    answers: ["using <link> tag", "inside <head> with rel='stylesheet'"],
+                    correct: ["<link rel='stylesheet' href='style.css'>", "using the link tag"]
+                },
+                {
+                    question: "What is the purpose of the `alt` attribute in the `<img>` tag?",
+                    answers: ["alternative text for images", "accessibility for screen readers", "SEO benefits if image fails to load"],
+                    correct: ["alternative text", "for screen readers", "describes the image"]
+                },
+                {
+                    question: "Explain the difference between `id` and `class` attributes.",
+                    answers: ["id is unique, class can be reused", "id for single element, class for multiple"],
+                    correct: ["id is unique, class is not", "id for specific element, class for groups"]
+                }
+            ],
+            "css": [
+                {
+                    question: "Explain the CSS Box Model.",
+                    answers: ["content, padding, border, margin", "defines space around elements", "how elements are rendered"],
+                    correct: ["content padding border margin", "box model describes element space"]
+                },
+                {
+                    question: "What is the difference between `margin` and `padding`?",
+                    answers: ["margin is outside border, padding is inside border", "padding adds space within element, margin adds space around"],
+                    correct: ["margin is outside padding is inside", "padding is inner space, margin is outer space"]
+                },
+                {
+                    question: "How does `position: relative;` affect an element?",
+                    answers: ["positions relative to its normal position", "allows children to be absolutely positioned", "does not take element out of flow"],
+                    correct: ["positions relative to its normal position", "relative to itself", "does not affect other elements' positions initially"]
+                },
+                {
+                    question: "What is CSS specificity?",
+                    answers: ["rules for applying conflicting styles", "determines which style declaration applies", "based on selector types"],
+                    correct: ["rules for applying conflicting styles", "determines style precedence", "selector priority"]
+                },
+                 {
+                    question: "What is Flexbox and when would you use it?",
+                    answers: ["one-dimensional layout model", "for distributing space among items", "for aligning items in a container"],
+                    correct: ["one dimensional layout", "for aligning items in a single row or column", "for dynamic sizing and positioning"]
+                }
+            ],
+            "python": [
+                {
+                    question: "Explain the difference between a `list` and a `tuple` in Python.",
+                    answers: ["list is mutable, tuple is immutable", "lists use square brackets, tuples use parentheses"],
+                    correct: ["list is mutable, tuple is immutable", "lists can be changed, tuples cannot"]
+                },
+                {
+                    question: "What is a 'decorator' in Python?",
+                    answers: ["function that takes another function and extends its behavior", "syntax with @ symbol", "wraps another function"],
+                    correct: ["function that modifies another function", "wraps a function", "enhances a function's functionality"]
+                },
+                {
+                    question: "How do you handle exceptions in Python?",
+                    answers: ["try-except blocks", "finally block for cleanup"],
+                    correct: ["try except finally", "using try and except"]
+                },
+                {
+                    question: "What is a 'generator' in Python and why use it?",
+                    answers: ["function that returns an iterator", "uses 'yield' keyword", "memory efficient for large sequences", "lazy evaluation"],
+                    correct: ["function that returns an iterator", "uses yield", "memory efficient"]
+                },
+                {
+                    question: "What is the GIL (Global Interpreter Lock) in Python?",
+                    answers: ["a mutex that protects access to Python objects", "prevents multiple native threads from executing Python bytecodes simultaneously", "impacts multi-threaded performance"],
+                    correct: ["global interpreter lock", "limits true parallelism in cpython", "mutex for python objects", "a lock for python objects"]
+                }
+            ],
+            "react": [
+                {
+                    question: "What is JSX and why is it used in React?",
+                    answers: ["JavaScript XML", "syntax extension for React", "describes UI structure", "transpiled to React.createElement calls"],
+                    correct: ["JavaScript XML", "describes UI structure", "syntax extension"]
+                },
+                {
+                    question: "Explain the concept of 'State' in React.",
+                    answers: ["data managed by a component", "mutable data that can change over time", "causes component re-render when updated"],
+                    correct: ["data managed by component", "mutable data", "causes re-renders"]
+                },
+                {
+                    question: "What are 'Props' in React?",
+                    answers: ["properties passed from parent to child components", "immutable data", "read-only"],
+                    correct: ["properties passed to components", "read-only data", "immutable component inputs"]
+                },
+                {
+                    question: "Describe the React component lifecycle methods (e.g., for mounting).",
+                    answers: ["componentDidMount", "constructor", "render", "phases of component existence"],
+                    correct: ["componentDidMount", "mounting lifecycle", "render"]
+                },
+                {
+                    question: "What is a React Hook? Give an example.",
+                    answers: ["functions that let you use state and other React features without writing a class", "useState", "useEffect"],
+                    correct: ["functions that let you use state without classes", "useState", "useEffect hook"]
+                }
+            ],
+            "java": [
+                {
+                    question: "Explain the difference between `HashMap` and `HashTable` in Java.",
+                    answers: ["HashMap is not synchronized, HashTable is synchronized", "HashMap allows null keys/values, HashTable does not", "HashTable is legacy"],
+                    correct: ["HashMap not synchronized, HashTable synchronized", "HashMap allows nulls"]
+                },
+                {
+                    question: "What is method overloading and overriding in Java?",
+                    answers: ["overloading: same method name, different parameters", "overriding: same method signature in subclass", "polymorphism concepts"],
+                    correct: ["overloading is compile-time polymorphism", "overriding is runtime polymorphism", "overloading is different parameters", "overriding is same signature in child class"]
+                },
+                {
+                    question: "What is the purpose of the `finally` block in Java exception handling?",
+                    answers: ["executes always, regardless of exception", "for cleanup code", "after try-catch"],
+                    correct: ["always executes", "for cleanup", "guaranteed execution"]
+                },
+                {
+                    question: "Explain 'interface' vs 'abstract class' in Java.",
+                    answers: ["interface: fully abstract, multiple inheritance", "abstract class: partial abstraction, single inheritance", "default methods in interfaces"],
+                    correct: ["interface is fully abstract", "abstract class can have concrete methods", "interface allows multiple inheritance"]
+                }
+            ]
+        };
+
+        const lastQuestionIndex = {};
+
+        const predefinedSkills = [
+            "JavaScript", "Python", "HTML", "CSS", "React", "Angular", "Vue.js",
+            "Node.js", "Express.js", "Django", "Flask", "Ruby on Rails", "PHP",
+            "Java", "C#", ".NET", "SQL", "MongoDB", "PostgreSQL", "MySQL",
+            "AWS", "Azure", "Google Cloud Platform", "Docker", "Kubernetes",
+            "Git", "Jira", "Agile", "Scrum", "REST API", "GraphQL",
+            "Machine Learning", "Data Science", "Artificial Intelligence",
+            "UI/UX Design", "Figma", "Sketch", "Photoshop",
+            "Project Management", "Business Analysis", "Quality Assurance", "Testing",
+            "DevOps", "Cybersecurity", "Network Administration", "Technical Support",
+            "Power BI", "Excel", "Data Visualization", "Big Data", "Cloud Computing"
+        ].sort();
+
+        /**
+         * Function to show/hide the Test Skill button based on input value.
+         * @param {HTMLInputElement} inputElement - The skill input field.
+         */
+        function toggleTestButton(inputElement) {
+            const testButton = inputElement.nextElementSibling; // The Test Skill button
+            if (inputElement.value.trim().length > 0) {
+                testButton.style.display = 'inline-block'; // Show the button
+            } else {
+                testButton.style.display = 'none'; // Hide the button
+                // Also hide the associated skill test area if the input is cleared
+                const parentDiv = inputElement.closest('.input-group');
+                let skillTestArea = parentDiv.nextElementSibling;
+                while (skillTestArea && !skillTestArea.classList.contains('skill-test-area')) {
+                    skillTestArea = skillTestArea.nextElementSibling;
+                }
+                if (skillTestArea && skillTestArea.id !== 'skillTestAreaTemplate') {
+                    skillTestArea.style.display = 'none'; // Hide the test area
+                    skillTestArea.classList.remove('active');
+                }
+            }
+        }
+
+        /**
+         * Handles both showing suggestions and toggling the test button.
+         * @param {HTMLInputElement} inputElement - The skill input field.
+         */
+        function handleSkillInput(inputElement) {
+            showSkillSuggestions(inputElement);
+            toggleTestButton(inputElement);
+        }
+
+        /**
+         * Adds a new skill input field dynamically to the form.
+         * Modified to call handleSkillInput for initial state.
+         */
+        function addSkillField() {
+            const container = document.getElementById('skillsContainer');
+            const newField = document.createElement('div');
+            newField.className = 'input-group';
+            newField.innerHTML = `
+                <input type="text" class="skill-input" placeholder="e.g., Python" required
+                    oninput="handleSkillInput(this)"
+                    ondragover="allowDrop(event)" ondrop="dropSkill(event)" ondragleave="clearDragOver(event)">
+                <button type="button" onclick="generateSkillTest(this)" class="test-button">Test Skill</button>
+                <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+                <div class="skill-suggestions hidden"></div>
+            `;
+            container.appendChild(newField);
+
+            // Ensure the test button is hidden initially for the new field
+            const newSkillInput = newField.querySelector('.skill-input');
+            toggleTestButton(newSkillInput);
+        }
+
+        /**
+         * Displays skill suggestions based on user input.
+         * @param {HTMLInputElement} inputElement - The skill input field.
+         */
+        function showSkillSuggestions(inputElement) {
+            const inputValue = inputElement.value.toLowerCase();
+            const suggestionsContainer = inputElement.closest('.input-group').querySelector('.skill-suggestions');
+
+            suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+
+            if (inputValue.length === 0) {
+                suggestionsContainer.classList.add('hidden');
+                return;
+            }
+
+            const filteredSuggestions = predefinedSkills.filter(skill =>
+                skill.toLowerCase().includes(inputValue)
+            );
+
+            if (filteredSuggestions.length > 0) {
+                filteredSuggestions.forEach(skill => {
+                    const suggestionItem = document.createElement('div');
+                    suggestionItem.textContent = skill;
+                    const labelSpan = document.createElement('span');
+                    labelSpan.textContent = 'Recommendation';
+                    labelSpan.className = 'skill-recommendation-label';
+                    suggestionItem.appendChild(labelSpan);
+
+                    suggestionItem.addEventListener('click', () => {
+                        inputElement.value = skill;
+                        suggestionsContainer.classList.add('hidden');
+                        toggleTestButton(inputElement); // Ensure button shows if selected via click
+                    });
+
+                    suggestionItem.setAttribute('draggable', 'true');
+                    suggestionItem.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', skill);
+                        e.dataTransfer.effectAllowed = 'copy';
+                    });
+
+                    suggestionsContainer.appendChild(suggestionItem);
+                });
+                suggestionsContainer.classList.remove('hidden');
+            } else {
+                suggestionsContainer.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Allows dropping on the skill input field.
+         * @param {DragEvent} event
+         */
+        function allowDrop(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+            event.target.classList.add('drag-over');
+        }
+
+        /**
+         * Handles the drop event on the skill input field.
+         * @param {DragEvent} event
+         */
+        function dropSkill(event) {
+            event.preventDefault();
+            const skillName = event.dataTransfer.getData('text/plain');
+            event.target.value = skillName;
+            event.target.classList.remove('drag-over');
+            const suggestionsContainer = event.target.closest('.input-group').querySelector('.skill-suggestions');
+            if (suggestionsContainer) {
+                suggestionsContainer.classList.add('hidden');
+            }
+            toggleTestButton(event.target); // Ensure button shows if skill is dropped
+        }
+
+        /**
+         * Clears the drag-over visual cue when dragging leaves the input.
+         * @param {DragEvent} event
+         */
+        function clearDragOver(event) {
+            event.target.classList.remove('drag-over');
+        }
+
+
+        // --- Hide suggestions when clicking outside ---
+        document.addEventListener('click', function(event) {
+            document.querySelectorAll('.skill-suggestions').forEach(container => {
+                if (!container.closest('.input-group').contains(event.target)) {
+                    container.classList.add('hidden');
+                }
+            });
+        });
+
+        /**
+         * Function to run on page load to set initial state of "Test Skill" buttons.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.skill-input').forEach(input => {
+                toggleTestButton(input);
+            });
+        });
+
+        // The rest of your existing JavaScript functions (addProjectField, addExperienceField, addRatingField, removeField, generateSkillTest, checkSkillAnswer, form submit listener) remain the same.
+
+        /**
+         * Adds a new project textarea field dynamically to the form.
+         */
+        function addProjectField() {
+            const container = document.getElementById('projectsContainer');
+            const newField = document.createElement('div');
+            newField.className = 'input-group';
+            newField.innerHTML = `
+                <textarea class="project-input" rows="2" placeholder="Project Name - Description"></textarea>
+                <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+            `;
+            container.appendChild(newField);
+        }
+
+        /**
+         * Adds a new experience textarea field dynamically to the form.
+         */
+        function addExperienceField() {
+            const container = document.getElementById('experienceContainer');
+            const newField = document.createElement('div');
+            newField.className = 'input-group';
+            newField.innerHTML = `
+                <textarea class="experience-input" rows="2" placeholder="Company Name, Role, Duration, Key Responsibilities"></textarea>
+                <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+            `;
+            container.appendChild(newField);
+        }
+
+        /**
+         * Adds a new rating input field dynamically to the form.
+         */
+        function addRatingField() {
+            const container = document.getElementById('ratingsContainer');
+            const newField = document.createElement('div');
+            newField.className = 'input-group';
+            newField.innerHTML = `
+                <input type="text" class="rating-skill-input" placeholder="Skill for rating">
+                <input type="number" class="rating-value-input" min="1" max="5" placeholder="Rating (1-5)" required>
+                <button type="button" onclick="removeField(this)" class="remove-button">Remove</button>
+            `;
+            container.appendChild(newField);
+        }
+
+        /**
+         * Removes a dynamically added field from the form.
+         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
+         */
+        function removeField(buttonElement) {
+            const parentDiv = buttonElement.closest('.input-group');
+            if (parentDiv) {
+                // Check if it's a skill field and if it has an associated test area
+                const skillInput = parentDiv.querySelector('.skill-input');
+                if (skillInput) {
+                    let skillTestArea = parentDiv.nextElementSibling;
+                    // Iterate through siblings to find the actual skill-test-area
+                    while (skillTestArea && !skillTestArea.classList.contains('skill-test-area')) {
+                        skillTestArea = skillTestArea.nextElementSibling;
+                    }
+                    if (skillTestArea && skillTestArea.id !== 'skillTestAreaTemplate') {
+                        skillTestArea.remove(); // Remove the test area if it exists and is not the template
+                    }
+                }
+                parentDiv.remove();
+            }
+        }
+
+        /**
+         * Generates and displays a small test for the given skill.
+         * Modified to select a random question and avoid immediate repetition.
+         * @param {HTMLElement} buttonElement - The "Test Skill" button element.
+         */
+        function generateSkillTest(buttonElement) {
+            const skillInput = buttonElement.previousElementSibling; // The skill input field
+            const skillName = skillInput.value.toLowerCase().trim();
+            const parentDiv = buttonElement.closest('.input-group');
+
+            let skillTestArea = parentDiv.nextElementSibling;
+            while (skillTestArea && !skillTestArea.classList.contains('skill-test-area')) {
+                skillTestArea = skillTestArea.nextElementSibling;
+            }
+
+            if (!skillTestArea || skillTestArea.id === 'skillTestAreaTemplate') {
+                const template = document.getElementById('skillTestAreaTemplate');
+                skillTestArea = template.cloneNode(true);
+                skillTestArea.removeAttribute('id');
+                skillTestArea.classList.remove('active');
+                skillTestArea.style.display = 'block';
+                let insertAfterElement = parentDiv;
+                while (insertAfterElement.nextElementSibling && !insertAfterElement.nextElementSibling.classList.contains('skill-test-area')) {
+                    insertAfterElement = insertAfterElement.nextElementSibling;
+                }
+                insertAfterElement.parentNode.insertBefore(skillTestArea, insertAfterElement.nextSibling);
+            }
+
+            const questionElement = skillTestArea.querySelector('.skill-question');
+            const answerInput = skillTestArea.querySelector('.skill-answer-input');
+            const feedbackElement = skillTestArea.querySelector('.skill-test-feedback');
+
+            // Clear previous state
+            answerInput.value = '';
+            feedbackElement.textContent = '';
+            feedbackElement.classList.remove('feedback-correct', 'feedback-incorrect');
+
+            const questionsForSkill = skillTests[skillName];
+            if (questionsForSkill && questionsForSkill.length > 0) {
+                let randomIndex;
+                // Select a random question, avoiding immediate repetition
+                do {
+                    randomIndex = Math.floor(Math.random() * questionsForSkill.length);
+                } while (questionsForSkill.length > 1 && randomIndex === lastQuestionIndex[skillName]);
+
+                lastQuestionIndex[skillName] = randomIndex; // Store the index for next time
+
+                const test = questionsForSkill[randomIndex];
+                questionElement.textContent = `Question for ${skillName.charAt(0).toUpperCase() + skillName.slice(1)}: ${test.question}`;
+                skillTestArea.dataset.correctAnswers = JSON.stringify(test.correct.map(a => a.toLowerCase().trim())); // Store all correct answers
+                answerInput.style.display = 'block';
+                skillTestArea.querySelector('.check-button').style.display = 'inline-block';
+                skillTestArea.classList.add('active');
+            } else {
+                questionElement.textContent = `No specific test available for "${skillName}".`;
+                answerInput.style.display = 'none';
+                skillTestArea.querySelector('.check-button').style.display = 'none';
+                skillTestArea.classList.add('active');
+            }
+        }
+
+        /**
+         * Checks the user's answer for the skill test.
+         * Modified to check against multiple correct answers.
+         * @param {HTMLElement} buttonElement - The "Check" button element.
+         */
+        function checkSkillAnswer(buttonElement) {
+            const skillTestArea = buttonElement.closest('.skill-test-area');
+            const userAnswer = skillTestArea.querySelector('.skill-answer-input').value.toLowerCase().trim();
+            const correctAnswers = JSON.parse(skillTestArea.dataset.correctAnswers || '[]');
+            const feedbackElement = skillTestArea.querySelector('.skill-test-feedback');
+
+            feedbackElement.classList.remove('feedback-correct', 'feedback-incorrect');
+
+            const isCorrect = correctAnswers.some(correctAns => userAnswer.includes(correctAns));
+
+            if (isCorrect) {
+                feedbackElement.textContent = 'Correct! Well done.';
+                feedbackElement.classList.add('feedback-correct');
+            } else {
+                let specificFeedback = '';
+                if (correctAnswers.length > 0) {
+                     specificFeedback = `The correct answer(s) include variations like: "${correctAnswers.join('", "')}"`;
+                }
+                feedbackElement.textContent = `Incorrect. Please review the concept. ${specificFeedback}`;
+                feedbackElement.classList.add('feedback-incorrect');
+            }
+        }
+
+        /**
+         * Collects all dynamic field data and populates hidden form fields before submission.
+         */
+        document.getElementById('profileForm').addEventListener('submit', function(event) {
+            // Collect Skills
+            const skills = Array.from(document.querySelectorAll('#skillsContainer .skill-input'))
+                                .map(input => ({ name: input.value.trim() }))
+                                .filter(item => item.name !== '');
+            document.getElementById('id_skills').value = JSON.stringify(skills);
+
+            // Collect Projects
+            const projects = Array.from(document.querySelectorAll('#projectsContainer .project-input'))
+                                 .map(textarea => ({ description: textarea.value.trim() }))
+                                 .filter(item => item.description !== '');
+            document.getElementById('id_projects').value = JSON.stringify(projects);
+
+            // Collect Experience
+            const experiences = Array.from(document.querySelectorAll('#experienceContainer .experience-input'))
+                                    .map(textarea => ({ details: textarea.value.trim() }))
+                                    .filter(item => item.details !== '');
+            document.getElementById('id_experiences').value = JSON.stringify(experiences);
+
+            // Collect Ratings
+            const ratings = [];
+            document.querySelectorAll('#ratingsContainer .input-group').forEach(group => {
+                const skillInput = group.querySelector('.rating-skill-input');
+                const valueInput = group.querySelector('.rating-value-input');
+                if (skillInput && skillInput.value.trim() !== '' && valueInput && valueInput.value.trim() !== '') {
+                    ratings.push({
+                        skill: skillInput.value.trim(),
+                        value: parseInt(valueInput.value.trim())
+                    });
+                }
+            });
+            document.getElementById('id_ratings').value = JSON.stringify(ratings);
+        });
+
+    </script>
+{% endblock %}

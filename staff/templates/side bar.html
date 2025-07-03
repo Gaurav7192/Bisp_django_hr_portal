@@ -2,7 +2,7 @@
 
 <aside class="main-sidebar sidebar-dark-primary elevation-4">
   <!-- Brand Logo -->
-  <a href="index3.html" class="brand-link">
+  <a href="#" class="brand-link">
     <img src="https://bispsolutions.com/wp-content/uploads/2023/06/colorchange.png"
          alt="BISP Solution Logo"
          class="brand-image img-circle elevation-3"
@@ -43,7 +43,7 @@
 
         <!-- Dashboard -->
         <li class="nav-item">
-          <a href="{% url 'd2' request.session.user_id %}" class="nav-link">
+          <a href="{% url 'dashboard' request.session.user_id %}" class="nav-link">
             <i class="far fa-circle nav-icon"></i>
             <p>Dashboard v2</p>
           </a>
@@ -56,12 +56,12 @@
             <p>Project</p>
           </a>
         </li>
-       <li class="nav-item">
-              <a href="{% url 'todo' %}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Todo List</p>
-              </a>
-            </li>
+<!--       <li class="nav-item">-->
+<!--              <a href="{% url 'task_handler' %}" class="nav-link">-->
+<!--                <i class="far fa-circle nav-icon"></i>-->
+<!--                <p>Todo List</p>-->
+<!--              </a>-->
+<!--            </li>-->
 
         <!-- Task -->
         <li class="nav-item has-treeview">
@@ -91,7 +91,7 @@
         <li class="nav-item has-treeview">
           <a href="#" class="nav-link">
             <i class="nav-icon far fa-calendar-alt"></i>
-            <p>Leave<span class="badge badge-info right">2</span></p>
+            <p>Leave<span class="badge badge-info right"></span></p>
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
@@ -219,29 +219,30 @@
               </a>
             </li>
             <li class="nav-item">
-              <a href="pages/examples/project-detail.html" class="nav-link">
+            <a href="{% url 'project' request.session.user_id %}" class="nav-link">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Project Detail</p>
               </a>
             </li>
-            <li class="nav-item">
-              <a href="pages/examples/contacts.html" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Contacts</p>
+<!--            <li class="nav-item">-->
+<!--              <a href="pages/examples/contacts.html" class="nav-link">-->
+<!--                <i class="far fa-circle nav-icon"></i>-->
+<!--                <p>Contacts</p>-->
+<!--              </a>-->
+<!--            </li>-->
+           <li class="nav-item">
+              <a href="{% url 'manual_generate_payslip' %}" class="nav-link">
+                <i class="fas fa-file-invoice-dollar nav-icon"></i>
+                <p>Generate Payslip</p>
               </a>
-            </li>
-            <li class="nav-item">
-              <a href="pages/examples/faq.html" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>FAQ</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="pages/examples/contact-us.html" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
-                <p>Contact Us</p>
-              </a>
-            </li>
+           </li>
+
+<!--                        <li class="nav-item">-->
+<!--              <a href="pages/examples/contact-us.html" class="nav-link">-->
+<!--                <i class="far fa-circle nav-icon"></i>-->
+<!--                <p>Contact Us</p>-->
+<!--              </a>-->
+<!--            </li>-->
           </ul>
         </li>
 <li class="nav-item">
@@ -266,6 +267,26 @@
           </ul>
         </li>
         {% endif %}
+
+          <li class="nav-item">
+  <a href="{% url 'chatbot_page' %}" class="nav-link">
+    <i class="far fa-comment-dots nav-icon"></i>
+    <p>HR Chatbot</p>
+  </a>
+</li>
+
+        <li class="nav-item">
+            <a href="{% url 'profile_form'  %}" class="nav-link">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <p>profile_form</p>
+            </a>
+        </li>
+          <li class="nav-item">
+    <a href="{% url 'skill_recommendations' %}" class="nav-link">
+        <i class="nav-icon fas fa-lightbulb"></i> <!-- Using a lightbulb icon for recommendations -->
+        <p>Skill Recommendations</p>
+    </a>
+</li>
         <li class="nav-item">
             <a href="{% url 'resignation_form' request.session.user_id %}" class="nav-link">
                 <i class="nav-icon fas fa-sign-out-alt"></i>

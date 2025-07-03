@@ -14,7 +14,8 @@ from simple_history.models import HistoricalRecords
 from decimal import Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
-
+from .vector_store import load_or_create_index
+from .  import vector_store, query_engine, document_processor
 
 class DesignationMaster(models.Model):
     designation_name = models.CharField(max_length=100, unique=True)
@@ -212,6 +213,20 @@ class Handbook(models.Model):
     def __str__(self):
         return f"Handbook {self.id} - {self.document.name}"
 
+    def process_for_chatbot(self):
+        """
+        Extracts text from the document and adds it to the FAISS vector index.
+        """
+        try:
+            index = load_or_create_index()
+            file_path = self.document.path
+            chunks = document_processor.extract_chunks(file_path)
+            vector_store.add_text_chunks(index, chunks)
+            return True
+        except Exception as e:
+            print(f"[ERROR] Failed to process handbook: {e}")
+            return False
+
 
 # Acknowledgment model to track employee responses (preserving history)
 
@@ -245,38 +260,6 @@ class Acknowledgment(models.Model):
 
     def __str__(self):
         return f"{self.employee.name} - {self.handbook.id} - {self.acknowledgment} - {self.status}"
-# class LeaveRecord(models.Model):
-#     EMPLOYEE_TYPES = [('Staff', 'Staff'), ('Manager', 'Manager'), ('HR', 'HR')]
-#     DEPARTMENTS = [('IT', 'IT'), ('Accounts', 'Accounts'), ('HR', 'HR'), ('Sales', 'Sales'),('Marketing', 'Marketing')]
-#     LEAVE_TYPES = [('Sick Leave', 'Sick Leave'), ('Casual Leave', 'Casual Leave'),
-#                        ('Compensation Leave', 'Compensation Leave'), ('Half Day', 'Half Day')]
-#     STATUS_TYPES = [('Approved', 'Approved'), ('Rejected', 'Rejected'),
-#                         ('Withdrawn', 'Withdrawn'), ('Pending', 'Pending')]
-#
-#     half_day_type=[('First Half','First Half'),('Second Half','Second Half')]
-#     # Foreign Key
-#
-#     start_date = models.DateField(null=False)
-#     end_date=models.DateField(null=False,default=2025-03-27)
-#     no_of_days=models.DecimalField(max_digits=4,decimal_places=1)
-#     leave_type = models.CharField(max_length=20, choices=LEAVE_TYPES)
-#     half_day=models.CharField(max_length=12,choices=half_day_type,null=True,blank=True)
-#     reason = models.TextField()
-#     approval_status = models.CharField(max_length=20, choices=STATUS_TYPES)
-#     approved_by = models.CharField(max_length=100, blank=True, null=True)
-#
-#     def __str__(self):
-#         return f"{self.name} - {self.leave_type}"
-#
-#
-#
-# class employee_leaves(models.Model):
-#     pass
-# #class EmployeeForm(forms.ModelForm):
-#     class Meta:
-#         model = emp_registers
-#         fields = '__all__'
-# #
 
 class emp_logins(models.Model):
     email = models.EmailField()
@@ -381,8 +364,8 @@ class Task(models.Model):
 class EmployeeDetail(models.Model):
 
     emp_id = models.ForeignKey(emp_registers, on_delete=models.DO_NOTHING)
-    phone_number = models.CharField(max_length=15)
-    guidance_phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=10 ,null=True)
+    guidance_phone_number = models.CharField(max_length=10 ,null=True)
     address = models.TextField()
     father_guidance_name = models.CharField(max_length=100)
     blood_group = models.CharField(max_length=5)
@@ -622,6 +605,14 @@ class Timesheet(models.Model):
         return f"{self.emp_id} - {self.pname} - {self.date}"
 
 
+class LatestPayslip(models.Model):
+    file_name = models.CharField(max_length=255)
+    file = models.FileField(upload_to='payslip/',null=True)
+
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.file_name
 
 
 
@@ -746,6 +737,7 @@ class SentEmail(models.Model):
         return f"Email to {self.recipient_email} by {self.employee} on {self.sent_at.strftime('%Y-%m-%d')}"
 class TodoTask(models.Model):
     name = models.CharField(max_length=255)
+    emp_id = models.ForeignKey('emp_registers', on_delete=DO_NOTHING,null=True ,blank =True )
     badge = models.CharField(max_length=20, choices=[
         ('success', 'Success'),
         ('danger', 'Danger'),
@@ -775,9 +767,9 @@ class Payslip(models.Model):
     GROSS_BASIC = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
     GROSS_HRA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
     GROSS_DA = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
-
     CONVENCE_ALLOWANCE = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
                                             blank=True)
+
     SPECIAL_ALLOWNCES = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
                                             blank=True)
     Project_Incentive = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True,
@@ -807,6 +799,19 @@ class Payslip(models.Model):
     net_salary = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    from django.core.validators import MinValueValidator
+
+    # Add these to your model (anywhere within the class)
+
+
+    PRESENT_DAYS = models.IntegerField(default=0, null=True, blank=True, validators=[MinValueValidator(0)])
+    PAID_LEAVE = models.IntegerField(default=0, null=True, blank=True, validators=[MinValueValidator(0)])
+    WEEK_OFF = models.IntegerField(default=0, null=True, blank=True, validators=[MinValueValidator(0)])
+    UNPAID_LEAVE = models.IntegerField(default=0, null=True, blank=True, validators=[MinValueValidator(0)])
+    WORKING_DAYS = models.IntegerField(default=0, null=True, blank=True, validators=[MinValueValidator(0)])
+
+    TOTAL_SALARY = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), null=True, blank=True)
+
 
     class Meta:
         unique_together = ('employee_id', 'month')
@@ -833,7 +838,12 @@ class Payslip(models.Model):
         # Net salary = gross - deductions
         self.NET_SALARY = self.GROSS_TOTAL - self.Total_Deductions
 
-        # Optional: keep legacy fields in sync
+        # Optional: Total salary = basic + hra + da
+        self.TOTAL_SALARY = (
+                self.SALARY_BASIC + self.SALARY_HRA + self.SALARY_DA
+        )
+
+        # Keep legacy fields in sync
         self.basic = self.SALARY_BASIC
         self.hra = self.SALARY_HRA
         self.allowance = self.SPECIAL_ALLOWNCES + self.CONVENCE_ALLOWANCE + self.Variable_Pay
@@ -885,5 +895,90 @@ class HRPolicy(models.Model):
 
     def __str__(self):
         return self.title
+class ChatLog(models.Model):
+    emp_id = models.ForeignKey(emp_registers, to_field='id', on_delete=models.CASCADE)
+    message = models.TextField()
+    sender = models.CharField(max_length=10, choices=[('user', 'User'), ('bot', 'Bot')])
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.timestamp}] {self.emp_id.emp_id} - {self.sender}: {self.message}"
+
+    @staticmethod
+    def get_recent_chats(emp_id):
+        week_ago = now() - timedelta(days=7)
+        return ChatLog.objects.filter(emp_id__emp_id=emp_id, timestamp__gte=week_ago).order_by('timestamp')
 
 # ... potentially other models you already have ...
+
+
+# profiles/models.py
+
+from django.db import models
+import json # Import json for serialization/deserialization
+class UserProfile(models.Model):
+    """
+    Main UserProfile model, now linked to EmpRegister.
+    Skills, projects, experience, and ratings are stored as JSON strings.
+    """
+    # Foreign Key to EmpRegister
+    emp_register = models.ForeignKey(
+        emp_registers,
+        on_delete=models.CASCADE, # If an EmpRegister is deleted, delete associated UserProfiles
+
+    )
+
+    name = models.CharField(max_length=255, help_text="Full name of the user/employee")
+    role = models.ForeignKey(
+        DesignationMaster,  # model reference
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Role or designation of the user"
+    )
+    # Storing lists of dictionaries as JSON strings in TextField
+    skills_json = models.TextField(default="[]", blank=True, help_text="JSON array of skills")
+    projects_json = models.TextField(default="[]", blank=True, help_text="JSON array of projects")
+    experiences_json = models.TextField(default="[]", blank=True, help_text="JSON array of experiences")
+    ratings_json = models.TextField(default="[]", blank=True, help_text="JSON array of ratings")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def set_skills(self, data):
+        self.skills_json = json.dumps(data)
+
+    def get_skills(self):
+        return json.loads(self.skills_json)
+
+    def set_projects(self, data):
+        self.projects_json = json.dumps(data)
+
+    def get_projects(self):
+        return json.loads(self.projects_json)
+
+    def set_experiences(self, data):
+        self.experiences_json = json.dumps(data)
+
+    def get_experiences(self):
+        return json.loads(self.experiences_json)
+
+    def set_ratings(self, data):
+        self.ratings_json = json.dumps(data)
+
+    def get_ratings(self):
+        return json.loads(self.ratings_json)
+
+    def __str__(self):
+        return f"{self.name} (Linked to {self.emp_register.employee_id})"
+
+class SkillRecommendation(models.Model):
+    employee = models.ForeignKey(emp_registers, on_delete=models.CASCADE)
+    recommended_skills = models.TextField()
+    top_peer_ids = models.TextField()
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+class Feedback(models.Model):
+    employee = models.ForeignKey(emp_registers, on_delete=models.CASCADE)
+    skill = models.CharField(max_length=255)
+    feedback_type = models.CharField(max_length=50)  # accepted, rejected, already_known, etc.
+    timestamp = models.DateTimeField(auto_now_add=True)

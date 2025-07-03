@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body {
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  h2 {
+    text-align: center;
+    margin-top: 20px;
+    color: #333;
+  }
+
+  .dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .chart-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    width: 500px;
+    max-width: 100%;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .chart-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .chart-card h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    color: #222;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
+
+  noscript img,
+  img[style*="display:none;"] {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<h2>📊 Company Dashboard – Data Analysis</h2>
+
+<div class="dashboard-container">
+  {% for key, chart in charts.items %}
+    <div class="chart-card">
+      <h3>{{ chart.title }}</h3>
+      <canvas id="{{ key }}_canvas" width="400" height="200"></canvas>
+
+      <!-- Fallback image -->
+      <noscript>
+        <img src="data:image/png;base64,{{ chart.fallback }}" alt="{{ chart.title }}">
+      </noscript>
+      <img src="data:image/png;base64,{{ chart.fallback }}" alt="{{ chart.title }}" style="display:none;" onerror="this.style.display='block'; document.getElementById('{{ key }}_canvas').style.display='none';" />
+
+      <script>
+        const ctx_{{ key }} = document.getElementById('{{ key }}_canvas').getContext('2d');
+        new Chart(ctx_{{ key }}, {
+          type: '{{ chart.kind if chart.kind != "pie" else "doughnut" }}',
+          data: {
+            labels: {{ chart.labels|safe }},
+            datasets: [{
+              label: '{{ chart.title }}',
+              data: {{ chart.values|safe }},
+              backgroundColor: [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+                '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                display: {{ 'false' if chart.kind == 'bar' else 'true' }},
+                position: 'bottom'
+              },
+              title: {
+                display: true,
+                text: '{{ chart.title }}',
+                font: { size: 16 }
+              }
+            }
+          }
+        });
+      </script>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

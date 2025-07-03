@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    .table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+        background: #fff;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    table.table th,
+    table.table td {
+        white-space: nowrap;
+        vertical-align: middle;
+        font-size: 14px;
+    }
+
+    thead.table-dark th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .filters .form-control,
+    .filters .form-select {
+        font-size: 14px;
+    }
+
+    .btn {
+        font-size: 14px;
+    }
+
+    #pageInfo {
+        font-weight: bold;
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4 text-center">All Employees Payslip Records</h2>
+
+    <!-- Filters -->
+    <div class="row mb-3 filters">
+        <div class="col-md-4 mb-2">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search Name, Email, Emp ID">
+        </div>
+        <div class="col-md-3 mb-2">
+            <input type="text" id="filterYear" class="form-control" placeholder="Enter Year (e.g., 2025)">
+        </div>
+        <div class="col-md-3 mb-2">
+            <select id="filterMonth" class="form-select">
+                <option value="">All Months</option>
+                {% for m in months %}
+                    <option value="{{ m }}">{{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+        <table id="payslipTable" class="table table-bordered table-striped w-100 text-nowrap">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Emp ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>SALARY BASIC</th>
+                    <th>SALARY HRA</th>
+                    <th>SALARY DA</th>
+                    <th>TOTAL SALARY</th>
+                    <th>Present Days</th>
+                    <th>Paid Leaves</th>
+                    <th>Weekly Off</th>
+                    <th>Unpaid Leaves</th>
+                    <th>Festivals</th>
+                    <th>Total Paid Days</th>
+                    <th>GROSS BASIC</th>
+                    <th>GROSS HRA</th>
+                    <th>GROSS DA</th>
+                    <th>Conveyance</th>
+                    <th>Special Allow.</th>
+                    <th>Project Incentive</th>
+                    <th>Variable Pay</th>
+                    <th>GROSS TOTAL</th>
+                    <th>ESI</th>
+                    <th>PF</th>
+                    <th>Salary Advance</th>
+                    <th>Negative Leave</th>
+                    <th>TDS</th>
+                    <th>Total Deductions</th>
+                    <th>NET SALARY</th>
+                    <th>Month</th>
+                </tr>
+            </thead>
+            <tbody id="payslipBody">
+                {% for slip in payslips %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ slip.employee_id.emp_id }}</td>
+                    <td>{{ slip.employee_name }}</td>
+                    <td>{{ slip.employee_id.email }}</td>
+                    <td>{{ slip.SALARY_BASIC }}</td>
+                    <td>{{ slip.SALARY_HRA }}</td>
+                    <td>{{ slip.SALARY_DA }}</td>
+                    <td>{{ slip.TOTAL_SALARY }}</td>
+                    <td>{{ slip.PRESENT_DAYS }}</td>
+                    <td>{{ slip.PAID_LEAVE }}</td>
+                    <td>{{ slip.WEEK_OFF }}</td>
+                    <td>{{ slip.UNPAID_LEAVE }}</td>
+                    <td>{{ slip.WORKING_DAYS|add:"-"|add:slip.PRESENT_DAYS|add:slip.UNPAID_LEAVE }}</td>
+                    <td>{{ slip.PRESENT_DAYS|add:slip.PAID_LEAVE|add:slip.WEEK_OFF }}</td>
+                    <td>{{ slip.GROSS_BASIC }}</td>
+                    <td>{{ slip.GROSS_HRA }}</td>
+                    <td>{{ slip.GROSS_DA }}</td>
+                    <td>{{ slip.CONVENCE_ALLOWANCE }}</td>
+                    <td>{{ slip.SPECIAL_ALLOWNCES }}</td>
+                    <td>{{ slip.Project_Incentive }}</td>
+                    <td>{{ slip.Variable_Pay }}</td>
+                    <td>{{ slip.GROSS_TOTAL }}</td>
+                    <td>{{ slip.ESI }}</td>
+                    <td>{{ slip.PF }}</td>
+                    <td>{{ slip.Salary_Advance }}</td>
+                    <td>{{ slip.Negative_Leave }}</td>
+                    <td>{{ slip.TDS }}</td>
+                    <td>{{ slip.Total_Deductions }}</td>
+                    <td>{{ slip.net_salary }}</td>
+                    <td>{{ slip.month }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <button id="prevPage" class="btn btn-outline-dark">Previous</button>
+        <span id="pageInfo" class="text-dark"></span>
+        <button id="nextPage" class="btn btn-outline-dark">Next</button>
+    </div>
+</div>
+
+<script>
+    let currentPage = 1;
+    const rowsPerPage = 10;
+
+    function paginateTable() {
+        const rows = document.querySelectorAll("#payslipBody tr");
+        const totalPages = Math.ceil(rows.length / rowsPerPage);
+        document.getElementById("pageInfo").innerText = `Page ${currentPage} of ${totalPages}`;
+        rows.forEach((row, index) => {
+            row.style.display = (index >= (currentPage - 1) * rowsPerPage && index < currentPage * rowsPerPage) ? "" : "none";
+        });
+        document.getElementById("prevPage").disabled = currentPage === 1;
+        document.getElementById("nextPage").disabled = currentPage === totalPages;
+    }
+
+    document.getElementById("prevPage").onclick = () => { if (currentPage > 1) { currentPage--; paginateTable(); } };
+    document.getElementById("nextPage").onclick = () => { currentPage++; paginateTable(); };
+
+    document.getElementById("searchInput").addEventListener("keyup", function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#payslipBody tr");
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+        currentPage = 1;
+        paginateTable();
+    });
+
+    document.getElementById("filterYear").addEventListener("input", filterTable);
+    document.getElementById("filterMonth").addEventListener("change", filterTable);
+
+    function filterTable() {
+        const year = document.getElementById("filterYear").value;
+        const month = document.getElementById("filterMonth").value.toLowerCase();
+        const rows = document.querySelectorAll("#payslipBody tr");
+
+        rows.forEach(row => {
+            const monthText = row.cells[29].innerText.toLowerCase(); // 30th column = Month
+            const matchYear = !year || monthText.includes(year);
+            const matchMonth = !month || monthText.includes(month);
+            row.style.display = (matchYear && matchMonth) ? "" : "none";
+        });
+
+        currentPage = 1;
+        paginateTable();
+    }
+
+    document.addEventListener("DOMContentLoaded", paginateTable);
+</script>
+{% endblock %}

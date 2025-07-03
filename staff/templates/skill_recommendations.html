@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        .employee-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+        .employee-card h3 { color: #0056b3; margin-top: 0; }
+        .skills-list { list-style: none; padding: 0; margin: 5px 0; }
+        .skills-list li {
+            display: inline-block;
+            background-color: #e2e6ea;
+            color: #495057;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin: 3px;
+            font-size: 0.9em;
+        }
+        .recommended-skill {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            cursor: pointer; /* Indicate clickable */
+            transition: background-color 0.3s ease;
+        }
+        .recommended-skill:hover {
+            background-color: #bee5eb;
+        }
+        .feedback-buttons button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-right: 5px;
+            transition: background-color 0.2s;
+        }
+        .feedback-buttons button:hover {
+            opacity: 0.9;
+        }
+        .feedback-buttons button.already-known { background-color: #ffc107; }
+        .feedback-buttons button.rejected { background-color: #dc3545; }
+        .no-suggestions { color: #6c757d; font-style: italic; }
+        .message { margin-top: 10px; padding: 10px; border-radius: 5px; }
+        .message.success { background-color: #d4edda; color: #155724; }
+        .message.error { background-color: #f8d7da; color: #721c24; }
+    </style>
+
+    <div class="container">
+        <h1>Skill Recommendations</h1>
+
+        {% if recommendations %}
+            {% for employee in recommendations %}
+            <div class="employee-card">
+                <h3>{{ employee.name }} (ID: {{ employee.id }})</h3>
+                <p><strong>Current Skills:</strong>
+                    <ul class="skills-list">
+                        {% for skill in employee.current_skills %}
+                            <li>{{ skill }}</li>
+                        {% empty %}
+                            <li>No skills listed.</li>
+                        {% endfor %}
+                    </ul>
+                </p>
+                <p><strong>Recommended Skills:</strong>
+                    <ul class="skills-list">
+                        {% if employee.recommended_skills %}
+                            {% for skill in employee.recommended_skills %}
+                                <li class="recommended-skill"
+                                    data-user-id="{{ employee.id }}"
+                                    data-skill="{{ skill }}">
+                                    {{ skill }}
+                                    <span class="feedback-buttons">
+                                        <button onclick="sendFeedback(this, 'accepted')">Accept</button>
+                                        <button class="already-known" onclick="sendFeedback(this, 'already_known')">Already Known</button>
+                                        <button class="rejected" onclick="sendFeedback(this, 'rejected')">Reject</button>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="no-suggestions">No suggestions at this time.</li>
+                        {% endif %}
+                    </ul>
+                </p>
+                <p><strong>Top Peer IDs:</strong> {{ employee.top_peer_ids|join:", " }}</p>
+                <div id="message-{{ employee.id }}" class="message" style="display: none;"></div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No employee data available or recommendations could not be generated.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        async function sendFeedback(button, feedbackType) {
+            const listItem = button.closest('.recommended-skill');
+            const userId = listItem.dataset.userId;
+            const skill = listItem.dataset.skill;
+            const messageDiv = document.getElementById(`message-${userId}`);
+
+            const formData = new FormData();
+            formData.append('user_profile_id', userId);
+            formData.append('recommended_skill', skill);
+            formData.append('feedback_type', feedbackType);
+
+            try {
+                const response = await fetch('{% url "submit_feedback" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    messageDiv.style.display = 'block';
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = `Feedback for '${skill}' (${feedbackType}) recorded successfully!`;
+                    // Optional: Disable or hide the feedback buttons after a click
+                    const buttons = listItem.querySelectorAll('.feedback-buttons button');
+                    buttons.forEach(btn => btn.disabled = true);
+                    listItem.style.opacity = '0.7'; // Visually indicate it's been handled
+                } else {
+                    messageDiv.style.display = 'block';
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = `Error: ${data.message}`;
+                }
+            } catch (error) {
+                messageDiv.style.display = 'block';
+                messageDiv.className = 'message error';
+                messageDiv.textContent = `Network error: ${error}`;
+            }
+            // Hide message after some time
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+
+{% endblock %}

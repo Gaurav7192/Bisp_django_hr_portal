@@ -1,0 +1,5 @@
+2025-06-20 22.45.34 - submitted resignation with status 'Apply' (ID: 4)
+2025-06-20 22.45.34 - recorded resignation action 'Apply' for rajdeep (ID: 13)
+2025-06-20 22.46.43 - sent email to gauravsinghbhandari7@gmail.com with subject 'd' (ID: 11)
+2025-06-20 22.46.43 - updated resignation with status 'Submit' (ID: 4)
+2025-06-20 22.46.43 - recorded resignation action 'Submit' for rajdeep (ID: 14)

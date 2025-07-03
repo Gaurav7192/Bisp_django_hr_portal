@@ -53,6 +53,19 @@ def log_emp_registers_save(sender, instance, created, **kwargs):
     identifier = instance.name # Or instance.email or instance.pk
     print(f"DEBUG: Signal 'post_save' for emp_registers (ID: {instance.pk})")
     log_audit_action(identifier, f"{action} for {instance.name} (ID: {instance.pk})")
+# in signals.py
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import Handbook
+
+@receiver(post_save, sender=Handbook)
+def process_handbook_on_upload(sender, instance, created, **kwargs):
+    if created:
+        print(f"[AI Chatbot] Processing handbook: {instance.document_name}")
+        count = instance.process_for_chatbot()
+        print(f"[AI Chatbot] {count} chunks embedded.")
+
+
 
 @receiver(post_save, sender=Project)
 def log_project_save(sender, instance, created, **kwargs):

@@ -1,849 +1,961 @@
 {% extends 'base.html' %}
-
-{%load static %}
+{% load static %}
 
 {% block content %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    :root {
+        --primary-blue: #0d6efd;
+        --secondary-grey: #6c757d;
+        --success-green: #28a745;
+        --info-cyan: #17a2b8;
+        --warning-orange: #fd7e14;
+        --danger-red: #dc3545;
+        --purple: #6f42c1;
+        --light-bg: #f4f6fa;
+        --white: #ffffff;
+        /* Adjusted text colors for better visibility */
+        --text-dark: #212529; /* Slightly darker than original #333 */
+        --text-medium: #343a40; /* Darker than original #555 */
+        --text-light: #495057; /* Darker than original #777 */
+        --shadow-light: rgba(0,0,0,0.05);
+        --shadow-medium: rgba(0,0,0,0.1);
+        --shadow-strong: rgba(0,0,0,0.15);
+        --border-light: #eee;
+        --border-lighter: #f8f8f8;
+    }
+
+    body {
+        background-color: var(--light-bg); /* Lighter background for the entire page */
+        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        color: var(--text-dark);
+        line-height: 1.6;
+    }
+
+    .dashboard-container {
+        padding: 30px;
+        background: var(--light-bg);
+    }
+
+    .welcome-msg {
+        font-size: 36px; /* Slightly larger */
+        font-weight: 700;
+        margin-bottom: 40px; /* More space below */
+        color: var(--text-dark);
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--border-light);
+        animation: fadeInDown 0.8s ease-out; /* Simple entry animation */
+    }
+
+    /* --- Custom Card Styles --- */
+    .card-box {
+        background: var(--white);
+        border-radius: 12px; /* Slightly more rounded */
+        padding: 25px; /* More padding */
+        text-align: center;
+        margin-bottom: 25px; /* More margin */
+        box-shadow: 0 4px 15px var(--shadow-medium); /* More prominent, softer shadow */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 130px; /* Ensure consistent height for cards */
+        position: relative; /* For potential future badge/overlay */
+        overflow: hidden; /* Ensures content stays within rounded corners */
+        border: 1px solid var(--border-light); /* Subtle border for definition */
+    }
+
+    /* Make the entire card clickable */
+    .card-box a {
+        text-decoration: none; /* Remove underline from links */
+        color: inherit; /* Inherit text color from parent */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+    }
 
 
+    .card-box::before { /* Subtle background pattern or overlay */
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle at 100% 150%, var(--primary-blue) 0%, transparent 20%);
+        opacity: 0.03; /* Very subtle */
+        pointer-events: none;
+    }
+
+    .card-box:hover {
+        transform: translateY(-8px) scale(1.01); /* Lift more, slight scale */
+        box-shadow: 0 10px 25px var(--shadow-strong); /* Stronger shadow on hover */
+    }
+
+    .card-box h3 {
+        font-size: 36px; /* Even larger numbers */
+        margin: 10px 0 5px;
+        color: var(--text-dark);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .card-box p {
+        color: var(--text-light);
+        font-size: 17px; /* Slightly larger for better readability */
+        margin-bottom: 0;
+        font-weight: 500;
+    }
+
+    .card-icon {
+        font-size: 42px; /* Larger icons */
+        margin-bottom: 12px;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); /* Subtle shadow on icon */
+    }
+
+    /* Specific Card Colors */
+    .card-total-employee { border-left: 6px solid var(--info-cyan); }
+    .card-total-employee .card-icon { color: var(--info-cyan); }
+
+    .card-total-holiday { border-left: 6px solid var(--purple); }
+    .card-total-holiday .card-icon { color: var(--purple); }
+
+    .card-total-leave { border-left: 6px solid var(--warning-orange); }
+    .card-total-leave .card-icon { color: var(--warning-orange); }
+
+    /* MODIFIED: Remaining Leave Card Style */
+    .card-remaining-leave {
+        border-left: 6px solid var(--success-green); /* Use border-left for consistent style */
+        background: var(--white); /* Reset background */
+        color: var(--text-dark); /* Reset text color */
+    }
+    .card-remaining-leave h3,
+    .card-remaining-leave p {
+        color: var(--text-dark); /* Ensure text color is dark */
+    }
+    .card-remaining-leave .card-icon {
+        color: var(--success-green); /* Apply icon color */
+        background: transparent; /* Reset background for icon */
+        border-radius: 0; /* Reset border-radius for icon */
+        padding: 0; /* Reset padding for icon */
+        box-shadow: none; /* Reset shadow for icon */
+    }
 
 
+    .card-availed-leave { border-left: 6px solid var(--secondary-grey); }
+    .card-availed-leave .card-icon { color: var(--secondary-grey); }
 
-      <div class="container-fluid">
-        <!-- Info boxes -->
-        <div class="row">
-          <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box">
-              <span class="info-box-icon bg-info elevation-1"><i class="fas fa-cog"></i></span>
+    .card-project { border-left: 6px solid var(--primary-blue); }
+    .card-project .card-icon { color: var(--primary-blue); }
 
-              <div class="info-box-content">
-                <span class="info-box-text">total employee</span>
-                <span class="info-box-number">
-                  20
-                  <small></small>
-                </span>
-              </div>
-              <!-- /.info-box-content -->
+    .card-task { border-left: 6px solid #ffc107; } /* Keep original yellow/orange for tasks if preferred, or use a custom one */
+    .card-task .card-icon { color: #ffc107; }
+
+    /* --- Section Box Styles --- */
+    .section-box {
+        background: var(--white);
+        padding: 25px; /* More padding */
+        border-radius: 12px; /* More rounded */
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px var(--shadow-light); /* Softer shadow */
+        border: 1px solid var(--border-light);
+        height: auto; /* Allow content to dictate height */
+        display: flex;
+        flex-direction: column; /* Ensure vertical layout for content */
+        min-height: 400px; /* Added min-height for consistent row alignment */
+        overflow-y: auto; /* For scrollable content within fixed height */
+    }
+
+    .section-box h5 {
+        font-weight: 600;
+        margin-bottom: 20px; /* More space below heading */
+        color: var(--text-dark);
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 15px; /* More padding below line */
+        font-size: 1.25rem; /* Larger heading */
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Space between icon and text if you add one */
+    }
+
+    .section-box ul {
+        padding-left: 0;
+        list-style: none;
+        margin-bottom: 0;
+        flex-grow: 1; /* Allow ul to take available space */
+    }
+
+    .section-box ul li {
+        padding: 12px 0; /* More vertical padding */
+        border-bottom: 1px solid var(--border-lighter); /* Lighter separator */
+        display: flex;
+        flex-direction: column; /* Stack main text and reason/tag */
+        align-items: flex-start; /* Align content to the left */
+        color: var(--text-medium); /* Applied darker text medium */
+        font-size: 16px; /* Slightly larger text */
+        line-height: 1.5;
+        position: relative; /* For absolute positioning of tags if needed */
+    }
+
+    .section-box ul li:last-child {
+        border-bottom: none;
+    }
+
+    .section-box ul li .main-info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        align-items: center;
+        margin-bottom: 5px; /* Space between main info and reason */
+    }
+
+    .section-box ul li .reason-text {
+        font-size: 14px;
+        color: var(--text-light); /* Applied darker text light */
+        font-style: italic;
+        margin-top: 5px; /* Space from main info */
+        padding-left: 5px; /* Slight indent */
+        border-left: 2px solid var(--border-light); /* Visual cue */
+    }
+
+    /* Make list items clickable without changing their display */
+    .section-box ul li a {
+        text-decoration: none;
+        color: inherit;
+        display: flex; /* Maintain flex layout for the content */
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%; /* Ensure link covers the whole list item */
+    }
+
+    /* Status Tags within lists */
+    .status-tag {
+        display: inline-block;
+        padding: 6px 12px; /* More padding */
+        border-radius: 6px; /* Slightly more rounded */
+        font-size: 12px;
+        font-weight: 700; /* Bolder text */
+        text-transform: uppercase;
+        margin-left: 15px; /* More separation */
+        letter-spacing: 0.5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Subtle shadow on tags */
+    }
+
+    .status-pending {
+        background-color: #ffe0b2; /* Lighter orange */
+        color: #e65100; /* Darker orange */
+    }
+
+    .status-approved {
+        background-color: #c8e6c9; /* Lighter green */
+        color: #388e3c; /* Darker green */
+    }
+
+    .status-submitted {
+        background-color: #b3e5fc; /* Lighter blue */
+        color: #0288d1; /* Darker blue */
+    }
+
+    .status-resignation {
+        background-color: #f8d7da; /* Light red */
+        color: #721c24; /* Dark red */
+    }
+
+    .status-new-project {
+        background-color: #d1ecf1; /* Light cyan */
+        color: #0c5460; /* Dark cyan */
+    }
+
+    .status-assigned-task {
+        background-color: #fff3cd; /* Light yellow */
+        color: #856404; /* Dark yellow */
+    }
+
+    /* Status Tags for general use, e.g., for rejected or withdrawn */
+    .status-danger { /* For rejected */
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .status-secondary { /* For withdrawn */
+        background-color: #e2e3e5;
+        color: #495057;
+    }
+
+
+    /* --- Team Members Section --- */
+    .team-members-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Slightly smaller columns */
+        gap: 20px; /* More gap */
+        padding: 15px 0;
+    }
+
+    .team-member-item {
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .team-member-item:hover {
+        transform: translateY(-3px);
+    }
+
+    .team-member-item img {
+        width: 80px; /* Larger image */
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary-blue); /* More prominent border */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: border-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .team-member-item img:hover {
+        border-color: var(--success-green); /* Change border on hover */
+        transform: scale(1.05); /* Slight zoom */
+    }
+
+    .team-member-item p {
+        margin-top: 10px;
+        font-size: 14px;
+        font-weight: 600; /* Bolder name */
+        color: var(--text-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Action Buttons */
+    .leave-actions button {
+        margin-left: 10px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .leave-actions .btn-approve {
+        background-color: var(--success-green);
+        color: var(--white);
+        border: 1px solid var(--success-green);
+    }
+    .leave-actions .btn-approve:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    .leave-actions .btn-reject {
+        background-color: var(--danger-red);
+        color: var(--white);
+        border: 1px solid var(--danger-red);
+    }
+    .leave-actions .btn-reject:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    .leave-actions .btn-withdraw {
+        background-color: var(--warning-orange);
+        color: var(--white);
+        border: 1px solid var(--warning-orange);
+    }
+    .leave-actions .btn-withdraw:hover {
+        background-color: #e06200;
+        border-color: #cb5300;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 1199.98px) { /* Adjust for smaller desktops / larger tablets */
+        .col-lg-8, .col-lg-4 {
+            width: 100%;
+            flex: none;
+        }
+    }
+
+    @media (max-width: 991.98px) { /* Adjust for smaller laptops/tabl */
+        .welcome-msg {
+            font-size: 28px;
+            margin-bottom: 25px;
+        }
+        .col-md-4 { /* Targets the columns in the new full-width row */
+            width: 100%;
+            flex: none;
+        }
+    }
+
+    @media (max-width: 767.98px) { /* Adjust for mobile */
+        .dashboard-container {
+            padding: 15px;
+        }
+        .welcome-msg {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .card-box {
+            padding: 18px;
+            min-height: 110px;
+            margin-bottom: 15px;
+        }
+        .card-box h3 {
+            font-size: 28px; /* Adjusted for mobile */
+        }
+        .card-box p {
+            font-size: 15px; /* Adjusted for mobile */
+        }
+        .card-icon {
+            font-size: 36px;
+        }
+        .section-box {
+            padding: 18px;
+            margin-bottom: 15px;
+            min-height: 300px; /* Example adjustment for mobile */
+        }
+        .section-box h5 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+        .section-box ul li {
+            font-size: 14px;
+            padding: 10px 0;
+        }
+        .status-tag {
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+        .team-members-grid {
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 10px;
+        }
+        .team-member-item img {
+            width: 60px;
+            height: 60px;
+        }
+        .team-member-item p {
+            font-size: 12px;
+        }
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="welcome-msg">Welcome, {{ emp.name }}!</div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="card-box card-total-employee">
+                <i class="fas fa-users card-icon"></i>
+                <h3>{{ total_employees|default:"0" }}</h3>
+                <p>Total Employee</p>
             </div>
-            <!-- /.info-box -->
-          </div>
-          <!-- /.col -->
-          <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box mb-3">
-              <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-thumbs-up"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">total leave request </span>
-                <span class="info-box-number">41,410</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-          </div>
-          <!-- /.col -->
-
-          <!-- fix for small devices only -->
-          <div class="clearfix hidden-md-up"></div>
-
-          <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box mb-3">
-              <span class="info-box-icon bg-success elevation-1"><i class="fas fa-shopping-cart"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">Sales</span>
-                <span class="info-box-number">760</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-          </div>
-          <!-- /.col -->
-          <div class="col-12 col-sm-6 col-md-3">
-            <div class="info-box mb-3">
-              <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-users"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">New Members</span>
-                <span class="info-box-number">2,000</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-          </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="card-box card-total-holiday">
+                <a href="{% url 'holiday_list_view' %}">
+                    <i class="fas fa-plane-departure card-icon"></i>
+                    <h3>{{ total_holidays|default:"0" }}</h3>
+                    <p>Total Holiday</p>
 
-        <div class="row">
-          <div class="col-md-12">
-            <div class="card">
-              <div class="card-header">
-                <h5 class="card-title">Monthly Recap Report</h5>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <div class="btn-group">
-                    <button type="button" class="btn btn-tool dropdown-toggle" data-toggle="dropdown">
-                      <i class="fas fa-wrench"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right" role="menu">
-                      <a href="#" class="dropdown-item">Action</a>
-                      <a href="#" class="dropdown-item">Another action</a>
-                      <a href="#" class="dropdown-item">Something else here</a>
-                      <a class="dropdown-divider"></a>
-                      <a href="#" class="dropdown-item">Separated link</a>
-                    </div>
-                  </div>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-8">
-                    <p class="text-center">
-                      <strong>Sales: 1 Jan, 2014 - 30 Jul, 2014</strong>
-                    </p>
-
-                    <div class="chart">
-                      <!-- Sales Chart Canvas -->
-                      <canvas id="salesChart" height="180" style="height: 180px;"></canvas>
-                    </div>
-                    <!-- /.chart-responsive -->
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-md-4">
-                    <p class="text-center">
-                      <strong>Goal Completion</strong>
-                    </p>
-
-                    <div class="progress-group">
-                      Add Products to Cart
-                      <span class="float-right"><b>160</b>/200</span>
-                      <div class="progress progress-sm">
-                        <div class="progress-bar bg-primary" style="width: 80%"></div>
-                      </div>
-                    </div>
-                    <!-- /.progress-group -->
-
-                    <div class="progress-group">
-                      Complete Purchase
-                      <span class="float-right"><b>310</b>/400</span>
-                      <div class="progress progress-sm">
-                        <div class="progress-bar bg-danger" style="width: 75%"></div>
-                      </div>
-                    </div>
-
-                    <!-- /.progress-group -->
-                    <div class="progress-group">
-                      <span class="progress-text">Visit Premium Page</span>
-                      <span class="float-right"><b>480</b>/800</span>
-                      <div class="progress progress-sm">
-                        <div class="progress-bar bg-success" style="width: 60%"></div>
-                      </div>
-                    </div>
-
-                    <!-- /.progress-group -->
-                    <div class="progress-group">
-                      Send Inquiries
-                      <span class="float-right"><b>250</b>/500</span>
-                      <div class="progress progress-sm">
-                        <div class="progress-bar bg-warning" style="width: 50%"></div>
-                      </div>
-                    </div>
-                    <!-- /.progress-group -->
-                  </div>
-                  <!-- /.col -->
-                </div>
-                <!-- /.row -->
-              </div>
-              <!-- ./card-body -->
-              <div class="card-footer">
-                <div class="row">
-                  <div class="col-sm-3 col-6">
-                    <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 17%</span>
-                      <h5 class="description-header">$35,210.43</h5>
-                      <span class="description-text">TOTAL REVENUE</span>
-                    </div>
-                    <!-- /.description-block -->
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-3 col-6">
-                    <div class="description-block border-right">
-                      <span class="description-percentage text-warning"><i class="fas fa-caret-left"></i> 0%</span>
-                      <h5 class="description-header">$10,390.90</h5>
-                      <span class="description-text">TOTAL COST</span>
-                    </div>
-                    <!-- /.description-block -->
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-3 col-6">
-                    <div class="description-block border-right">
-                      <span class="description-percentage text-success"><i class="fas fa-caret-up"></i> 20%</span>
-                      <h5 class="description-header">$24,813.53</h5>
-                      <span class="description-text">TOTAL PROFIT</span>
-                    </div>
-                    <!-- /.description-block -->
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-sm-3 col-6">
-                    <div class="description-block">
-                      <span class="description-percentage text-danger"><i class="fas fa-caret-down"></i> 18%</span>
-                      <h5 class="description-header">1200</h5>
-                      <span class="description-text">GOAL COMPLETIONS</span>
-                    </div>
-                    <!-- /.description-block -->
-                  </div>
-                </div>
-                <!-- /.row -->
-              </div>
-              <!-- /.card-footer -->
+                </a>
             </div>
-            <!-- /.card -->
-          </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
-
-        <!-- Main row -->
-        <div class="row">
-          <!-- Left col -->
-          <div class="col-md-8">
-            <!-- MAP & BOX PANE -->
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">US-Visitors Report</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body p-0">
-                <div class="d-md-flex">
-                  <div class="p-1 flex-fill" style="overflow: hidden">
-                    <!-- Map will be created here -->
-                    <div id="world-map-markers" style="height: 325px; overflow: hidden">
-                      <div class="map"></div>
-                    </div>
-                  </div>
-                  <div class="card-pane-right bg-success pt-2 pb-2 pl-4 pr-4">
-                    <div class="description-block mb-4">
-                      <div class="sparkbar pad" data-color="#fff">90,70,90,70,75,80,70</div>
-                      <h5 class="description-header">8390</h5>
-                      <span class="description-text">Visits</span>
-                    </div>
-                    <!-- /.description-block -->
-                    <div class="description-block mb-4">
-                      <div class="sparkbar pad" data-color="#fff">90,50,90,70,61,83,63</div>
-                      <h5 class="description-header">30%</h5>
-                      <span class="description-text">Referrals</span>
-                    </div>
-                    <!-- /.description-block -->
-                    <div class="description-block">
-                      <div class="sparkbar pad" data-color="#fff">90,50,90,70,61,83,63</div>
-                      <h5 class="description-header">70%</h5>
-                      <span class="description-text">Organic</span>
-                    </div>
-                    <!-- /.description-block -->
-                  </div><!-- /.card-pane-right -->
-                </div><!-- /.d-md-flex -->
-              </div>
-              <!-- /.card-body -->
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2"> {# Corrected class name: "6" to "col-6" #}
+            <div class="card-box card-total-leave">
+                <a href="{% url 'leave_record' user_id=emp.id %}">
+                    <i class="fas fa-calendar-alt card-icon"></i>
+                    <h3>{{ total_leaves|default:"0" }}</h3>
+                    <p>Total Leave</p>
+                </a>
             </div>
-            <!-- /.card -->
-            <div class="row">
-              <div class="col-md-6">
-                <!-- DIRECT CHAT -->
-                <div class="card direct-chat direct-chat-warning">
-                  <div class="card-header">
-                    <h3 class="card-title">Direct Chat</h3>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3 col-lg-3">
+            <div class="card-box card-remaining-leave">
+                <a href="{% url 'leave_record' user_id=emp.id %}">
+                    <i class="fas fa-calendar-check card-icon"></i>
+                    <h3>{{ balance_leaves|default:"0.0" }}</h3> <p>Remaining Leave</p>
+                </a>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="card-box card-availed-leave">
+                <a href="{% url 'leave_record' user_id=emp.id %}">
+                    <i class="fas fa-calendar-minus card-icon"></i>
+                    <h3>{{ used_leaves|default:"0.0" }}</h3> <p>Availed Leave</p>
+                </a>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="card-box card-project">
+                <a href="#"> <i class="fas fa-briefcase card-icon"></i>
+                    <h3>{{ total_projects|default:"0" }}</h3>
+                    <p>Total Project</p>
+                </a>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            <div class="card-box card-task">
+                <a href="{% url 'task_list_view' user_id=emp.id %}">
+                    <i class="fas fa-tasks card-icon"></i>
+                    <h3>{{ ongoing_tasks|default:"0" }}</h3>
+                    <p>Task</p>
+                </a>
+            </div>
+        </div>
+    </div>
 
-                    <div class="card-tools">
-                      <span title="3 New Messages" class="badge badge-warning">3</span>
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                      <button type="button" class="btn btn-tool" title="Contacts" data-widget="chat-pane-toggle">
-                        <i class="fas fa-comments"></i>
-                      </button>
-                      <button type="button" class="btn btn-tool" data-card-widget="remove">
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <!-- /.card-header -->
-                  <div class="card-body">
-                    <!-- Conversations are loaded here -->
-                    <div class="direct-chat-messages">
-                      <!-- Message. Default to the left -->
-                      <div class="direct-chat-msg">
-                        <div class="direct-chat-infos clearfix">
-                          <span class="direct-chat-name float-left">Alexander Pierce</span>
-                          <span class="direct-chat-timestamp float-right">23 Jan 2:00 pm</span>
-                        </div>
-                        <!-- /.direct-chat-infos -->
-                        <img class="direct-chat-img" src="dist/img/user1-128x128.jpg" alt="message user image">
-                        <!-- /.direct-chat-img -->
-                        <div class="direct-chat-text">
-                          Is this template really for free? That's unbelievable!
-                        </div>
-                        <!-- /.direct-chat-text -->
-                      </div>
-                      <!-- /.direct-chat-msg -->
-
-                      <!-- Message to the right -->
-                      <div class="direct-chat-msg right">
-                        <div class="direct-chat-infos clearfix">
-                          <span class="direct-chat-name float-right">Sarah Bullock</span>
-                          <span class="direct-chat-timestamp float-left">23 Jan 2:05 pm</span>
-                        </div>
-                        <!-- /.direct-chat-infos -->
-                        <img class="direct-chat-img" src="dist/img/user3-128x128.jpg" alt="message user image">
-                        <!-- /.direct-chat-img -->
-                        <div class="direct-chat-text">
-                          You better believe it!
-                        </div>
-                        <!-- /.direct-chat-text -->
-                      </div>
-                      <!-- /.direct-chat-msg -->
-
-                      <!-- Message. Default to the left -->
-                      <div class="direct-chat-msg">
-                        <div class="direct-chat-infos clearfix">
-                          <span class="direct-chat-name float-left">Alexander Pierce</span>
-                          <span class="direct-chat-timestamp float-right">23 Jan 5:37 pm</span>
-                        </div>
-                        <!-- /.direct-chat-infos -->
-                        <img class="direct-chat-img" src="dist/img/user1-128x128.jpg" alt="message user image">
-                        <!-- /.direct-chat-img -->
-                        <div class="direct-chat-text">
-                          Working with AdminLTE on a great new app! Wanna join?
-                        </div>
-                        <!-- /.direct-chat-text -->
-                      </div>
-                      <!-- /.direct-chat-msg -->
-
-                      <!-- Message to the right -->
-                      <div class="direct-chat-msg right">
-                        <div class="direct-chat-infos clearfix">
-                          <span class="direct-chat-name float-right">Sarah Bullock</span>
-                          <span class="direct-chat-timestamp float-left">23 Jan 6:10 pm</span>
-                        </div>
-                        <!-- /.direct-chat-infos -->
-                        <img class="direct-chat-img" src="dist/img/user3-128x128.jpg" alt="message user image">
-                        <!-- /.direct-chat-img -->
-                        <div class="direct-chat-text">
-                          I would love to.
-                        </div>
-                        <!-- /.direct-chat-text -->
-                      </div>
-                      <!-- /.direct-chat-msg -->
-
-                    </div>
-                    <!--/.direct-chat-messages-->
-
-                    <!-- Contacts are loaded here -->
-                    <div class="direct-chat-contacts">
-                      <ul class="contacts-list">
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user1-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                Count Dracula
-                                <small class="contacts-list-date float-right">2/28/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">How have you been? I was...</span>
+    <div class="row g-4 mt-4">
+        {# Conditional display for the entire Pending Leave Requests section #}
+        {% if pending_leaves and (is_hr or request.session.position == 'Manager') %}
+        <div class="col-12 col-md-4">
+            <div class="section-box">
+                <h5><i class="fas fa-inbox me-2"></i> Pending Leave Requests (HR/Manager Overview)</h5>
+                <ul id="pendingLeaveList">
+                    {% for leave in pending_leaves %}
+                        {# Inner condition to filter specific leaves for HR/Manager view #}
+                        {# This ensures only future leaves of non-HR/Manager roles are shown #}
+                        {% if today <= leave.start_date and leave.emp_id.position.role != "Manager" and leave.emp_id.position.role != "HR" %}
+                        <li id="leave-{{ leave.id }}">
+                            <div class="main-info">
+                                <span>{{ leave.emp_id.name }} ({{ leave.emp_id.designation }})</span>
+                                <span class="status-tag status-pending">Pending</span>
                             </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
-                        </li>
-                        <!-- End Contact Item -->
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user7-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                Sarah Doe
-                                <small class="contacts-list-date float-right">2/23/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">I will be waiting for...</span>
+                            <span class="reason-text">Dates: {{ leave.start_date|date:"M d, Y" }} to {{ leave.end_date|date:"M d, Y" }}</span>
+                            <div class="leave-actions mt-2">
+                                <button class="btn-approve" onclick="updateLeaveStatus({{ leave.id }}, 'approved', '{{ leave.emp_id.id }}')">Approve</button>
+                                <button class="btn-reject" onclick="updateLeaveStatus({{ leave.id }}, 'rejected', '{{ leave.emp_id.id }}')">Reject</button>
                             </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
                         </li>
-                        <!-- End Contact Item -->
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user3-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                Nadia Jolie
-                                <small class="contacts-list-date float-right">2/20/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">I'll call you back at...</span>
-                            </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
-                        </li>
-                        <!-- End Contact Item -->
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user5-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                Nora S. Vans
-                                <small class="contacts-list-date float-right">2/10/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">Where is your new...</span>
-                            </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
-                        </li>
-                        <!-- End Contact Item -->
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user6-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                John K.
-                                <small class="contacts-list-date float-right">1/27/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">Can I take a look at...</span>
-                            </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
-                        </li>
-                        <!-- End Contact Item -->
-                        <li>
-                          <a href="#">
-                            <img class="contacts-list-img" src="dist/img/user8-128x128.jpg" alt="User Avatar">
-
-                            <div class="contacts-list-info">
-                              <span class="contacts-list-name">
-                                Kenneth M.
-                                <small class="contacts-list-date float-right">1/4/2015</small>
-                              </span>
-                              <span class="contacts-list-msg">Never mind I found...</span>
-                            </div>
-                            <!-- /.contacts-list-info -->
-                          </a>
-                        </li>
-                        <!-- End Contact Item -->
-                      </ul>
-                      <!-- /.contacts-list -->
-                    </div>
-                    <!-- /.direct-chat-pane -->
-                  </div>
-                  <!-- /.card-body -->
-                  <div class="card-footer">
-                    <form action="#" method="post">
-                      <div class="input-group">
-                        <input type="text" name="message" placeholder="Type Message ..." class="form-control">
-                        <span class="input-group-append">
-                          <button type="button" class="btn btn-warning">Send</button>
-                        </span>
-                      </div>
-                    </form>
-                  </div>
-                  <!-- /.card-footer-->
-                </div>
-                <!--/.direct-chat -->
-              </div>
-              <!-- /.col -->
-
-              <div class="col-md-6">
-                <!-- USERS LIST -->
-                <div class="card">
-                  <div class="card-header">
-                    <h3 class="card-title">Latest Members</h3>
-
-                    <div class="card-tools">
-                      <span class="badge badge-danger">8 New Members</span>
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                      <button type="button" class="btn btn-tool" data-card-widget="remove">
-                        <i class="fas fa-times"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <!-- /.card-header -->
-                  <div class="card-body p-0">
-                    <ul class="users-list clearfix">
-                      <li>
-                        <img src="dist/img/user1-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Alexander Pierce</a>
-                        <span class="users-list-date">Today</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user8-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Norman</a>
-                        <span class="users-list-date">Yesterday</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user7-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Jane</a>
-                        <span class="users-list-date">12 Jan</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user6-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">John</a>
-                        <span class="users-list-date">12 Jan</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user2-160x160.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Alexander</a>
-                        <span class="users-list-date">13 Jan</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user5-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Sarah</a>
-                        <span class="users-list-date">14 Jan</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user4-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Nora</a>
-                        <span class="users-list-date">15 Jan</span>
-                      </li>
-                      <li>
-                        <img src="dist/img/user3-128x128.jpg" alt="User Image">
-                        <a class="users-list-name" href="#">Nadia</a>
-                        <span class="users-list-date">15 Jan</span>
-                      </li>
-                    </ul>
-                    <!-- /.users-list -->
-                  </div>
-                  <!-- /.card-body -->
-                  <div class="card-footer text-center">
-                    <a href="javascript:">View All Users</a>
-                  </div>
-                  <!-- /.card-footer -->
-                </div>
-                <!--/.card -->
-              </div>
-              <!-- /.col -->
-            </div>
-            <!-- /.row -->
-
-            <!-- TABLE: LATEST ORDERS -->
-            <div class="card">
-              <div class="card-header border-transparent">
-                <h3 class="card-title">Latest Orders</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table m-0">
-                    <thead>
-                    <tr>
-                      <th>Order ID</th>
-                      <th>Item</th>
-                      <th>Status</th>
-                      <th>Popularity</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR9842</a></td>
-                      <td>Call of Duty IV</td>
-                      <td><span class="badge badge-success">Shipped</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#00a65a" data-height="20">90,80,90,-70,61,-83,63</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR1848</a></td>
-                      <td>Samsung Smart TV</td>
-                      <td><span class="badge badge-warning">Pending</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#f39c12" data-height="20">90,80,-90,70,61,-83,68</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                      <td>iPhone 6 Plus</td>
-                      <td><span class="badge badge-danger">Delivered</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#f56954" data-height="20">90,-80,90,70,-61,83,63</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                      <td>Samsung Smart TV</td>
-                      <td><span class="badge badge-info">Processing</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#00c0ef" data-height="20">90,80,-90,70,-61,83,63</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR1848</a></td>
-                      <td>Samsung Smart TV</td>
-                      <td><span class="badge badge-warning">Pending</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#f39c12" data-height="20">90,80,-90,70,61,-83,68</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR7429</a></td>
-                      <td>iPhone 6 Plus</td>
-                      <td><span class="badge badge-danger">Delivered</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#f56954" data-height="20">90,-80,90,70,-61,83,63</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td><a href="pages/examples/invoice.html">OR9842</a></td>
-                      <td>Call of Duty IV</td>
-                      <td><span class="badge badge-success">Shipped</span></td>
-                      <td>
-                        <div class="sparkbar" data-color="#00a65a" data-height="20">90,80,90,-70,61,-83,63</div>
-                      </td>
-                    </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <!-- /.table-responsive -->
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer clearfix">
-                <a href="javascript:void(0)" class="btn btn-sm btn-info float-left">Place New Order</a>
-                <a href="javascript:void(0)" class="btn btn-sm btn-secondary float-right">View All Orders</a>
-              </div>
-              <!-- /.card-footer -->
-            </div>
-            <!-- /.card -->
-          </div>
-          <!-- /.col -->
-
-          <div class="col-md-4">
-            <!-- Info Boxes Style 2 -->
-            <div class="info-box mb-3 bg-warning">
-              <span class="info-box-icon"><i class="fas fa-tag"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">Inventory</span>
-                <span class="info-box-number">5,200</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-            <div class="info-box mb-3 bg-success">
-              <span class="info-box-icon"><i class="far fa-heart"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">Mentions</span>
-                <span class="info-box-number">92,050</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-            <div class="info-box mb-3 bg-danger">
-              <span class="info-box-icon"><i class="fas fa-cloud-download-alt"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">Downloads</span>
-                <span class="info-box-number">114,381</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-            <div class="info-box mb-3 bg-info">
-              <span class="info-box-icon"><i class="far fa-comment"></i></span>
-
-              <div class="info-box-content">
-                <span class="info-box-text">Direct Messages</span>
-                <span class="info-box-number">163,921</span>
-              </div>
-              <!-- /.info-box-content -->
-            </div>
-            <!-- /.info-box -->
-
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Browser Usage</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-8">
-                    <div class="chart-responsive">
-                      <canvas id="pieChart" height="150"></canvas>
-                    </div>
-                    <!-- ./chart-responsive -->
-                  </div>
-                  <!-- /.col -->
-                  <div class="col-md-4">
-                    <ul class="chart-legend clearfix">
-                      <li><i class="far fa-circle text-danger"></i> Chrome</li>
-                      <li><i class="far fa-circle text-success"></i> IE</li>
-                      <li><i class="far fa-circle text-warning"></i> FireFox</li>
-                      <li><i class="far fa-circle text-info"></i> Safari</li>
-                      <li><i class="far fa-circle text-primary"></i> Opera</li>
-                      <li><i class="far fa-circle text-secondary"></i> Navigator</li>
-                    </ul>
-                  </div>
-                  <!-- /.col -->
-                </div>
-                <!-- /.row -->
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer bg-light p-0">
-                <ul class="nav nav-pills flex-column">
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      United States of America
-                      <span class="float-right text-danger">
-                        <i class="fas fa-arrow-down text-sm"></i>
-                        12%</span>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      India
-                      <span class="float-right text-success">
-                        <i class="fas fa-arrow-up text-sm"></i> 4%
-                      </span>
-                    </a>
-                  </li>
-                  <li class="nav-item">
-                    <a href="#" class="nav-link">
-                      China
-                      <span class="float-right text-warning">
-                        <i class="fas fa-arrow-left text-sm"></i> 0%
-                      </span>
-                    </a>
-                  </li>
+                        {% endif %}
+                    {% endfor %}
                 </ul>
-              </div>
-              <!-- /.footer -->
+                <p class="text-muted text-center w-100 mb-0" id="noPendingLeavesMessage" style="{% if not pending_leaves %}display: block;{% else %}display: none;{% endif %}">No pending leave requests for review.</p>
             </div>
-            <!-- /.card -->
-
-            <!-- PRODUCT LIST -->
-            <div class="card">
-              <div class="card-header">
-                <h3 class="card-title">Recently Added Products</h3>
-
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                  <button type="button" class="btn btn-tool" data-card-widget="remove">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-              </div>
-              <!-- /.card-header -->
-              <div class="card-body p-0">
-                <ul class="products-list product-list-in-card pl-2 pr-2">
-                  <li class="item">
-                    <div class="product-img">
-                      <img src="dist/img/default-150x150.png" alt="Product Image" class="img-size-50">
-                    </div>
-                    <div class="product-info">
-                      <a href="javascript:void(0)" class="product-title">Samsung TV
-                        <span class="badge badge-warning float-right">$1800</span></a>
-                      <span class="product-description">
-                        Samsung 32" 1080p 60Hz LED Smart HDTV.
-                      </span>
-                    </div>
-                  </li>
-                  <!-- /.item -->
-                  <li class="item">
-                    <div class="product-img">
-                      <img src="dist/img/default-150x150.png" alt="Product Image" class="img-size-50">
-                    </div>
-                    <div class="product-info">
-                      <a href="javascript:void(0)" class="product-title">Bicycle
-                        <span class="badge badge-info float-right">$700</span></a>
-                      <span class="product-description">
-                        26" Mongoose Dolomite Men's 7-speed, Navy Blue.
-                      </span>
-                    </div>
-                  </li>
-                  <!-- /.item -->
-                  <li class="item">
-                    <div class="product-img">
-                      <img src="dist/img/default-150x150.png" alt="Product Image" class="img-size-50">
-                    </div>
-                    <div class="product-info">
-                      <a href="javascript:void(0)" class="product-title">
-                        Xbox One <span class="badge badge-danger float-right">
-                        $350
-                      </span>
-                      </a>
-                      <span class="product-description">
-                        Xbox One Console Bundle with Halo Master Chief Collection.
-                      </span>
-                    </div>
-                  </li>
-                  <!-- /.item -->
-                  <li class="item">
-                    <div class="product-img">
-                      <img src="dist/img/default-150x150.png" alt="Product Image" class="img-size-50">
-                    </div>
-                    <div class="product-info">
-                      <a href="javascript:void(0)" class="product-title">PlayStation 4
-                        <span class="badge badge-success float-right">$399</span></a>
-                      <span class="product-description">
-                        PlayStation 4 500GB Console (PS4)
-                      </span>
-                    </div>
-                  </li>
-                  <!-- /.item -->
-                </ul>
-              </div>
-              <!-- /.card-body -->
-              <div class="card-footer text-center">
-                <a href="javascript:void(0)" class="uppercase">View All Products</a>
-              </div>
-              <!-- /.card-footer -->
-            </div>
-            <!-- /.card -->
-          </div>
-          <!-- /.col -->
         </div>
-        <!-- /.row -->
-      </div><!--/. container-fluid -->
+        {% endif %}
 
-    <!-- /.content -->
+        <div class="col-12 col-md-4">
+            <div class="section-box">
+                <h5><i class="fas fa-chart-line me-2"></i> Latest Activity</h5>
+                <ul>
+                    {% comment %} Combine all activity types into one list {% endcomment %}
+                    {% if activity_resignations or new_projects or recent_tasks %}
+                        {% for resign in activity_resignations %}
+                            <li>
+                                <a href="{% url 'resignation_activity' user_id=resign.employee.id %}">
+                                    <div class="main-info">
+                                        <span>{{ resign.employee.name }} - Resignation</span>
+                                        <span class="status-tag status-resignation">{{ resign.resign_status.status_name|default:"Submitted" }}</span>
+                                    </div>
+                                    <span class="reason-text">Reason: {{ resign.reason|default:"No reason provided." }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {% for project in new_projects %}
+                            <li>
+                                <a href="{% url 'project_detail' pk=project.id %}">
+                                    <div class="main-info">
+                                        <span>{{ project.pname }} - New Project</span>
+                                        <span class="status-tag status-new-project">New Project</span>
+                                    </div>
+                                    <span class="reason-text">Started: {{ project.start_date|date:"M d, Y" }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                        {% for task in recent_tasks %}
+                            <li>
+                                <a href="{% url 'task_list_view' user_id=emp.id %}"> <div class="main-info">
+                                        <span>{{ task.task_name }} - Task</span>
+                                        <span class="status-tag status-assigned-task">Assigned</span>
+                                    </div>
+                                    <span class="reason-text">Due Date: {{ task.due_date|date:"M d, Y" }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <li><p class="text-muted text-center w-100 mb-0">No recent activity.</p></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
 
-  <!-- /.control-sidebar -->
+        <div class="col-12 col-md-4">
+            {% if team_members %}
+            <div class="section-box">
+                <h5><i class="fas fa-people-group me-2"></i> Your Team <span class="badge bg-primary ms-2">{{ team_members|length }} Members</span></h5>
+                <div class="team-members-grid">
+                    {% for member in team_members %}
+                        <div class="team-member-item">
+                            <a href="#"> <img src="{{ member.profile_picture.url }}" alt="{{ member.first_name }}" onerror="this.onerror=null;this.src='{% static 'images/default_avatar.png' %}'">
+                                <p>{{ member.name }}</p>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row g-4 mt-4">
+        <div class="col-12 col-md-6">
+            <div class="section-box">
+                <h5><i class="fas fa-chart-pie me-2"></i> Your Task Completion Overview</h5>
+                <div class="chart-container" style="position: relative; height:300px; width:auto">
+                    <canvas id="taskCompletionChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="section-box">
+                <h5><i class="fas fa-chart-pie me-2"></i> Your Task Timeline Status</h5>
+                <div class="chart-container" style="position: relative; height:300px; width:auto">
+                    <canvas id="taskTimelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <!-- Main Footer -->
+{# Data for charts - FOR DEMONSTRATION, USING DUMMY DATA. #}
+{# In your Django view, you would replace these with actual values from your database. #}
+{# Example Python in your Django view: #}
+{#    from datetime import date #}
+{#    import json #}
+{#    ... #}
+{#    context = { #}
+{#        'user_completed_tasks_count': actual_completed_tasks_count, #}
+{#        'user_total_tasks_count': actual_total_tasks_count, #}
+{#        'user_tasks_timeline_data': json.dumps({'On-Time': 5, 'Delayed': 2, 'In Progress': 3}), #}
+{#        'today': date.today(), # Necessary for the leave filtering logic #}
+{#        # ... other context variables like 'emp', 'total_employees', 'pending_leaves', etc. #}
+{#    } #}
 
+{# DUMMY DATA FOR IMMEDIATE VISIBILITY IN YOUR BROWSER #}
+<script id="user_completed_tasks_count" type="application/json">7</script>
+<script id="user_total_tasks_count" type="application/json">10</script>
+<script id="user_tasks_timeline_data" type="application/json">{"On-Time": 5, "Delayed": 2, "In Progress": 3}</script>
+
+
+{# Include Chart.js library from CDN #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Function to get CSRF token from cookies (for Django POST requests)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Function to handle updating leave status (Approve/Reject/Withdraw)
+    async function updateLeaveStatus(leaveId, status, employeeIdOfApplicant) {
+        let reason = ""; // Initialize reason for rejection
+
+        // If the action is 'rejected', prompt the user for a reason
+        if (status === 'rejected') {
+            reason = prompt("Please enter the reason for rejecting this leave:");
+            // If the user cancels the prompt or provides an empty reason, abort the action
+            if (reason === null || reason.trim() === "") {
+                alert("Rejection cancelled or no reason provided. Leave status will not be updated.");
+                return;
+            }
+        }
+
+        // Confirm the action with the user
+        if (!confirm(`Are you sure you want to ${status} this leave request?`)) {
+            return; // User cancelled the confirmation
+        }
+
+        // Retrieve the logged-in user's ID from Django session context
+        const loggedInUserId = "{{ request.session.user_id }}";
+        if (!loggedInUserId || loggedInUserId === 'None') {
+            alert("Error: Could not determine the logged-in user's ID. Please log in again.");
+            return;
+        }
+
+        // Construct the URL for the API endpoint (ensure this matches your Django urls.py)
+        const finalUrl = `/update-leave-status/${loggedInUserId}/`;
+
+        try {
+            // Prepare the data payload to send to the backend
+            const bodyData = {
+                'action': status, // 'approved', 'rejected', or 'withdrawn'
+                'leave_id': leaveId, // The ID of the specific leave request
+                'employee_id_of_leave_applicant': employeeIdOfApplicant // ID of the employee whose leave is being acted upon
+            };
+
+            // If rejecting, include the reason in the payload
+            if (status === 'rejected') {
+                bodyData.reason = reason;
+            }
+
+            // Send the asynchronous request to the Django backend
+            const response = await fetch(finalUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken, // Include CSRF token for security
+                },
+                body: JSON.stringify(bodyData), // Send data as a JSON string
+            });
+
+            // Check if the HTTP response indicates success (status code 2xx)
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server responded with non-OK status:', response.status, errorText);
+                try {
+                    const errorData = JSON.parse(errorText); // Attempt to parse error as JSON
+                    throw new Error(errorData.error || `HTTP error! Status: ${response.status}. ${errorText.substring(0, 100)}...`);
+                } catch (jsonParseError) {
+                    // If parsing as JSON fails, it's likely an HTML error page or plain text response
+                    throw new Error(`Received unexpected response format (likely HTML). Status: ${response.status}. Response: ${errorText.substring(0, 200)}...`);
+                }
+            }
+
+            // Parse the JSON response from the backend
+            const data = await response.json();
+
+            // If the backend indicates success
+            if (data.success) {
+                alert(data.message); // Display success message to the user
+                const listItem = document.getElementById(`leave-${leaveId}`); // Get the specific list item in the UI
+
+                if (listItem) {
+                    listItem.remove(); // Remove the leave item from the displayed list
+
+                    // Update the "No pending leaves" message visibility
+                    const pendingUl = document.getElementById('pendingLeaveList');
+                    const noPendingMessage = document.getElementById('noPendingLeavesMessage');
+                    if (pendingUl && pendingUl.children.length === 0) { // If the list is now empty
+                        if (noPendingMessage) { // If the message paragraph already exists in the HTML
+                            noPendingMessage.style.display = 'block'; // Make it visible
+                        } else { // Fallback: create and append the message if it somehow doesn't exist
+                            const parentDiv = pendingUl.closest('.section-box');
+                            if (parentDiv) {
+                                const newMessage = document.createElement('p');
+                                newMessage.className = "text-muted text-center w-100 mb-0";
+                                newMessage.id = "noPendingLeavesMessage";
+                                newMessage.innerText = "No pending leave requests for review.";
+                                parentDiv.appendChild(newMessage);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // If backend indicates an error, display its message
+                alert('Error: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            // Catch and report any network or parsing errors
+            console.error('Fetch error:', error);
+            alert('An error occurred: ' + error.message);
+        }
+    }
+
+
+    // --- Chart.js Initialization ---
+    // This script runs once the DOM is fully loaded.
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Task Completion Chart (Pie Chart) ---
+        // Retrieve data from the hidden script tags (either dummy or live Django data)
+        const completedTasks = parseInt(document.getElementById('user_completed_tasks_count').textContent) || 0;
+        const totalTasks = parseInt(document.getElementById('user_total_tasks_count').textContent) || 0;
+        const pendingTasks = totalTasks - completedTasks; // Calculate pending tasks
+
+        // Get the 2D rendering context of the canvas element
+        const ctxCompletion = document.getElementById('taskCompletionChart').getContext('2d');
+        // Create a new Chart.js instance for the completion overview
+        new Chart(ctxCompletion, {
+            type: 'pie', // Specify chart type as pie
+            data: {
+                labels: ['Completed Tasks', 'Pending Tasks'], // Labels for pie slices
+                datasets: [{
+                    data: [completedTasks, pendingTasks], // Data values for slices
+                    backgroundColor: [
+                        'rgba(40, 167, 69, 0.8)', // Green for completed
+                        'rgba(253, 126, 20, 0.8)' // Orange for pending
+                    ],
+                    borderColor: [
+                        'rgba(255, 255, 255, 1)', // White border for slices
+                        'rgba(255, 255, 255, 1)'
+                    ],
+                    borderWidth: 1 // Border width
+                }]
+            },
+            options: {
+                responsive: true, // Chart resizes with container
+                maintainAspectRatio: false, // Don't force a fixed aspect ratio
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Your Task Completion Overview' // Chart title
+                    },
+                    legend: {
+                        position: 'bottom', // Legend position
+                    },
+                    tooltip: { // Customize tooltip display
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed; // Display the data value
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+        });
+
+        // --- 2. Task Timeline Status Chart (Pie Chart) ---
+        const timelineDataElement = document.getElementById('user_tasks_timeline_data');
+        let timelineData = {};
+        // Safely parse JSON data for timeline statuses
+        if (timelineDataElement && timelineDataElement.textContent) {
+            try {
+                timelineData = JSON.parse(timelineDataElement.textContent);
+            } catch (e) {
+                console.error("Error parsing timeline data:", e);
+                timelineData = {"No Data": 1}; // Fallback in case of parsing error
+            }
+        } else {
+            timelineData = {"No Data": 1}; // Fallback if no data is provided
+        }
+
+        const timelineLabels = Object.keys(timelineData); // Get status names as labels
+        const timelineValues = Object.values(timelineData); // Get counts as values
+
+        // Define a set of consistent colors for various timeline statuses
+        const timelineColors = {
+            "On-Time": 'rgba(23, 162, 184, 0.8)', // Info Cyan
+            "Delayed": 'rgba(220, 53, 69, 0.8)', // Danger Red
+            "Ahead": 'rgba(40, 167, 69, 0.8)', // Success Green
+            "In Progress": 'rgba(0, 123, 255, 0.8)', // Primary Blue
+            "Not Started": 'rgba(108, 117, 125, 0.8)', // Secondary Grey
+            "No Data": 'rgba(200, 200, 200, 0.8)' // Light Grey for when there's no data
+        };
+
+        // Map labels to their corresponding colors, with a fallback
+        const backgroundColors = timelineLabels.map(label => timelineColors[label] || 'rgba(150, 150, 150, 0.8)');
+
+        // Get the 2D rendering context of the canvas element
+        const ctxTimeline = document.getElementById('taskTimelineChart').getContext('2d');
+        // Create a new Chart.js instance for the timeline status
+        new Chart(ctxTimeline, {
+            type: 'pie',
+            data: {
+                labels: timelineLabels, // Labels for pie slices (e.g., "On-Time", "Delayed")
+                datasets: [{
+                    data: timelineValues, // Data values for slices (counts)
+                    backgroundColor: backgroundColors, // Dynamic background colors
+                    borderColor: [
+                        'rgba(255, 255, 255, 1)', // White border for slices
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(255, 255, 255, 1)',
+                        'rgba(255, 255, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Your Task Timeline Status' // Chart title
+                    },
+                    legend: {
+                        position: 'bottom', // Legend position
+                    },
+                    tooltip: { // Customize tooltip display
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed; // Display the data value
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+        });
+    });
+
+    // Alert chain for initial dashboard load (e.g., welcome, project alerts)
+    window.onload = function () {
+        let alerts = [];
+
+        // Check for specific alerts passed from Django context
+        {% if handbook_alert %}
+            alerts.push("📘 Please acknowledge the latest handbook!");
+        {% endif %}
+
+        {% if project_alerts %}
+            {% for alert in project_alerts %}
+                alerts.push("🚨 Project Alert:\n{{ alert|escapejs }}");
+            {% endfor %}
+        {% endif %}
+
+        {% if task_alerts %}
+            {% for alert in task_alerts %}
+                alerts.push("🧩 Task Alert:\n{{ alert|escapejs }}");
+            {% endfor %}
+        {% endif %}
+
+        // Recursive function to show alerts one by one
+        function showNextAlert(index) {
+            if (index < alerts.length) {
+                alert(alerts[index]); // Show current alert
+                showNextAlert(index + 1); // Call for the next alert
+            }
+        }
+
+        // Function to show initial welcome message followed by other alerts after a delay
+        function showDelayedAlert() {
+            alerts.unshift("Welcome to your dashboard! Enjoy your experience!"); // Add welcome message to the start
+
+            if (alerts.length > 0) {
+                showNextAlert(0); // Start showing the alerts
+            }
+        }
+
+        // Delay the first alert by 10 seconds (10000 milliseconds)
+        setTimeout(showDelayedAlert, 10000);
+    };
+</script>
 {% endblock %}

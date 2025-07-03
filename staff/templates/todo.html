@@ -1,198 +1,499 @@
-{% extends "base.html" %}
-
-{% block title %}Employee Attendance{% endblock %}
+{% extends 'base.html' %} {# Make sure 'base.html' exists and properly loads static files #}
+{% load static %}
 
 {% block content %}
-<div class="container">
-    <h2>Employee Attendance Record</h2>
+<title>Task Calendar</title>
 
-    <!-- Filter Form -->
-    <div class="controls">
-        <div class="filter-section">
-            <form method="GET" action="{% url 'attendance' %}" id="attendance-filter-form">
-                <label for="month-select">Select Month:</label>
-                <select id="month-select" name="month" onchange="this.form.submit()">
-                    {% for month_option in month_options %}
-                        <option value="{{ month_option.value }}" {% if month_option.selected %}selected{% endif %}>
-                            {{ month_option.name }} {{ selected_year }}
-                        </option>
-                    {% endfor %}
-                </select>
+{# Include Bootstrap CSS if you haven't in base.html #}
+{# <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> #}
+{# <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> #}
 
-                <label for="year-select">Select Year:</label>
-                <select id="year-select" name="year" onchange="this.form.submit()">
-                    {% for year_val in year_options %}
-                        <option value="{{ year_val }}" {% if year_val == selected_year %}selected{% endif %}>
-                            {{ year_val }}
-                        </option>
-                    {% endfor %}
-                </select>
+<div class="wrapper" style="display: flex; height: 100vh; overflow: hidden; font-family: Arial, sans-serif;">
+    <div class="task-form" style="flex: 0 0 22%; border-right: 1px solid #ccc; padding: 15px; background: #f9f9f9;">
+        <h3 class="mb-3">Create Task</h3>
+        <input type="text" id="taskName" placeholder="Task Name" class="form-control mb-2">
+        <select id="badge" class="form-control mb-2">
+            <option value="success">Success</option>
+            <option value="danger">Danger</option>
+            <option value="secondary">Secondary</option>
+        </select>
+        <input type="datetime-local" id="taskDatetime" class="form-control mb-2">
+        <button type="button" onclick="createTask()" class="btn btn-primary w-100 mb-4">Create Task</button>
 
-                <label for="employee-search">Search Employee:</label>
-                <input type="text" id="employee-search" name="search" placeholder="Employee Name" value="{{ request.GET.search|default:'' }}">
-                <button type="submit">Apply Filters</button>
-            </form>
+        <h3 class="mb-3">Calendar View</h3>
+        <div class="view-switch d-flex justify-content-around mb-4">
+            <button onclick="switchView('day', this)" class="btn btn-outline-info active">Day</button>
+            <button onclick="switchView('week', this)" class="btn btn-outline-info">Week</button>
+            <button onclick="switchView('month', this)" class="btn btn-outline-info">Month</button>
+        </div>
+        <div class="navigation d-flex justify-content-around">
+            <button onclick="navigateCalendar(-1)" class="btn btn-secondary">&lt; Previous</button>
+            <button onclick="navigateCalendar(1)" class="btn btn-secondary">Next &gt;</button>
         </div>
     </div>
 
-    <!-- Attendance Table -->
-    <div class="attendance-table-container">
-        <table class="attendance-table" id="attendanceTable">
-            <thead>
-                <tr>
-                    <th class="sticky-col employee-name-col">Employee Name</th>
-                    {% for day_num in days_in_month_header_range %}
-                    <th class="{% if selected_year == current_year and selected_month == current_month and day_num == current_day %}today-date-header{% elif selected_year == current_year and selected_month == current_month and day_num > current_day %}future-date-header{% endif %}">
-                        {{ day_num }}
-                    </th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for employee in employees_attendance %}
-                <tr>
-                    <td class="sticky-col employee-name-col">{{ employee.name }}</td>
-                    {% for day_data in employee.days_data %}
-                        {% if day_data.status == 'L' or day_data.status == 'H' %}
-                        <td class="{{ day_data.class }} {% if selected_year == current_year and selected_month == current_month and day_data.day_num == current_day %}today-date{% endif %}"
-                            data-bs-toggle="modal" data-bs-target="#reasonModal"
-                            onclick="showFullReasonModal('{{ day_data.reason|default_if_none:''|escapejs }}', '{{ day_data.status }}')">
-                            {{ day_data.status }}
-                        </td>
-                        {% else %}
-                        <td class="{{ day_data.class }} {% if selected_year == current_year and selected_month == current_month and day_data.day_num == current_day %}today-date{% endif %}">
-                            {{ day_data.status }}
-                        </td>
-                        {% endif %}
-                    {% endfor %}
-                </tr>
-                {% empty %}
-                <tr class="no-results-row">
-                    <td colspan="{{ num_days_in_month|add:1 }}" style="text-align: center;">No attendance data available for the selected period or filter.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <div id="noDataMessage" style="text-align: center; margin-top: 20px; display: none;">No employees found matching the current filters.</div>
-    </div>
-
-    <!-- Pagination Controls -->
-    <div class="pagination-controls">
-        <div class="items-per-page">
-            <label for="perPageSelect">Items per page:</label>
-            <select id="perPageSelect">
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="30">30</option>
-                <option value="all">All</option>
-            </select>
-        </div>
-
-        <div class="pagination">
-            <button id="prevPageBtn">&laquo; Previous</button>
-            <span id="pageInfo"></span>
-            <button id="nextPageBtn">Next &raquo;</button>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="reasonModal" tabindex="-1" aria-labelledby="reasonModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="reasonModalLabel">Reason Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="fullReasonText"></div>
-            </div>
-        </div>
+    <div class="calendar-container" style="flex: 1; overflow-x: auto; background: #fff; padding: 10px; box-sizing: border-box;">
+        <h4 id="calendarTitle" class="text-center mb-3"></h4>
+        <div id="calendarGrid" class="calendar"></div> {# Corrected ID: calendarGrid #}
     </div>
 </div>
 
-<!-- Bootstrap & JS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- JS Script -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const table = document.getElementById('attendanceTable');
-        const tableBody = table.querySelector('tbody');
-        const rows = Array.from(tableBody.querySelectorAll('tr:not(.no-results-row)'));
-        const noResultsRow = tableBody.querySelector('.no-results-row');
-        const noDataMessage = document.getElementById('noDataMessage');
-
-        const perPageSelect = document.getElementById('perPageSelect');
-        const prevPageBtn = document.getElementById('prevPageBtn');
-        const nextPageBtn = document.getElementById('nextPageBtn');
-        const pageInfo = document.getElementById('pageInfo');
-
-        let currentPage = 1;
-        let rowsPerPage = parseInt(perPageSelect.value);
-
-        function paginate(page) {
-            currentPage = page;
-            const totalRows = rows.length;
-            const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(totalRows / rowsPerPage);
-
-            if (totalRows === 0) {
-                if (noResultsRow) noResultsRow.style.display = 'table-row';
-                noDataMessage.style.display = 'block';
-                prevPageBtn.disabled = true;
-                nextPageBtn.disabled = true;
-                pageInfo.textContent = 'No data';
-                return;
-            } else {
-                if (noResultsRow) noResultsRow.style.display = 'none';
-                noDataMessage.style.display = 'none';
-            }
-
-            rows.forEach((row, index) => {
-                const start = (currentPage - 1) * rowsPerPage;
-                const end = start + rowsPerPage;
-
-                if (rowsPerPage === 'all' || (index >= start && index < end)) {
-                    row.style.display = 'table-row';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-
-            prevPageBtn.disabled = currentPage === 1;
-            nextPageBtn.disabled = currentPage === totalPages || rowsPerPage === 'all';
-            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-        }
-
-        perPageSelect.addEventListener('change', () => {
-            rowsPerPage = perPageSelect.value === 'all' ? 'all' : parseInt(perPageSelect.value);
-            currentPage = 1;
-            paginate(currentPage);
-        });
-
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) paginate(currentPage - 1);
-        });
-
-        nextPageBtn.addEventListener('click', () => {
-            const totalPages = rowsPerPage === 'all' ? 1 : Math.ceil(rows.length / rowsPerPage);
-            if (currentPage < totalPages) paginate(currentPage + 1);
-        });
-
-        window.showFullReasonModal = function (reason, status) {
-            const modalTitle = document.getElementById('reasonModalLabel');
-            const modalBody = document.getElementById('fullReasonText');
-
-            modalTitle.textContent = status === 'L' ? 'Leave Reason' : (status === 'H' ? 'Holiday Name' : 'Details');
-            modalBody.textContent = reason && reason.trim() ? reason : 'No details provided.';
-        };
-
-        paginate(1);
-    });
-</script>
-
-<!-- CSS Styling -->
 <style>
-    /* Add your full CSS from your original post here */
+    /* Basic utility classes (if Bootstrap is not used) */
+    .mb-2 { margin-bottom: 0.5rem; }
+    .mb-3 { margin-bottom: 1rem; }
+    .mb-4 { margin-bottom: 1.5rem; }
+    .w-100 { width: 100%; }
+    .d-flex { display: flex; }
+    .justify-content-around { justify-content: space-around; }
+    .text-center { text-align: center; }
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        box-sizing: border-box; /* Crucial for consistent width */
+    }
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        color: #212529;
+        text-align: center;
+        vertical-align: middle;
+        cursor: pointer;
+        user-select: none;
+        background-color: transparent;
+        border: 1px solid transparent;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        border-radius: 0.25rem;
+        transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    .btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+    .btn-secondary {
+        color: #fff;
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+    .btn-secondary:hover {
+        background-color: #545b62;
+        border-color: #4e555b;
+    }
+    .btn-outline-info {
+        color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    .btn-outline-info:hover {
+        color: #fff;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    .btn-outline-info.active {
+        color: #fff;
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+
+    /* Calendar specific styles */
+    .calendar {
+        display: table;
+        border-collapse: collapse;
+        width: max-content; /* Allows horizontal scrolling */
+        min-width: 100%; /* Ensures it takes full width initially, then expands with content */
+    }
+    .calendar-header {
+        display: table-row;
+        font-weight: bold;
+        background-color: #e9ecef;
+    }
+    .calendar-header-cell {
+        display: table-cell;
+        border: 1px solid #aaa;
+        padding: 8px 5px;
+        text-align: center;
+        min-width: 130px; /* Match min-width of calendar-cell */
+    }
+    .calendar-row {
+        display: table-row;
+    }
+    .calendar-time-label {
+        display: table-cell;
+        border: 1px solid #aaa;
+        vertical-align: top;
+        padding: 5px;
+        font-weight: bold;
+        background-color: #f8f9fa;
+        width: 60px; /* Fixed width for time labels */
+        min-width: 60px; /* Ensure it doesn't shrink */
+        position: sticky; /* Keep time labels visible on horizontal scroll */
+        left: 0;
+        z-index: 10; /* Ensure it stays on top */
+    }
+    .calendar-cell {
+        display: table-cell;
+        border: 1px solid #aaa;
+        min-width: 130px; /* Adjusted for better visibility */
+        height: 60px; /* Height for each hour slot */
+        vertical-align: top;
+        padding: 5px;
+        position: relative; /* For positioning tasks */
+    }
+    /* Badge styles */
+    .badge-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 5px;
+        margin: 2px 0;
+        display: block;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.85em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid #c3e6cb;
+    }
+    .badge-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 5px;
+        margin: 2px 0;
+        display: block;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.85em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid #f5c6cb;
+    }
+    .badge-secondary {
+        background-color: #e2e3e5;
+        color: #383d41;
+        padding: 5px;
+        margin: 2px 0;
+        display: block;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.85em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        border: 1px solid #d6d8db;
+    }
 </style>
 
+<script>
+let currentView = 'day';
+let baseDate = new Date(); // This will hold the current reference date for the view
+let tasks = [];
+// This value comes from the Django template context
+let empId = "{{ user_id|default:'1' }}"; // Use the user_id from session, default to '1' for testing
+
+// Function to get CSRF token (important for Django POST requests)
+const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+};
+const csrftoken = getCookie('csrftoken');
+
+// Function to update active view button
+function setActiveViewButton(clickedButton) {
+    document.querySelectorAll('.view-switch .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    clickedButton.classList.add('active');
+}
+
+function createTask() {
+    const name = document.getElementById("taskName").value;
+    const badge = document.getElementById("badge").value;
+    const datetime = document.getElementById("taskDatetime").value;
+
+    if (!name || !datetime) {
+        alert("Please enter task name and datetime.");
+        return;
+    }
+
+    fetch("/task-handler/", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            mode: "create",
+            name: name,
+            badge: badge,
+            datetime: datetime,
+            base_date: baseDate.toISOString(), // Send current baseDate to server
+            view: currentView,
+            emp_id: empId
+        })
+    }).then(res => {
+        if (!res.ok) { // Check for HTTP errors
+            return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+    })
+      .then(data => {
+          tasks = data; // Server returns updated tasks
+          document.getElementById("taskName").value = "";
+          document.getElementById("taskDatetime").value = "";
+          renderCalendar();
+      })
+      .catch(error => {
+          console.error('Error creating task:', error);
+          alert("Error creating task: " + (error.error || "Please check console for details."));
+      });
+}
+
+function switchView(view, buttonElement) {
+    setActiveViewButton(buttonElement);
+    currentView = view;
+    renderCalendar();
+}
+
+function navigateCalendar(direction) {
+    if (currentView === 'day') {
+        baseDate.setDate(baseDate.getDate() + direction);
+    } else if (currentView === 'week') {
+        baseDate.setDate(baseDate.getDate() + (direction * 7));
+    } else if (currentView === 'month') {
+        baseDate.setMonth(baseDate.getMonth() + direction);
+    }
+    renderCalendar();
+}
+
+function renderCalendar() {
+    fetch("/task-handler/", {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            mode: "fetch",
+            base_date: baseDate.toISOString(),
+            view: currentView,
+            emp_id: empId
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+    })
+    .then(data => {
+        tasks = data;
+        const container = document.getElementById("calendarGrid");
+        const titleElement = document.getElementById("calendarTitle");
+
+        if (!container || !titleElement) {
+            console.error("Calendar container or title element not found!");
+            return;
+        }
+
+        container.innerHTML = ""; // Clear existing calendar content
+
+        let columns = [];
+        let headerHtml = '<div class="calendar-header">';
+        headerHtml += '<div class="calendar-header-cell calendar-time-label">Time</div>'; // Header for time column
+
+        // Determine columns and title based on view
+        if (currentView === 'day') {
+            columns = [new Date(baseDate)]; // Create new Date object to avoid modifying baseDate
+            titleElement.textContent = baseDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            headerHtml += `<div class="calendar-header-cell">${columns[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</div>`;
+        } else if (currentView === 'week') {
+            const startOfWeek = new Date(baseDate);
+            // Adjust to Sunday of the current week (Sunday is day 0)
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            for (let i = 0; i < 7; i++) {
+                let d = new Date(startOfWeek);
+                d.setDate(startOfWeek.getDate() + i);
+                columns.push(d);
+                headerHtml += `<div class="calendar-header-cell">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</div>`;
+            }
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            titleElement.textContent = `${startOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endOfWeek.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        } else if (currentView === 'month') {
+            const year = baseDate.getFullYear();
+            const month = baseDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                const d = new Date(year, month, i);
+                columns.push(d);
+                headerHtml += `<div class="calendar-header-cell">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })}</div>`;
+            }
+            titleElement.textContent = baseDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        }
+        headerHtml += '</div>';
+        container.innerHTML += headerHtml; // Add headers to the calendar
+
+        // Generate calendar body (rows for hours, cells for dates)
+        let bodyHtml = '';
+        for (let hour = 0; hour < 24; hour++) {
+            bodyHtml += '<div class="calendar-row">';
+            // Time label column (sticky for horizontal scroll)
+            bodyHtml += `<div class="calendar-time-label">${String(hour).padStart(2, '0')}:00</div>`;
+
+            for (let colDate of columns) {
+                // Format colDate to "YYYY-MM-DD" for comparison (e.g., "2025-06-23")
+                const colDateString = colDate.toISOString().split("T")[0];
+
+                const cellTasks = tasks.filter(t => {
+                    const d = new Date(t.datetime);
+                    // Check if task is in the current hour and on the current date
+                    return d.getHours() === hour && d.toISOString().split("T")[0] === colDateString;
+                });
+
+                bodyHtml += `<div class="calendar-cell" ondrop="drop(event, '${colDateString}', ${hour})" ondragover="event.preventDefault()">`;
+                cellTasks.forEach(task => {
+                    bodyHtml += `<div id="task-${task.id}" class="badge badge-${task.badge}" draggable="true" ondragstart="drag(event)" onclick="changeBadge(${task.id})">${task.name}</div>`;
+                });
+                bodyHtml += `</div>`;
+            }
+            bodyHtml += '</div>';
+        }
+        container.innerHTML += bodyHtml; // Add the grid body
+    })
+    .catch(error => {
+        console.error('Error fetching tasks:', error);
+        alert("Error fetching tasks: " + (error.error || "Please check console for details."));
+    });
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev, dateString, hour) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text");
+    const taskId = parseInt(data.replace("task-", ""));
+    const task = tasks.find(t => t.id === taskId);
+
+    if (task) {
+        // Create a new Date object from the dropped date string and hour
+        // Use ISO format for consistent parsing. Timezone handling is critical.
+        // It's best to create UTC datetime and let Django handle conversion if needed.
+        const newDateTime = new Date(`${dateString}T${String(hour).padStart(2, '0')}:00:00`);
+
+        fetch("/task-handler/", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                mode: "update",
+                id: task.id,
+                datetime: newDateTime.toISOString(), // Send updated datetime
+                badge: task.badge, // Keep existing badge
+                base_date: baseDate.toISOString(), // Send current baseDate to server
+                view: currentView,
+                emp_id: empId
+            })
+        }).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => Promise.reject(err));
+            }
+            return res.json();
+        })
+          .then(data => {
+              tasks = data; // Server returns updated tasks
+              renderCalendar();
+          })
+          .catch(error => {
+              console.error('Error updating task (drag/drop):', error);
+              alert("Error updating task: " + (error.error || "Please check console for details."));
+          });
+    }
+}
+
+function changeBadge(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+        const next = { 'success': 'danger', 'danger': 'secondary', 'secondary': 'success' };
+        const newBadge = next[task.badge];
+        fetch("/task-handler/", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                mode: "update",
+                id: task.id,
+                datetime: task.datetime, // Keep existing datetime
+                badge: newBadge, // Send updated badge
+                base_date: baseDate.toISOString(), // Send current baseDate to server
+                view: currentView,
+                emp_id: empId
+            })
+        }).then(res => {
+            if (!res.ok) {
+                return res.json().then(err => Promise.reject(err));
+            }
+            return res.json();
+        })
+          .then(data => {
+              tasks = data; // Server returns updated tasks
+              renderCalendar();
+          })
+          .catch(error => {
+              console.error('Error updating task (badge change):', error);
+              alert("Error updating task: " + (error.error || "Please check console for details."));
+          });
+    }
+}
+
+// Initial setup when the page loads
+window.onload = () => {
+    // Set initial datetime-local input to current date and time
+    const now = new Date();
+    // Adjust for local timezone offset to display correctly in datetime-local input
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('taskDatetime').value = now.toISOString().slice(0, 16);
+
+    // Set initial active button
+    const defaultButton = document.querySelector('.view-switch .btn.active');
+    if (defaultButton) {
+        setActiveViewButton(defaultButton);
+    } else {
+        // Fallback if no active class is initially set in HTML
+        document.querySelector('.view-switch .btn[onclick*="day"]').classList.add('active');
+    }
+
+    renderCalendar();
+};
+</script>
 {% endblock %}
