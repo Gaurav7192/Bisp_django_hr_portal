@@ -583,11 +583,14 @@ def generate_salary_csv_and_send():
         annual_ctc = float(emp.salary or 0)
         monthly_ctc = annual_ctc / 12
 
-        basic = round(monthly_ctc * 0.40, 2)
-        hra = round(monthly_ctc * 0.20, 2)
+        basic = round(monthly_ctc * 0.50, 2)
+
         da = round(monthly_ctc * 0.10, 2)
-        conveyance = 1600.00
-        special = round(monthly_ctc - (basic + hra + da + conveyance), 2)
+        hra =round((basic +da)*0.3 ,2)
+        balance =monthly_ctc - (basic + hra + da )
+
+        conveyance = round((monthly_ctc-balance)*0.4, 2)
+        special = round((monthly_ctc-balance)*0.6, 2)
         gross_monthly = basic + hra + da + conveyance + special
 
         leaves = LeaveRecord.objects.filter(
@@ -666,7 +669,8 @@ def generate_salary_csv_and_send():
 
     # Save file in LatestPayslip with FileField
     latest = LatestPayslip(file_name=filename)
-    latest.file.save(f"payslip/{filename}", ContentFile(csv_buffer.getvalue().encode()), save=True)
+    latest.file.save(filename, ContentFile(csv_buffer.getvalue().encode()), save=True)
+    print(latest.file.path)
 
     # Email the file
     # email = EmailMessage(
@@ -3566,6 +3570,12 @@ def get_existing_data(request, category):
     return JsonResponse({'data': data})
 
 
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import render
+import json
+
+from .models import LeaveTypeMaster, EmployeeDetail
 
 def leave_type_panel(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -3578,7 +3588,8 @@ def leave_type_panel(request):
             leave.leave_status = leave_status
             leave.save()
 
-            employees = EmployeeDetail.objects.all()
+            # Optional: initialize leaves for all employees if a leave is activated
+            # employees = EmployeeDetail.objects.all()
             # for emp in employees:
             #     initialize_leave_details(emp)
 
@@ -3589,79 +3600,21 @@ def leave_type_panel(request):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
 
-    # GET request: paginate leave masters
-    page_size = request.GET.get('page_size', '10')
-    leave_masters = LeaveTypeMaster.objects.all()
-    leave_records = LeaveRecord.objects.all()
+    # Handle GET request - Paginate Leave Types
+    leave_masters = LeaveTypeMaster.objects.all().order_by('id')  # Add ordering if needed
+    page = request.GET.get('page', 1)
+    page_size = int(request.GET.get('page_size', 10))
 
     paginator = Paginator(leave_masters, page_size)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginator.get_page(page)
 
-    return render(request, 'leave_type_panel.html', {
-        'leave_masters': page_obj,
-        'leave_records': leave_records,
-        'page_obj': page_obj,
-    })
-
-def project_detail_view(request, pk):
-    if 'user_id' not in request.session:
-        return redirect('login')
-    # Step 1: Fetch project and user details
-    project = get_object_or_404(Project, id=pk)
-    user_id = request.session.get('user_id')
-    emp = get_object_or_404(emp_registers, id=user_id)
-    position = emp.position.role.lower()  # Get user's role (e.g., 'employee', 'manager', 'hr')
-
-    # Step 2: Define allowed status options based on the user's role and current project status
-    if position == "employee":
-        if project.status.status.lower() == 'complete':
-            allowed_keys = ['complete']
-        else:
-            allowed_keys = ['hold', 'inprocess', 'claim_complete', 'pending']
-    elif position in ['manager', 'hr']:
-        if project.status.status.lower() == 'complete':
-            allowed_keys = ['complete']
-        else:
-            allowed_keys = ['hold', 'inprocess', 'complete', 'pending']
-    else:
-        allowed_keys = []  # No allowed statuses for other roles
-
-    # Step 3: Fetch the allowed status options from StatusMaster based on the allowed_keys
-    status_queryset = StatusMaster.objects.filter(status__in=allowed_keys)
-    status_options = [(s.status.lower(), s.status) for s in status_queryset]  # (value, label)
-
-    # Step 4: Handle POST request to update the project's status
-    if project.status.status.lower() != 'complete':  # Prevent changing the status if it's already 'complete'
-        if request.method == "POST":
-            new_status_value = request.POST.get("status")  # The status selected by the user (e.g., 'complete')
-
-            if new_status_value in allowed_keys:
-                try:
-                    # Step 5: Fetch the StatusMaster object corresponding to the selected status
-                    new_status_obj = StatusMaster.objects.get(status__iexact=new_status_value)
-                    project.status = new_status_obj  # Update the project's status
-
-                    # If the status is 'complete', set the complete date
-                    if new_status_obj.status.lower() == 'complete':
-                        project.complete_date = now()
-
-                    project.last_update = now()  # Update the last updated timestamp
-                    project.save()  # Save the project with the new status
-                    messages.success(request, "Project status updated successfully.")
-                except StatusMaster.DoesNotExist:
-                    messages.error(request, "Selected status is invalid.")
-
-            return redirect("project_detail", pk=pk)
-
-    # Step 6: Render the project detail page with the status options
     context = {
-        'project': project,
-        'status_options': status_options,  # Passed as (value, label) pairs
-        'user_id': request.session['user_id'],
+        'leave_types': page_obj,
+        'page_obj': page_obj,
+        'total_pages': paginator.num_pages,
+        'page_size': page_size,
     }
-    return render(request, 'project_detail_view.html', context)
-
+    return render(request, 'leave_type_panel.html', context)
 
 def project_edit_view(request, project_id):
     # Fetch the project using the provided project_id
@@ -4811,11 +4764,13 @@ def manual_generate_payslip(request):
 
 
 def view_latest_payslip(request):
-    latest = LatestPayslip.objects.first()
+    latest = LatestPayslip.objects.order_by('-id').first()
+    print(latest)
+
     if not latest:
         return render(request, "payslip_view.html", {'headers': [], 'rows': [], 'month': ''})
 
-    filepath = f"media/{latest.file_name}"
+    filepath = f"media/payslip/payslip/{latest.file_name}"
     with open(filepath, newline='') as f:
         reader = csv.reader(f)
         data = list(reader)

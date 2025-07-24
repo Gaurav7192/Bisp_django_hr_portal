@@ -35029,3 +35029,529 @@ INFO 2025-07-03 17:27:26,401 basehttp "GET /recommendations/ HTTP/1.1" 200 11030
 WARNING 2025-07-03 17:27:26,457 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
 WARNING 2025-07-03 17:27:26,466 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
 WARNING 2025-07-03 17:27:26,466 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-03 18:15:32,329 autoreload Watching for file changes with StatReloader
+INFO 2025-07-03 18:15:38,729 basehttp code 400, message Bad request version ('\x17ã_÷É¿¾3)\x86+Û%8ÿ\x9c\x00')
+ERROR 2025-07-03 18:15:38,729 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-03 18:15:38,733 basehttp code 400, message Bad request syntax ('\x16\x03\x01\x07\x00\x01\x00\x06ü\x03\x03ìpEì\x10Ç\x01\x89´2\xad6\x18\x98³ä4Ý\x8118')
+ERROR 2025-07-03 18:15:38,733 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-03 18:15:38,925 basehttp code 400, message Bad request version ('**\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x06SZZ\x00\x00\x00')
+ERROR 2025-07-03 18:15:38,926 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-03 18:15:38,937 basehttp code 400, message Bad request version ('úú\x13\x01\x13\x02\x13\x03À+À/À,À0Ì©Ì¨À\x13À\x14\x00\x9c\x00\x9d\x00/\x005\x01\x00\x063**\x00\x00\x00\x05\x00\x05\x01\x00\x00\x00\x00\x00')
+ERROR 2025-07-03 18:15:38,938 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-03 18:15:56,785 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-03 18:15:57,447 log Not Found: /favicon.ico
+WARNING 2025-07-03 18:15:57,448 basehttp "GET /favicon.ico HTTP/1.1" 404 27863
+INFO 2025-07-03 18:16:02,387 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-03 18:16:02,410 basehttp "GET /d2/10/ HTTP/1.1" 302 0
+INFO 2025-07-03 18:16:02,601 basehttp "GET /dashboard/10/ HTTP/1.1" 200 61688
+INFO 2025-07-03 18:16:02,912 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-03 18:16:02,915 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+INFO 2025-07-03 18:16:02,915 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-03 18:16:02,924 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+WARNING 2025-07-03 18:16:02,925 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-03 18:16:02,927 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+INFO 2025-07-03 18:16:02,929 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-03 18:16:02,932 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+WARNING 2025-07-03 18:16:02,937 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:16:02,941 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-03 18:16:02,949 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-03 18:16:02,953 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-03 18:16:02,956 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-03 18:16:02,962 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-03 18:16:02,968 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-03 18:16:02,968 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-03 18:16:02,969 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-03 18:16:02,970 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-03 18:16:02,980 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-03 18:16:02,981 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-03 18:16:02,982 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-03 18:16:02,983 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-03 18:16:02,984 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-03 18:16:02,994 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+INFO 2025-07-03 18:16:02,994 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-03 18:16:02,996 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-03 18:16:02,997 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+WARNING 2025-07-03 18:16:03,144 basehttp "GET /static/images/default_avatar.png HTTP/1.1" 404 1889
+INFO 2025-07-03 18:16:08,023 basehttp "GET /task_list_view/10/ HTTP/1.1" 200 36581
+WARNING 2025-07-03 18:16:08,062 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:16:08,070 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:16:08,071 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-03 18:16:08,194 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-03 18:16:08,196 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+INFO 2025-07-03 18:16:12,745 basehttp "GET /user_timesheet HTTP/1.1" 200 25807
+WARNING 2025-07-03 18:16:12,778 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:16:12,783 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:16:12,787 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-03 18:17:44,823 basehttp "GET /recommendations/ HTTP/1.1" 200 110248
+WARNING 2025-07-03 18:17:44,875 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:17:44,875 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-03 18:17:44,881 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-04 12:51:44,082 autoreload Watching for file changes with StatReloader
+INFO 2025-07-04 12:52:08,469 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-04 12:52:09,257 log Not Found: /favicon.ico
+WARNING 2025-07-04 12:52:09,263 basehttp "GET /favicon.ico HTTP/1.1" 404 27866
+INFO 2025-07-04 12:52:48,283 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-04 12:52:48,488 basehttp "GET /d2/2/ HTTP/1.1" 302 0
+INFO 2025-07-04 12:52:48,941 basehttp "GET /dashboard/2/ HTTP/1.1" 200 59807
+WARNING 2025-07-04 12:52:49,062 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:52:49,067 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:52:49,084 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 12:53:15,087 basehttp "GET /employee_list, HTTP/1.1" 200 51445
+WARNING 2025-07-04 12:53:15,292 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:53:15,308 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:53:15,318 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 12:54:08,295 basehttp "GET /dashboard/2/ HTTP/1.1" 200 59807
+INFO 2025-07-04 12:56:25,711 basehttp "GET /apply_leave/2/ HTTP/1.1" 200 28333
+WARNING 2025-07-04 12:56:26,126 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:56:26,126 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 12:56:26,127 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 13:01:46,342 basehttp "GET /leave-type-panel/ HTTP/1.1" 200 45521
+WARNING 2025-07-04 13:01:46,523 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 13:01:46,561 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 13:01:46,565 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 13:01:49,533 basehttp "GET /apply_leave/2/ HTTP/1.1" 200 28333
+INFO 2025-07-04 14:32:25,976 basehttp "GET /handbooks/2 HTTP/1.1" 200 23720
+WARNING 2025-07-04 14:32:26,374 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:32:26,376 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:32:27,480 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:32:35,730 basehttp "GET /media/handbooks/Employee_Handbook_2024_1_K1eAsdk.pdf HTTP/1.1" 200 1062232
+INFO 2025-07-04 14:37:30,225 basehttp "GET /project/2 HTTP/1.1" 200 37637
+WARNING 2025-07-04 14:37:30,487 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:37:30,688 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:37:36,477 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:42:46,801 basehttp "GET /add_project/2 HTTP/1.1" 200 30290
+WARNING 2025-07-04 14:42:47,058 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:42:47,149 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:42:47,154 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:42:54,367 basehttp "GET /project/2 HTTP/1.1" 200 37637
+WARNING 2025-07-04 14:42:54,715 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:42:54,948 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:42:54,953 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:43:05,265 basehttp "GET /project/2 HTTP/1.1" 200 37637
+WARNING 2025-07-04 14:43:05,486 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:43:05,573 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:43:05,578 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:45:52,922 basehttp "GET / HTTP/1.1" 200 5701
+INFO 2025-07-04 14:46:13,751 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-04 14:46:13,995 basehttp "GET /d2/2/ HTTP/1.1" 302 0
+INFO 2025-07-04 14:46:14,606 basehttp "GET /dashboard/2/ HTTP/1.1" 200 59807
+WARNING 2025-07-04 14:46:14,921 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:46:14,986 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:46:14,991 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:46:15,192 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:46:16,132 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 14:50:26,229 basehttp "GET /task_list_view/2/ HTTP/1.1" 200 36527
+WARNING 2025-07-04 14:50:26,407 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:50:26,408 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 14:50:26,425 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 15:00:37,652 basehttp "GET /dashboard/2/ HTTP/1.1" 200 59807
+WARNING 2025-07-04 15:00:37,769 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 15:00:37,774 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 15:00:37,783 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 15:00:41,265 basehttp "GET /update_profile/2 HTTP/1.1" 200 52592
+WARNING 2025-07-04 15:00:41,426 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 15:00:41,432 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-04 15:00:41,437 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-04 16:38:41,571 autoreload Watching for file changes with StatReloader
+INFO 2025-07-04 16:39:03,588 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-04 16:39:04,918 log Not Found: /favicon.ico
+WARNING 2025-07-04 16:39:04,919 basehttp "GET /favicon.ico HTTP/1.1" 404 27863
+INFO 2025-07-04 16:39:16,212 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-04 16:39:16,260 basehttp "GET /d2/10/ HTTP/1.1" 302 0
+INFO 2025-07-04 16:39:16,583 basehttp "GET /dashboard/10/ HTTP/1.1" 200 61688
+INFO 2025-07-04 16:39:17,050 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-04 16:39:17,053 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-04 16:39:17,054 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+INFO 2025-07-04 16:39:17,056 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+INFO 2025-07-04 16:39:17,057 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-04 16:39:17,058 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+WARNING 2025-07-04 16:39:17,073 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-04 16:39:17,073 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+WARNING 2025-07-04 16:39:17,074 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-04 16:39:17,081 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-04 16:39:17,088 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-04 16:39:17,093 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-04 16:39:17,099 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-04 16:39:17,101 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-04 16:39:17,102 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-04 16:39:17,104 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-04 16:39:17,105 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-04 16:39:17,114 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-04 16:39:17,122 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-04 16:39:17,124 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-04 16:39:17,125 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-04 16:39:17,126 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-04 16:39:17,127 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-04 16:39:17,129 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+INFO 2025-07-04 16:39:17,139 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+INFO 2025-07-04 16:39:17,139 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-04 16:39:17,158 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-04 16:39:18,441 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-04 16:39:18,443 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+WARNING 2025-07-04 16:39:18,565 basehttp "GET /static/images/default_avatar.png HTTP/1.1" 404 1889
+INFO 2025-07-04 16:59:19,021 basehttp "GET /recommendations/ HTTP/1.1" 200 110270
+WARNING 2025-07-04 16:59:19,241 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-04 16:59:19,249 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-04 16:59:19,294 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-04 17:34:25,295 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\models.py changed, reloading.
+INFO 2025-07-04 17:34:45,072 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:04:49,761 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:05:03,604 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\models.py changed, reloading.
+INFO 2025-07-10 13:05:05,685 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:05:20,049 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:06:16,845 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:07:15,225 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-10 13:07:18,603 autoreload Watching for file changes with StatReloader
+INFO 2025-07-10 13:10:17,534 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:23:37,132 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:31:35,326 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:35:44,969 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:37:15,363 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:42:14,299 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:49:55,961 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:51:04,305 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 12:52:02,639 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:53:12,632 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 12:53:35,760 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 12:55:16,377 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 12:56:05,204 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:00:27,438 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:01:59,686 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:04:24,431 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:09:00,076 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:09:31,276 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:09:45,548 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-22 13:09:46,150 log Not Found: /favicon.ico
+WARNING 2025-07-22 13:09:46,151 basehttp "GET /favicon.ico HTTP/1.1" 404 27863
+INFO 2025-07-22 13:09:47,922 basehttp code 400, message Bad request version ('6©&ªú©\x05\x05\x03u4%\x97·\x94\x0e\x8cE»\x81lF£Æ\x0eÕû#çË[Å¬¸Í±LÁ\x90{¡É\x17e@Cx\x82')
+ERROR 2025-07-22 13:09:47,922 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:09:47,927 basehttp code 400, message Bad request version ('tÔº\x06Y5¶¦\x9b\x00\x98\x83óeI\x0e×\x93\x15¦2&')
+ERROR 2025-07-22 13:09:47,927 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:09:53,907 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-22 13:09:53,921 basehttp "GET /d2/10/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:09:54,170 basehttp "GET /dashboard/10/ HTTP/1.1" 200 60601
+INFO 2025-07-22 13:09:54,474 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-22 13:09:54,479 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+INFO 2025-07-22 13:09:54,484 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-22 13:09:54,486 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+WARNING 2025-07-22 13:09:54,493 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:09:54,498 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:09:54,507 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:09:54,516 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-22 13:09:54,523 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-22 13:09:54,532 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-22 13:09:54,539 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-22 13:09:54,540 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+INFO 2025-07-22 13:09:54,542 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-22 13:09:54,545 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-22 13:09:54,547 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+INFO 2025-07-22 13:09:54,551 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-22 13:09:54,560 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-22 13:09:54,561 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-22 13:09:54,567 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-22 13:09:54,573 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-22 13:09:54,574 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-22 13:09:54,582 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-22 13:09:54,585 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-22 13:09:54,585 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+INFO 2025-07-22 13:09:54,587 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-22 13:09:54,591 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-22 13:09:54,609 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+WARNING 2025-07-22 13:09:54,782 basehttp "GET /static/images/default_avatar.png HTTP/1.1" 404 1889
+INFO 2025-07-22 13:10:10,569 basehttp "GET /payslip_from_csv/ HTTP/1.1" 200 23813
+WARNING 2025-07-22 13:10:10,623 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:10,626 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:10,631 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:10:10,634 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-22 13:10:10,636 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+INFO 2025-07-22 13:10:30,287 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:10:30,340 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:10:30,387 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:30,391 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:30,391 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:10:38,303 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:10:38,318 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:10:38,369 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:38,370 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:10:38,378 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:11:04,643 basehttp "GET /export_payslip_csv/ HTTP/1.1" 200 16400
+INFO 2025-07-22 13:14:58,304 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:14:58,439 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:14:58,439 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:14:58,439 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:24:12,436 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:24:12,456 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:24:12,501 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:24:12,574 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:24:12,580 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:29:33,162 basehttp "GET /payslip_from_csv/ HTTP/1.1" 200 23813
+WARNING 2025-07-22 13:29:33,312 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:29:33,324 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:29:33,326 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:29:38,892 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:29:38,977 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:29:39,074 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:29:39,113 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:29:39,114 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:29:53,648 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-07-22 13:29:53,650 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 27974
+INFO 2025-07-22 13:29:53,939 basehttp "GET /static/plugins/moment/moment.min.js.map HTTP/1.1" 200 86532
+INFO 2025-07-22 13:29:53,949 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js.map HTTP/1.1" 200 316181
+INFO 2025-07-22 13:29:53,954 basehttp "GET /static/js/adminlte.js.map HTTP/1.1" 200 171653
+INFO 2025-07-22 13:29:53,965 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js.map HTTP/1.1" 200 427683
+INFO 2025-07-22 13:29:54,028 basehttp "GET /static/css/adminlte.min.css.map HTTP/1.1" 200 3783134
+INFO 2025-07-22 13:31:29,622 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:31:29,669 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:31:29,810 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:31:29,864 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-07-22 13:31:29,865 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:31:29,870 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 27974
+WARNING 2025-07-22 13:31:29,881 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:32:16,700 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:32:16,836 log Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-07-22 13:32:16,839 basehttp "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 27974
+WARNING 2025-07-22 13:32:16,879 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:32:16,898 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:32:16,930 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:37:11,040 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:38:00,784 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:42:51,198 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:43:28,141 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:43:50,343 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+INFO 2025-07-22 13:43:50,480 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:43:50,746 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:43:50,759 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:43:50,760 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:44:00,621 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:44:00,664 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:44:00,719 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:44:00,724 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:44:00,749 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:44:17,797 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:44:44,113 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:45:50,021 basehttp code 400, message Bad request version ("\x89Ö\x91xà\x19\x9c»\x13%ð\\Äp¼Ë}á\x1a{òÄ\x9b\x12°\x90\x19Îª`¡ÿ\x13^ÕQ,\x9aöI>#\x10m\x87NIRtC\x80t\x8fê\x9aw'Â\x19\x12Ë/\x99¾\x9c©·Áó\x16QéA\x03Å\x17ï\x9a\x12\x00X`")
+ERROR 2025-07-22 13:45:50,023 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:45:50,053 basehttp code 400, message Bad request version ('\x07¯à\x8faÙî\x18µ\x19\x9dLæ\x8e#ýÊ*\x04\x14\x19\x17%5\x00ðI½J\x08WÑ]>ÊWÃÕG\x9eOb\x98à\x16\x0f\x16k\x96³*ºxôÌj7u2VO©\x7f\x14\x18\x0fCâØÿú/X\x12à,ÓÂ\\ùMöù\x84\x90\xad\x17Óbsá\x86\x8c')
+ERROR 2025-07-22 13:45:50,054 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:46:04,507 basehttp code 400, message Bad request version ('Q¯rËÞ·¦nÈ\x08S\x10Î#ð\x03S\x1b\x86~%\x05K\x04Ï¨8\x98+(\x9aj\x97')
+ERROR 2025-07-22 13:46:04,507 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:46:04,513 basehttp code 400, message Bad request version ('\x00\x02\x01\x00\x00\x17\x00\x00\x00')
+ERROR 2025-07-22 13:46:04,513 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:46:05,520 basehttp code 400, message Bad HTTP/0.9 request type ('\x16\x03\x01\x06À\x01\x00\x06¼\x03\x03»Ê\x07ð¼Òz\x97k\x8e²4K\x90Iô<')
+ERROR 2025-07-22 13:46:05,520 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:46:05,526 basehttp code 400, message Bad request version ('Æ¼¦iaêU%¢Ãt<')
+ERROR 2025-07-22 13:46:05,526 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 13:46:15,264 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-22 13:46:16,414 log Not Found: /favicon.ico
+WARNING 2025-07-22 13:46:16,417 basehttp "GET /favicon.ico HTTP/1.1" 404 27863
+INFO 2025-07-22 13:46:23,451 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-22 13:46:23,472 basehttp "GET /d2/10/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:46:23,808 basehttp "GET /dashboard/10/ HTTP/1.1" 200 60601
+INFO 2025-07-22 13:46:24,263 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-22 13:46:24,266 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-22 13:46:24,271 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+INFO 2025-07-22 13:46:24,282 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+WARNING 2025-07-22 13:46:24,283 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:46:24,286 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+INFO 2025-07-22 13:46:24,287 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-22 13:46:24,289 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+WARNING 2025-07-22 13:46:24,302 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:46:24,312 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:46:24,318 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-22 13:46:24,319 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-22 13:46:24,326 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-22 13:46:24,328 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-22 13:46:24,337 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-22 13:46:24,338 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-22 13:46:24,339 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-22 13:46:24,348 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-22 13:46:24,360 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-22 13:46:24,362 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-22 13:46:24,364 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-22 13:46:24,366 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-22 13:46:24,368 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-22 13:46:24,376 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-22 13:46:24,379 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-22 13:46:24,381 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+INFO 2025-07-22 13:46:24,385 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+WARNING 2025-07-22 13:46:24,707 basehttp "GET /static/images/default_avatar.png HTTP/1.1" 404 1889
+INFO 2025-07-22 13:46:30,478 basehttp "GET /attendance/ HTTP/1.1" 200 204992
+WARNING 2025-07-22 13:46:30,536 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:46:30,555 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:46:30,562 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:46:30,692 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-22 13:46:30,694 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+INFO 2025-07-22 13:46:34,801 basehttp "GET /attendance/ HTTP/1.1" 200 204992
+WARNING 2025-07-22 13:46:34,860 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:46:34,862 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:46:34,869 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:46:40,020 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+ERROR 2025-07-22 13:46:40,236 log Internal Server Error: /payslip-view/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 4772, in view_latest_payslip
+    with open(filepath, newline='') as f:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'media/July_2025.csv'
+ERROR 2025-07-22 13:46:40,290 basehttp "GET /payslip-view/ HTTP/1.1" 500 69043
+INFO 2025-07-22 13:51:17,821 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:52:05,799 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:52:40,906 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-22 13:52:41,526 log Not Found: /favicon.ico
+WARNING 2025-07-22 13:52:41,528 basehttp "GET /favicon.ico HTTP/1.1" 404 27863
+INFO 2025-07-22 13:52:48,225 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-22 13:52:48,248 basehttp "GET /d2/10/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:52:48,503 basehttp "GET /dashboard/10/ HTTP/1.1" 200 60601
+INFO 2025-07-22 13:52:48,962 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-22 13:52:48,964 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+INFO 2025-07-22 13:52:48,971 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+INFO 2025-07-22 13:52:48,973 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-22 13:52:48,974 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+WARNING 2025-07-22 13:52:48,987 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:52:49,000 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+WARNING 2025-07-22 13:52:49,000 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:52:49,001 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:52:49,008 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-22 13:52:49,014 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-22 13:52:49,028 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-22 13:52:49,032 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-22 13:52:49,042 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-22 13:52:49,044 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-22 13:52:49,047 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-22 13:52:49,048 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-22 13:52:49,065 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-22 13:52:49,074 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-22 13:52:49,076 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-22 13:52:49,076 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-22 13:52:49,087 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-22 13:52:49,091 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-22 13:52:49,093 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+INFO 2025-07-22 13:52:49,094 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-22 13:52:49,096 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-22 13:52:49,111 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+WARNING 2025-07-22 13:52:50,499 basehttp "GET /static/images/default_avatar.png HTTP/1.1" 404 1889
+INFO 2025-07-22 13:53:14,047 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+ERROR 2025-07-22 13:53:14,136 log Internal Server Error: /payslip-view/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 4773, in view_latest_payslip
+    with open(filepath, newline='') as f:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'media/July_2025.csv'
+ERROR 2025-07-22 13:53:14,187 basehttp "GET /payslip-view/ HTTP/1.1" 500 69045
+INFO 2025-07-22 13:54:23,198 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:55:02,044 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:55:08,976 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:55:09,183 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:55:09,196 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:55:09,197 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:55:09,713 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-22 13:55:09,714 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+INFO 2025-07-22 13:55:13,402 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:55:13,424 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:55:13,466 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:55:13,473 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:55:13,475 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:58:08,894 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 13:58:48,758 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 13:59:45,684 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:59:45,738 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:59:45,884 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:59:45,904 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:59:45,907 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 13:59:49,521 basehttp "POST /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 13:59:49,542 basehttp "GET /payslip-view/ HTTP/1.1" 200 113549
+WARNING 2025-07-22 13:59:49,565 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:59:49,572 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 13:59:49,577 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 14:00:46,000 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 14:01:21,618 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 14:01:57,781 basehttp "GET /project/10 HTTP/1.1" 200 53932
+WARNING 2025-07-22 14:01:57,865 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:01:57,893 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:01:57,894 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 14:02:03,676 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+ERROR 2025-07-22 14:02:03,789 log Internal Server Error: /payslip-view/
+Traceback (most recent call last):
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\DELL\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py", line 4773, in view_latest_payslip
+    with open(filepath, newline='') as f:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'media/July_2025.csv'
+ERROR 2025-07-22 14:02:03,803 basehttp "GET /payslip-view/ HTTP/1.1" 500 69333
+INFO 2025-07-22 14:05:39,538 autoreload C:\Users\DELL\PycharmProjects\pythonProject\newproject\staff\views.py changed, reloading.
+INFO 2025-07-22 14:06:14,008 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 14:06:26,046 basehttp "GET /payslip-view/ HTTP/1.1" 200 113691
+WARNING 2025-07-22 14:06:26,259 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:06:26,269 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:06:26,270 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 14:15:24,751 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 14:15:43,392 basehttp "GET /payslip-view/ HTTP/1.1" 200 113691
+WARNING 2025-07-22 14:15:43,527 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:15:43,528 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1898
+WARNING 2025-07-22 14:15:43,529 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1898
+INFO 2025-07-22 14:19:17,294 autoreload Watching for file changes with StatReloader
+INFO 2025-07-22 14:20:52,444 basehttp "GET / HTTP/1.1" 200 5701
+WARNING 2025-07-22 14:20:53,115 log Not Found: /favicon.ico
+WARNING 2025-07-22 14:20:53,119 basehttp "GET /favicon.ico HTTP/1.1" 404 27866
+INFO 2025-07-22 14:21:24,384 basehttp "POST / HTTP/1.1" 302 0
+INFO 2025-07-22 14:21:24,585 basehttp "GET /d2/2/ HTTP/1.1" 302 0
+INFO 2025-07-22 14:21:25,185 basehttp "GET /dashboard/2/ HTTP/1.1" 200 59807
+INFO 2025-07-22 14:21:25,688 basehttp "GET /static/plugins/jqvmap/jqvmap.min.css HTTP/1.1" 200 614
+INFO 2025-07-22 14:21:25,747 basehttp "GET /static/plugins/icheck-bootstrap/icheck-bootstrap.min.css HTTP/1.1" 200 12505
+INFO 2025-07-22 14:21:25,749 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css HTTP/1.1" 200 11967
+INFO 2025-07-22 14:21:25,749 basehttp "GET /static/plugins/daterangepicker/daterangepicker.css HTTP/1.1" 200 8069
+INFO 2025-07-22 14:21:25,749 basehttp "GET /static/plugins/overlayScrollbars/css/OverlayScrollbars.min.css HTTP/1.1" 200 20021
+INFO 2025-07-22 14:21:25,752 basehttp "GET /static/plugins/fontawesome-free/css/all.min.css HTTP/1.1" 200 59348
+WARNING 2025-07-22 14:21:25,776 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:25,777 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:25,784 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-22 14:21:25,806 basehttp "GET /static/plugins/summernote/summernote-bs4.min.css HTTP/1.1" 200 19403
+INFO 2025-07-22 14:21:25,816 basehttp "GET /static/plugins/jquery/jquery.min.js HTTP/1.1" 200 89503
+INFO 2025-07-22 14:21:25,834 basehttp "GET /static/plugins/sparklines/sparkline.js HTTP/1.1" 200 7219
+INFO 2025-07-22 14:21:25,863 basehttp "GET /static/plugins/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 84384
+INFO 2025-07-22 14:21:25,881 basehttp "GET /static/plugins/jqvmap/jquery.vmap.min.js HTTP/1.1" 200 21159
+INFO 2025-07-22 14:21:25,883 basehttp "GET /static/plugins/jqvmap/maps/jquery.vmap.usa.js HTTP/1.1" 200 47714
+INFO 2025-07-22 14:21:25,917 basehttp "GET /static/css/adminlte.min.css HTTP/1.1" 200 1382986
+INFO 2025-07-22 14:21:25,935 basehttp "GET /static/plugins/chart.js/Chart.min.js HTTP/1.1" 200 173084
+INFO 2025-07-22 14:21:25,946 basehttp "GET /static/plugins/jquery-ui/jquery-ui.min.js HTTP/1.1" 200 253681
+INFO 2025-07-22 14:21:25,949 basehttp "GET /static/plugins/moment/moment.min.js HTTP/1.1" 200 58863
+INFO 2025-07-22 14:21:25,950 basehttp "GET /static/plugins/jquery-knob/jquery.knob.min.js HTTP/1.1" 200 10804
+INFO 2025-07-22 14:21:25,953 basehttp "GET /static/plugins/daterangepicker/daterangepicker.js HTTP/1.1" 200 67842
+INFO 2025-07-22 14:21:25,991 basehttp "GET /static/js/demo.js HTTP/1.1" 200 22926
+INFO 2025-07-22 14:21:25,992 basehttp "GET /static/js/pages/dashboard.js HTTP/1.1" 200 7626
+INFO 2025-07-22 14:21:25,993 basehttp "GET /static/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js HTTP/1.1" 200 61593
+INFO 2025-07-22 14:21:25,993 basehttp "GET /static/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js HTTP/1.1" 200 42614
+INFO 2025-07-22 14:21:25,997 basehttp "GET /static/js/adminlte.js HTTP/1.1" 200 102907
+INFO 2025-07-22 14:21:26,002 basehttp "GET /static/plugins/summernote/summernote-bs4.min.js HTTP/1.1" 200 151400
+INFO 2025-07-22 14:21:34,415 basehttp "GET /generate-payslip/ HTTP/1.1" 302 0
+INFO 2025-07-22 14:21:34,764 basehttp "GET /payslip-view/ HTTP/1.1" 200 113664
+WARNING 2025-07-22 14:21:34,947 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:34,948 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:34,948 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-22 14:21:34,971 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-regular-400.woff2 HTTP/1.1" 200 13276
+INFO 2025-07-22 14:21:34,981 basehttp "GET /static/plugins/fontawesome-free/webfonts/fa-solid-900.woff2 HTTP/1.1" 200 78196
+INFO 2025-07-22 14:21:56,595 basehttp "GET /chatbot/ HTTP/1.1" 200 22333
+WARNING 2025-07-22 14:21:56,768 basehttp "GET /static/plugin/img/user1-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:56,773 basehttp "GET /static/plugin/img/user8-128x128.jpg HTTP/1.1" 404 1901
+WARNING 2025-07-22 14:21:56,774 basehttp "GET /static/plugin/img/user3-128x128.jpg HTTP/1.1" 404 1901
+INFO 2025-07-22 14:22:02,599 basehttp "GET /chat/?query=jygj HTTP/1.1" 200 97
+INFO 2025-07-22 14:22:10,930 basehttp "GET /chat/?query=jhvb HTTP/1.1" 200 97
+INFO 2025-07-22 15:09:03,467 basehttp - Broken pipe from ('192.168.1.47', 56344)
+INFO 2025-07-22 15:09:03,541 basehttp - Broken pipe from ('192.168.1.47', 56345)
+INFO 2025-07-22 15:10:53,734 basehttp - Broken pipe from ('192.168.1.47', 56343)
+INFO 2025-07-22 15:11:02,658 basehttp - Broken pipe from ('192.168.1.47', 56346)
+INFO 2025-07-22 15:11:02,994 basehttp - Broken pipe from ('192.168.1.47', 56347)
+INFO 2025-07-22 16:55:05,825 basehttp code 400, message Bad request version ('\x02h2\x08http/1.1\x00\x12\x00\x00\x00#\x00\x00\x00')
+ERROR 2025-07-22 16:55:05,848 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-07-22 16:55:05,867 basehttp code 400, message Bad request version ('qhi#\x10\x8b"¶')
+ERROR 2025-07-22 16:55:05,868 basehttp You're accessing the development server over HTTPS, but it only supports HTTP.

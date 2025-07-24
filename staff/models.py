@@ -14,7 +14,7 @@ from simple_history.models import HistoricalRecords
 from decimal import Decimal
 from django.db import models
 from django.core.exceptions import ValidationError
-from .vector_store import load_or_create_index
+
 from .  import vector_store, query_engine, document_processor
 
 class DesignationMaster(models.Model):
@@ -982,3 +982,6 @@ class Feedback(models.Model):
     skill = models.CharField(max_length=255)
     feedback_type = models.CharField(max_length=50)  # accepted, rejected, already_known, etc.
     timestamp = models.DateTimeField(auto_now_add=True)
+
+
+
